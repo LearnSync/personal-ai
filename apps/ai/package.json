@@ -1,0 +1,14 @@
+{
+    "name": "ai",
+    "private": "true",
+    "version": "0.1.0",
+    "author": {
+        "name": "SOUMITRA SAHA",
+        "email": "soumitrosahaofficial@gmail.com"
+    },
+    "scripts": {
+        "start": "uvicorn main:app --reload --port 8000",
+        "freeze": "pip freeze > requirement.txt",
+        "build": "echo 'FastAPI doesn’t need building, but ensure dependencies are installed'"
+    }
+}
