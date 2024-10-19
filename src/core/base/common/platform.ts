@@ -58,7 +58,7 @@ else if (typeof navigator === "object") {
   _isWindows = _userAgent.toLowerCase().indexOf("windows") >= 0;
   _isMac = _userAgent.toLowerCase().indexOf("mac") >= 0;
   _isLinux = _userAgent.toLowerCase().indexOf("linux") >= 0;
-  _locale = navigator?.language?.toLowerCase(); // TODO: Getting Undefined
+  _locale = navigator.language.toLowerCase();
   _language = _locale || LANGUAGE_DEFAULT;
   _isWeb = true;
 }
