@@ -10,7 +10,8 @@
     /* Path */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@/core": ["./src/core/*"]
     }
   },
   "include": ["vite.config.ts"]
