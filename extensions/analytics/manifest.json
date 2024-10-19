@@ -1,0 +1,9 @@
+{
+    "name": "LS/AI Assistant Analytics",
+    "version": "0.0.1",
+    "entry": "src/index.ts",
+    "permissions": [
+        "process",
+        "api-access"
+    ]
+}
