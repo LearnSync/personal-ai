@@ -26,6 +26,6 @@
       "@/*": ["./src/*"],
     }
   },
-  "include": ["src", "ai"],
+  "include": ["src", "src/core/ai"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
