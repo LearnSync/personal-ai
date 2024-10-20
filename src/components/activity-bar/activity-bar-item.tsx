@@ -6,9 +6,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { IDefaultExtensionItems } from "@/constants";
+import { platform } from "@/core";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store";
-import { platform, PlatformToString } from "@/core";
 
 interface IActivityBarItemProps extends IDefaultExtensionItems {
   className?: string;
@@ -38,7 +38,7 @@ export const ActivityBarItem: React.FC<IActivityBarItemProps> = (props) => {
           </TooltipTrigger>
           <TooltipContent
             side="right"
-            className="border border-muted-foreground"
+            className="border border-muted-foreground/40"
           >
             <div className="text-sm font-medium dark:text-gray-400">
               <span>{props.label}</span>
