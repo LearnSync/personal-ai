@@ -20,7 +20,7 @@ export const ActivityBarItem: React.FC<IActivityBarItemProps> = (props) => {
   return (
     <div
       className={cn(
-        "w-full h-fit flex py-4 items-center justify-center border-l-4 border-transparent hover:bg-muted",
+        "w-full h-fit flex py-4 items-center justify-center border-l-2 border-transparent hover:bg-muted",
         activeExtensionTab === props.label &&
           "border-muted-foreground bg-muted shadow",
         props.className
