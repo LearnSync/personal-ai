@@ -97,7 +97,7 @@ export const Workbench = () => {
   const [conversationStarted, setConversationStarted] = React.useState(true);
 
   return (
-    <main className="container h-screen mx-auto max-w-7xl">
+    <main className="container h-full mx-auto max-w-7xl">
       <ScrollArea className="flex-grow h-full">
         <div className="w-[85%] mx-auto">
           {!conversationStarted ? (
