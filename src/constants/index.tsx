@@ -6,9 +6,10 @@ import {
   Settings,
 } from "lucide-react";
 
-import { Platform } from "@/core";
+import { generateUUID, Platform } from "@/core";
 
 export interface IDefaultExtensionItems {
+  id: string;
   icon: React.ReactNode;
   label: string;
   shortCut?: {
@@ -16,10 +17,12 @@ export interface IDefaultExtensionItems {
     modifiers: string[]; // i.e. ["ctrl", "shift"];
   }[];
   hasMore?: boolean;
+  position?: "default" | "bottom";
 }
 
-export const DEFAULT_EXTENSIONS_ITEMS: IDefaultExtensionItems[] = [
+export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   {
+    id: generateUUID(),
     icon: <MessageCircle className="w-full h-full" />,
     label: "Chat",
     shortCut: [
@@ -39,6 +42,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: IDefaultExtensionItems[] = [
     hasMore: false,
   },
   {
+    id: generateUUID(),
     icon: <Search className="w-full h-full" />,
     label: "Context Search",
     shortCut: [
@@ -58,6 +62,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: IDefaultExtensionItems[] = [
     hasMore: false,
   },
   {
+    id: generateUUID(),
     icon: <FileClock className="w-full h-full" />,
     label: "Chat History",
     shortCut: [
@@ -77,6 +82,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: IDefaultExtensionItems[] = [
     hasMore: false,
   },
   {
+    id: generateUUID(),
     icon: <Blocks className="w-full h-full" />,
     label: "Extensions",
     shortCut: [
@@ -95,24 +101,25 @@ export const DEFAULT_EXTENSIONS_ITEMS: IDefaultExtensionItems[] = [
     ],
     hasMore: false,
   },
+  {
+    id: generateUUID(),
+    icon: <Settings className="w-full h-full" />,
+    label: "Settings",
+    shortCut: [
+      {
+        key: Platform.Windows,
+        modifiers: ["ctrl", "shift", "s"],
+      },
+      {
+        key: Platform.Mac,
+        modifiers: ["cmd", "shift", "s"],
+      },
+      {
+        key: Platform.Linux,
+        modifiers: ["ctrl", "shift", "s"],
+      },
+    ],
+    hasMore: false,
+    position: "bottom",
+  },
 ];
-
-export const SETTINGS: IDefaultExtensionItems = {
-  icon: <Settings className="w-full h-full" />,
-  label: "Settings",
-  shortCut: [
-    {
-      key: Platform.Windows,
-      modifiers: ["ctrl", "shift", "s"],
-    },
-    {
-      key: Platform.Mac,
-      modifiers: ["cmd", "shift", "s"],
-    },
-    {
-      key: Platform.Linux,
-      modifiers: ["ctrl", "shift", "s"],
-    },
-  ],
-  hasMore: false,
-};
