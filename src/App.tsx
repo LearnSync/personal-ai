@@ -2,41 +2,29 @@ import { ChevronLeft, ChevronRight, PanelLeftOpen } from "lucide-react";
 import * as React from "react";
 
 import { ActivityBar } from "./components/activity-bar";
+import { TopHeader } from "./components/header";
+import TabItem from "./components/header/tab-item";
 import { SecondarySidebar, Sidebar } from "./components/sidebar";
 import { ThemeProvider } from "./components/theme-provider";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Workbench } from "./components/workbench";
+import {
+  PlatformProvider,
+  usePlatformContext,
+} from "./context/platform.context";
 import { cn } from "./lib/utils";
 import { useStore } from "./store";
-import { TopHeader } from "./components/header";
-import TabItem from "./components/header/tab-item";
-import useTabStore from "./store/tab";
 
 function App() {
   const [hideSecondarySideBar, setHideSecondarySideBar] = React.useState(true);
 
   // Store
   const { showSideBar, setShowSideBar } = useStore();
-  const { tabs, addTab } = useTabStore();
 
-  // Side Effect
-  React.useEffect(() => {
-    const timeId = setTimeout(() => {
-      // Setting Dummy Active Tab
-      addTab({
-        id: "tab1",
-        label: "First Chat",
-        isLocked: true,
-      });
+  // Context
+  const { tabSessionManager } = usePlatformContext();
 
-      addTab({
-        id: "tab2",
-        label: "Second Chat",
-        isLocked: false,
-      });
-    }, 100);
-    return () => clearTimeout(timeId);
-  }, []);
+  console.log("Tab session manager", tabSessionManager); // TODO: PENDING
 
   return (
     <ThemeProvider defaultTheme="system">
@@ -72,7 +60,7 @@ function App() {
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
-                {tabs.map((tab) => (
+                {tabSessionManager.getTabs()?.map((tab) => (
                   <TabItem
                     key={tab.id}
                     id={tab.id}
