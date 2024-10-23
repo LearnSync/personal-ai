@@ -8,25 +8,25 @@ import {
 import { IDefaultExtensionItems } from "@/constants";
 import { platform } from "@/core";
 import { cn } from "@/lib/utils";
-import { useStore } from "@/store";
+import { usePlatformContext } from "@/context/platform.context";
 
 interface IActivityBarItemProps extends IDefaultExtensionItems {
   className?: string;
 }
 
 export const ActivityBarItem: React.FC<IActivityBarItemProps> = (props) => {
-  const { activeExtensionTab, setActiveExtensionTab } = useStore();
+  const { activeExtensionTab, setActiveExtensionTab } = usePlatformContext();
 
   return (
     <div
       className={cn(
-        "w-full h-fit flex py-4 items-center justify-center border-l-2 border-transparent hover:bg-muted",
-        activeExtensionTab === props.label &&
+        "w-full h-fit flex py-4 items-center justify-center border-l-2 border-transparent hover:bg-muted cursor-pointer select-none",
+        activeExtensionTab.id === props.id &&
           "border-muted-foreground bg-muted shadow",
         props.className
       )}
       onClick={() => {
-        setActiveExtensionTab(props.label);
+        setActiveExtensionTab(props.id);
       }}
     >
       {props.icon && (
@@ -38,7 +38,7 @@ export const ActivityBarItem: React.FC<IActivityBarItemProps> = (props) => {
           </TooltipTrigger>
           <TooltipContent
             side="right"
-            className="border border-muted-foreground/40"
+            className="border select-none border-muted-foreground/40"
           >
             <div className="text-sm font-medium dark:text-gray-400">
               <span>{props.label}</span>
