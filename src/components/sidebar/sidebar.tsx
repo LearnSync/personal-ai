@@ -1,16 +1,39 @@
 import { PanelLeftClose } from "lucide-react";
 
+import { usePlatformContext } from "@/context/platform.context";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store";
-import SidebarItem from "./sidebar-item";
+import ChatHistorySidebar from "./chat-history-sidebar";
+import ContextSearchSidebar from "./context-search-sidebar";
+import DefaultSidebar from "./default-sidebar";
+import ExtensionsSidebar from "./extensions-sidebar";
+import SettingsSidebar from "./settings-sidebar";
 
 export const Sidebar = () => {
   const { showSideBar, setShowSideBar } = useStore();
 
+  // Context
+  const { activeExtensionTab, activityExtensionManager } = usePlatformContext();
+
+  const renderSidebarContent = () => {
+    switch (activeExtensionTab?.label) {
+      case activityExtensionManager.getExtensions()?.[1]?.label:
+        return <ContextSearchSidebar />;
+      case activityExtensionManager.getExtensions()?.[2]?.label:
+        return <ChatHistorySidebar />;
+      case activityExtensionManager.getExtensions()?.[3]?.label:
+        return <ExtensionsSidebar />;
+      case activityExtensionManager.getExtensions()?.[4]?.label:
+        return <SettingsSidebar />;
+      default:
+        return <DefaultSidebar />;
+    }
+  };
+
   return (
-    <aside className={cn("relative h-full p-4 w-full")}>
-      {/* Display Show SideBar toggle button */}
-      <div className={cn("absolute z-50 top-2 right-2")}>
+    <aside className={cn("relative h-full w-full")}>
+      <div className="flex items-center justify-between w-full px-2 border-b">
+        <div className="text-sm uppercase">{activeExtensionTab.label}</div>
         <button className="p-2 py-2 rounded-md cursor-pointer hover:bg-white/10">
           <PanelLeftClose
             className="w-6 h-6 text-muted-foreground"
@@ -19,7 +42,7 @@ export const Sidebar = () => {
         </button>
       </div>
 
-      <SidebarItem />
+      <div className="p-4">{renderSidebarContent()}</div>
     </aside>
   );
 };
