@@ -62,17 +62,21 @@ class ActivityExtensionManager {
    * @param label - The label of the new extension
    * @param icon - The icon for the extension
    * @param shortCut - Array of keyboard shortcuts for different platforms
+   * @param displaySidebar - Whether to display the extension's sidebar or not
+   * @returns {void}  - The added extension is pushed to the extensions array.  The sidebar is updated if the extension has displaySidebar set to true.  The active extension is updated if the extension is the one being added.  The tab is updated if the extension is the one being added and the sidebar is displayed.  The tab is not updated if the extension is not the one being added and the
    */
   public addExternalExtension(
     label: string,
     icon: React.ReactNode,
-    shortCut: { key: Platform; modifiers: string[] }[]
+    shortCut: { key: Platform; modifiers: string[] }[],
+    displaySidebar: boolean
   ): void {
     const newExtension: IExtension = {
       id: generateUUID(),
       label,
       icon,
       shortCut,
+      displaySidebar,
     };
     this.extensions.push(newExtension);
   }

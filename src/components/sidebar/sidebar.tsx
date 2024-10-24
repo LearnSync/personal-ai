@@ -7,7 +7,6 @@ import ChatHistorySidebar from "./chat-history-sidebar";
 import ContextSearchSidebar from "./context-search-sidebar";
 import DefaultSidebar from "./default-sidebar";
 import ExtensionsSidebar from "./extensions-sidebar";
-import SettingsSidebar from "./settings-sidebar";
 
 export const Sidebar = () => {
   const { showSideBar, setShowSideBar } = useStore();
@@ -23,8 +22,6 @@ export const Sidebar = () => {
         return <ChatHistorySidebar />;
       case activityExtensionManager.getExtensions()?.[3]?.label:
         return <ExtensionsSidebar />;
-      case activityExtensionManager.getExtensions()?.[4]?.label:
-        return <SettingsSidebar />;
       default:
         return <DefaultSidebar />;
     }
@@ -33,8 +30,10 @@ export const Sidebar = () => {
   return (
     <aside className={cn("relative h-full w-full")}>
       <div className="flex items-center justify-between w-full px-2 border-b">
-        <div className="text-sm uppercase">{activeExtensionTab.label}</div>
-        <button className="p-2 py-2 rounded-md cursor-pointer hover:bg-white/10">
+        <div className="text-sm uppercase font-[500]">
+          {activeExtensionTab.label}
+        </div>
+        <button className="p-2 rounded-md cursor-pointer m ax-w-10 max-h-10 hover:bg-white/10">
           <PanelLeftClose
             className="w-6 h-6 text-muted-foreground"
             onClick={() => setShowSideBar(!showSideBar)}
@@ -42,7 +41,7 @@ export const Sidebar = () => {
         </button>
       </div>
 
-      <div className="p-4">{renderSidebarContent()}</div>
+      <div>{renderSidebarContent()}</div>
     </aside>
   );
 };

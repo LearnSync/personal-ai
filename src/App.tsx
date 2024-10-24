@@ -8,10 +8,7 @@ import { SecondarySidebar, Sidebar } from "./components/sidebar";
 import { ThemeProvider } from "./components/theme-provider";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Workbench } from "./components/workbench";
-import {
-  PlatformProvider,
-  usePlatformContext,
-} from "./context/platform.context";
+import { usePlatformContext } from "./context/platform.context";
 import { cn } from "./lib/utils";
 import { useStore } from "./store";
 
@@ -22,7 +19,7 @@ function App() {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { tabSessionManager } = usePlatformContext();
+  const { tabSessionManager, activeExtensionTab } = usePlatformContext();
 
   console.log("Tab session manager", tabSessionManager); // TODO: PENDING
 
@@ -36,8 +33,8 @@ function App() {
           </div>
 
           {/* Primary Side Bar */}
-          {showSideBar && (
-            <div className={cn("min-w-64 h-screen bg-background-2")}>
+          {showSideBar && activeExtensionTab.displaySidebar && (
+            <div className={cn("min-w-64 max-w-64 h-screen bg-background-2")}>
               <Sidebar />
             </div>
           )}
@@ -50,7 +47,7 @@ function App() {
               )}
             >
               {/* Display Show SideBar toggle button */}
-              {!showSideBar && (
+              {!showSideBar && activeExtensionTab.displaySidebar && (
                 <div className="flex items-center justify-center p-2 border-r-2 cursor-pointer h-fit min-h-8 min-w-8 hover:bg-white/10">
                   <button onClick={() => setShowSideBar(!showSideBar)}>
                     <PanelLeftOpen className="w-6 h-6 text-muted-foreground" />

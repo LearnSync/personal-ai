@@ -1,6 +1,7 @@
 import {
   Blocks,
   FileClock,
+  FileStack,
   MessageCircle,
   Search,
   Settings,
@@ -17,6 +18,7 @@ export interface IDefaultExtensionItems {
     modifiers: string[]; // i.e. ["ctrl", "shift"];
   }[];
   hasMore?: boolean;
+  displaySidebar?: boolean;
   position?: "default" | "bottom";
 }
 
@@ -39,6 +41,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
         modifiers: ["ctrl", "shift", "c"],
       },
     ],
+    displaySidebar: true,
     hasMore: false,
   },
   {
@@ -59,26 +62,28 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
         modifiers: ["ctrl", "shift", "f"],
       },
     ],
+    displaySidebar: true,
     hasMore: false,
   },
   {
     id: generateUUID(),
-    icon: <FileClock className="w-full h-full" />,
-    label: "Chat History",
+    icon: <FileStack className="w-full h-full" />,
+    label: "Important Chat",
     shortCut: [
       {
         key: Platform.Windows,
-        modifiers: ["ctrl", "shift", "h"],
+        modifiers: ["ctrl", "shift", "i"],
       },
       {
         key: Platform.Mac,
-        modifiers: ["cmd", "shift", "h"],
+        modifiers: ["cmd", "shift", "i"],
       },
       {
         key: Platform.Linux,
-        modifiers: ["ctrl", "shift", "h"],
+        modifiers: ["ctrl", "shift", "i"],
       },
     ],
+    displaySidebar: true,
     hasMore: false,
   },
   {
@@ -99,6 +104,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
         modifiers: ["ctrl", "shift", "x"],
       },
     ],
+    displaySidebar: true,
     hasMore: false,
   },
   {
@@ -119,6 +125,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
         modifiers: ["ctrl", "shift", "s"],
       },
     ],
+    displaySidebar: false,
     hasMore: false,
     position: "bottom",
   },

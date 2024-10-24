@@ -3,18 +3,18 @@ import * as React from "react";
 import LLMResponse from "./llm-response";
 import UserMessage from "./user-message";
 
-export interface Message {
+export interface IMessage {
   type: "user" | "llm";
   text: string;
 }
 
 interface ConversationProps {
-  messages?: Message[];
+  messages?: IMessage[];
 }
 
 export const Conversation: React.FC<ConversationProps> = React.memo(
   ({ messages = [] }) => {
-    const [messageHistory] = React.useState<Message[]>(messages);
+    const [messageHistory] = React.useState<IMessage[]>(messages);
 
     return (
       <main
