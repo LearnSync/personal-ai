@@ -61,8 +61,7 @@ export const GenerateTextEffect: React.FC<GenerateTextEffectProps> = ({
       {generatedText}
       {isBlinking && (
         <span className={cn("blinking-cursor", cursorClassName)}>|</span>
-      )}{" "}
-      {/* Blinking cursor effect */}
+      )}
     </div>
   );
 };
