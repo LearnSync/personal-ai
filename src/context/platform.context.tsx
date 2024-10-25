@@ -17,7 +17,7 @@ interface IPlatformContextProps {
   setActiveTab: (id: string) => void;
   removeTab: (id: string) => void;
   addTab: (label: string) => void;
-  startChatInTab: (aiProvider: EAiProvider) => void;
+  startChatInTab: (uuid: string, aiProvider: EAiProvider) => void;
   updateTabLabel: (id: string, label: string) => void;
   setActiveExtensionTab: (id: string) => void;
   removeExtension: (id: string) => void;
@@ -79,8 +79,8 @@ export const PlatformProvider = ({
    * Start a new chat session in a new tab
    * @param aiProvider - AI provider (e.g., OpenAI, Gemini)
    */
-  const startChatInTab = (aiProvider: EAiProvider) => {
-    chatSessionManager.startNewChat(aiProvider);
+  const startChatInTab = (uuid: string, aiProvider: EAiProvider) => {
+    chatSessionManager.startNewChat(uuid, aiProvider);
     addTab(`Chat with ${aiProvider}`);
   };
 
