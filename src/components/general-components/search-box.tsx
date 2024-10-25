@@ -1,5 +1,6 @@
 import React, { useState, KeyboardEvent } from "react";
 import { cn } from "@/lib/utils"; // If you're using a utility function for className management like `cn`
+import { Search } from "lucide-react";
 
 interface SearchBoxProps {
   className?: string;
@@ -11,7 +12,7 @@ interface SearchBoxProps {
   showSuggestions?: boolean;
 }
 
-const SearchBox: React.FC<SearchBoxProps> = ({
+export const SearchBox: React.FC<SearchBoxProps> = ({
   className,
   showIcon = true,
   value = "",
@@ -20,7 +21,15 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   suggestions = [],
   showSuggestions = false,
 }) => {
+  /**
+   * State
+   */
   const [searchValue, setSearchValue] = useState(value);
+
+  /**
+   * Ref
+   */
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   // Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -48,36 +57,40 @@ const SearchBox: React.FC<SearchBoxProps> = ({
     }
   };
 
+  /**
+   * Side Effect
+   */
+  React.useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [searchValue]);
+
   return (
-    <div className={cn("relative", className)}>
-      <div className="flex items-center">
+    <div className={cn("relative")}>
+      <div
+        className={cn(
+          "flex items-center w-full rounded-md shadow-inner shadow-background-2 min-h-10 bg-background-2",
+          className
+        )}
+      >
         {showIcon && (
-          <span className="mr-2">
-            {/* Replace with your desired icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-6 h-6 text-gray-400"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-4.35-4.35m0 0a7.5 7.5 0 1110-10m0 0A7.5 7.5 0 1110 10z"
-              />
-            </svg>
+          <span className="p-1 px-2">
+            <Search className="w-6 h-6" />
           </span>
         )}
 
         {/* Search Input */}
         <textarea
+          ref={textareaRef}
           value={searchValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           rows={1}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          className={cn(
+            "focus:outline-none flex-1 w-full h-fit bg-transparent text-sm resize-none"
+          )}
           placeholder="Search..."
         />
       </div>
