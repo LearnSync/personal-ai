@@ -3,10 +3,10 @@ import { PanelLeftClose } from "lucide-react";
 import { usePlatformContext } from "@/context/platform.context";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store";
-import ChatHistorySidebar from "./chat-history-sidebar";
 import ContextSearchSidebar from "./context-search-sidebar";
 import DefaultSidebar from "./default-sidebar";
 import ExtensionsSidebar from "./extensions-sidebar";
+import { ImportantChatSidebar } from "./important-chat-sidebar";
 
 export const Sidebar = () => {
   const { showSideBar, setShowSideBar } = useStore();
@@ -19,7 +19,7 @@ export const Sidebar = () => {
       case activityExtensionManager.getExtensions()?.[1]?.label:
         return <ContextSearchSidebar />;
       case activityExtensionManager.getExtensions()?.[2]?.label:
-        return <ChatHistorySidebar />;
+        return <ImportantChatSidebar />;
       case activityExtensionManager.getExtensions()?.[3]?.label:
         return <ExtensionsSidebar />;
       default:

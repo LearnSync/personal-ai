@@ -29,15 +29,8 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
       {
         id: generateUUID(),
         icon: <Plus className="w-5 h-5" />,
-        label: "Start New Chat in New Tab",
-        action: () => console.log("Start New Chat in New Tab"),
-        className: "",
-      },
-      {
-        id: generateUUID(),
-        icon: <Plus className="w-5 h-5" />,
-        label: "Start New Chat in Current Tab",
-        action: () => console.log("Start New Chat in New Tab"),
+        label: "Start New Chat",
+        action: () => console.log("Start New Chat"),
         className: "",
       },
     ];
@@ -48,33 +41,33 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
     return [
       {
         id: generateUUID(),
-        icon: ollamaIcon({ className: "w-5 h-5" }),
-        label: "Start New Llama",
-        action: () => console.log("Start New Chat in New Tab"),
+        icon: ollamaIcon({ className: "w-4 h-4" }),
+        label: "Start New Chat with  Llama",
+        action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
       },
       {
         id: generateUUID(),
         icon: chatGptIcon({ className: "w-5 h-5 fill-white" }),
-        label: "Start New Chat OpenAI",
-        action: () => console.log("Start New Chat in New Tab"),
+        label: "Start New Chat with OpenAI",
+        action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-[#10a37f] to-white text-transparent bg-clip-text",
       },
       {
         id: generateUUID(),
         icon: geminiIcon({ className: "w-5 h-5 fill-white" }),
-        label: "Start New Chat Gemini",
-        action: () => console.log("Start New Chat in New Tab"),
+        label: "Start New Chat with Gemini",
+        action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-[#8b6ac2] to-[#2f96dc] text-transparent bg-clip-text",
       },
       {
         id: generateUUID(),
         icon: claudeAIIcon({ className: "w-5 h-5" }),
-        label: "Start New Chat Claude AI",
-        action: () => console.log("Start New Chat in New Tab"),
+        label: "Start New Chat with Claude AI",
+        action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-white to-[#cc9b7a] text-transparent bg-clip-text",
       },
@@ -111,7 +104,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
               </Button>
             ))}
 
-            <Separator className="my-4 bg-muted-foreground/40" />
+            <Separator className="my-2 bg-muted-foreground/40" />
 
             {startNewChatWithAvailableModels?.map((opt) => (
               <Button

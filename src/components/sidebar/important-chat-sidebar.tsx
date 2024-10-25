@@ -1,14 +1,15 @@
 import { cn } from "@/lib/utils";
+import { Archive, FileClock, Star } from "lucide-react";
 import React from "react";
 import SidebarItem from "./sidebar-item";
-import { Separator } from "../ui/separator";
-import { Archive, FileClock, Star } from "lucide-react";
 
-interface ChatHistorySidebarProps {
+interface IImportantChatSidebarProps {
   className?: string;
 }
 
-const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = (props) => {
+export const ImportantChatSidebar: React.FC<IImportantChatSidebarProps> = (
+  props
+) => {
   return (
     <div className={cn("px-2", props.className)} {...props}>
       <SidebarItem
@@ -36,4 +37,4 @@ const ChatHistorySidebar: React.FC<ChatHistorySidebarProps> = (props) => {
   );
 };
 
-export default ChatHistorySidebar;
+export default ImportantChatSidebar;

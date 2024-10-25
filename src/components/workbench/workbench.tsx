@@ -1,25 +1,18 @@
-import { usePlatformContext } from "@/context/platform.context";
-import { IExtension } from "@/core/platform/extensions";
+import { Route, Routes } from "react-router-dom";
+
 import { ScrollArea } from "../ui/scroll-area";
 import { Chat } from "./chat";
 import { Settings } from "./settings";
 
 export const Workbench = () => {
-  const { activeExtensionTab } = usePlatformContext();
-
-  const renderActiveWorkbench = (activeExtensionTab: IExtension) => {
-    switch (activeExtensionTab.label) {
-      case "Settings":
-        return <Settings />;
-      default:
-        return <Chat />;
-    }
-  };
-
   return (
     <main className="container h-full mx-auto max-w-7xl">
       <ScrollArea className="flex-grow h-full">
-        {renderActiveWorkbench(activeExtensionTab)}
+        <Routes>
+          <Route path="/*" element={<Chat />} />
+          <Route path="/c/:sessionId" element={<Chat />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
       </ScrollArea>
     </main>
   );
