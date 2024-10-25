@@ -1,4 +1,3 @@
-import { generateUUID } from "@/core/base/common/uuid";
 import { EAiProvider } from "@/core/types";
 
 interface ChatSessionData {
@@ -9,40 +8,23 @@ interface ChatSessionData {
 }
 
 export class ChatSessionManager {
-  private static instance: ChatSessionManager;
   private chatSessions: Map<string, ChatSessionData> = new Map();
 
   /**
-   * Private constructor to implement Singleton pattern.
-   */
-  private constructor() {}
-
-  /**
-   * Get the singleton instance of ChatSessionManager.
-   * Ensures only one instance is used across the app.
-   */
-  public static getInstance(): ChatSessionManager {
-    if (!ChatSessionManager.instance) {
-      ChatSessionManager.instance = new ChatSessionManager();
-    }
-    return ChatSessionManager.instance;
-  }
-
-  /**
    * Start a new chat session with a specified AI provider.
+   * @param {string} id - The unique id for Chat.
    * @param {EAiProvider} aiProvider - The AI provider for the chat (e.g., OpenAI, Gemmini).
-   * @returns {string} - The unique ID of the new chat session.
+   * @returns {ChatSessionData} - The new chat session data.
    */
-  public startNewChat(aiProvider: EAiProvider): string {
-    const chatId = generateUUID();
+  public startNewChat(id: string, aiProvider: EAiProvider): ChatSessionData {
     const newSession: ChatSessionData = {
-      id: chatId,
+      id,
       aiProvider,
       messages: [],
       isActive: true,
     };
-    this.chatSessions.set(chatId, newSession);
-    return chatId;
+    this.chatSessions.set(id, newSession);
+    return newSession;
   }
 
   /**
@@ -77,6 +59,17 @@ export class ChatSessionManager {
   }
 
   /**
+   * Set all sessions to active or inactive.
+   * @param {boolean} isActive - The desired active status for all chat sessions.
+   */
+  public setActiveChatSessions(isActive: boolean): void {
+    this.chatSessions.forEach((session, chatId) => {
+      session.isActive = isActive;
+      this.chatSessions.set(chatId, session);
+    });
+  }
+
+  /**
    * Set or update the messages of a chat session.
    * @param {string} chatId - The unique ID of the chat session.
    * @param {string[]} messages - The messages to be updated in the chat session.
@@ -105,18 +98,10 @@ export class ChatSessionManager {
   /**
    * Get all messages from a specific chat session.
    * @param {string} chatId - The unique ID of the chat session.
-   * @returns {string[]} - The array of messages from the chat session.
+   * @returns {string[]} - The array of messages from the chat session, or undefined if not found.
    */
   public getChatMessages(chatId: string): string[] | undefined {
     return this.chatSessions.get(chatId)?.messages;
-  }
-
-  /**
-   * Static method to clear all chat sessions (for resetting or clean-up purposes).
-   */
-  public static clearAllChatSessions(): void {
-    const instance = ChatSessionManager.getInstance();
-    instance.chatSessions.clear();
   }
 }
 
