@@ -1,4 +1,4 @@
-import { Archive, Pencil, Plus, Trash2 } from "lucide-react";
+import { Archive, Bookmark, Pencil, Plus, Trash2 } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { generateUUID } from "@/core";
 import { cn } from "@/lib/utils";
-import { SidebarItem } from "./sidebar-item";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   chatGptIcon,
@@ -14,6 +13,7 @@ import {
   geminiIcon,
   ollamaIcon,
 } from "./sidebar-icon";
+import { SidebarItem } from "./sidebar-item";
 
 interface DefaultSidebarProps {
   className?: string;
@@ -146,6 +146,12 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
                     label: "Rename",
                     icon: <Pencil className="w-5 h-5" />,
                     action: () => console.log("Rename"),
+                  },
+                  {
+                    id: generateUUID(),
+                    label: "Bookmark",
+                    icon: <Bookmark className="w-5 h-5" />,
+                    action: () => console.log("Start"),
                   },
                   {
                     id: generateUUID(),

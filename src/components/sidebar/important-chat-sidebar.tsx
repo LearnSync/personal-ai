@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Archive, FileClock, Star } from "lucide-react";
 import React from "react";
 import SidebarItem from "./sidebar-item";
+import { useNavigate } from "react-router-dom";
 
 interface IImportantChatSidebarProps {
   className?: string;
@@ -10,6 +11,8 @@ interface IImportantChatSidebarProps {
 export const ImportantChatSidebar: React.FC<IImportantChatSidebarProps> = (
   props
 ) => {
+  const navigate = useNavigate();
+
   return (
     <div className={cn("px-2", props.className)} {...props}>
       <SidebarItem
@@ -18,6 +21,9 @@ export const ImportantChatSidebar: React.FC<IImportantChatSidebarProps> = (
         id="chat_history"
         displayOption={false}
         className="my-2 bg-muted/40"
+        onClick={() => {
+          navigate("/important-chat/history", { replace: true });
+        }}
       />
       <SidebarItem
         label="Bookmarked Chats"
@@ -25,6 +31,9 @@ export const ImportantChatSidebar: React.FC<IImportantChatSidebarProps> = (
         id="bookmarked_chats"
         displayOption={false}
         className="my-2 bg-muted/40"
+        onClick={() => {
+          navigate("/important-chat/bookmark", { replace: true });
+        }}
       />
       <SidebarItem
         icon={<Archive className="w-6 h-6" />}
@@ -32,6 +41,9 @@ export const ImportantChatSidebar: React.FC<IImportantChatSidebarProps> = (
         id="archived_chats"
         displayOption={false}
         className="my-2 bg-muted/40"
+        onClick={() => {
+          navigate("/important-chat/archive", { replace: true });
+        }}
       />
     </div>
   );
