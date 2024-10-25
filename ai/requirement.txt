@@ -14,6 +14,7 @@ email_validator==2.2.0
 endpoints==7.0.0
 fastapi==0.115.2
 fastapi-cli==0.0.5
+flatbuffers==24.3.25
 frozenlist==1.4.1
 greenlet==3.1.1
 h11==0.14.0
@@ -28,6 +29,7 @@ jsonpointer==3.0.0
 langchain==0.3.4
 langchain-community==0.3.3
 langchain-core==0.3.12
+langchain-objectbox==0.1.0
 langchain-text-splitters==0.3.0
 langgraph==0.2.39
 langgraph-checkpoint==2.0.1
@@ -41,6 +43,7 @@ msgpack==1.1.0
 multidict==6.1.0
 mypy-extensions==1.0.0
 numpy==1.26.4
+objectbox==4.0.0
 orjson==3.10.9
 packaging==24.1
 propcache==0.2.0

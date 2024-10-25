@@ -2,10 +2,10 @@ from typing import List
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
-from route import router
+from .route import router
 from app.models.request import PromptRequest
 from app.services.ai import AIService
-from app.database.chat import ChatSession, ChatMessage
+# from app.database.chat import ChatSession, ChatMessage
 
 
 # TODO: Implementation is Pending
@@ -27,16 +27,16 @@ async def generate(request: "PromptRequest"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
 
-@router.get("/chat/sessions")
-def get_chat_sessions(chat_session_id: int, archived: bool = False, favorite: bool = False) -> List[ChatSession]:
-    """
-    Fetch all chat sessions for a user, optionally filtering by archived or favorite status.
-    """
-    # Query logic here...
-
-@router.get("/chat/sessions/{session_id}")
-def get_conversation(session_id: int) -> List[ChatMessage]:
-    """
-    Fetch all chat messages for a given session.
-    """
-    # Query logic here...
+# @router.get("/chat/sessions")
+# def get_chat_sessions(chat_session_id: int, archived: bool = False, favorite: bool = False) -> List[ChatSession]:
+#     """
+#     Fetch all chat sessions for a user, optionally filtering by archived or favorite status.
+#     """
+#     pass
+#
+# @router.get("/chat/sessions/{session_id}")
+# def get_conversation(session_id: int) -> List[ChatMessage]:
+#     """
+#     Fetch all chat messages for a given session.
+#     """
+#     pass
