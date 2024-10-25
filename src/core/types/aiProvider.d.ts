@@ -1,6 +1,8 @@
 export enum EAiProvider {
-  OpenAI = "openai",
-  Gemini = "gemini",
-  Anthropic = "anthroic",
-  Llama = "llama",
+  OPENAI = "openai",
+  GEMINI = "gemini",
+  ANTHROPIC = "anthroic",
+  OLLAMA = "ollama",
+  GREPTILE = "greptile",
+  LOCAL = "local",
 }
