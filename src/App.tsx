@@ -5,10 +5,24 @@ import { ActivityBar } from "./components/activity-bar";
 import { TopHeader } from "./components/header";
 import TabItem from "./components/header/tab-item";
 import { SecondarySidebar, Sidebar } from "./components/sidebar";
+import {
+  chatGptIcon,
+  claudeAIIcon,
+  geminiIcon,
+  ollamaIcon,
+} from "./components/sidebar/sidebar-icon";
 import { ThemeProvider } from "./components/theme-provider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Workbench } from "./components/workbench";
 import { usePlatformContext } from "./context/platform.context";
+import { generateUUID } from "./core";
 import { cn } from "./lib/utils";
 import { useStore } from "./store";
 
@@ -19,7 +33,58 @@ function App() {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { tabSessionManager, activeExtensionTab } = usePlatformContext();
+  const { tabSessionManager, activeExtensionTab, chatSessionManager } =
+    usePlatformContext();
+
+  /**
+   * Memoised the Response
+   */
+
+  const activeChatSessionOnCurrentTab = React.useMemo(() => {
+    return chatSessionManager.getChatSession(activeExtensionTab.id);
+  }, [activeExtensionTab]);
+
+  const startNewChatWithAvailableModels = React.useMemo(() => {
+    // Except Default Options
+    return [
+      {
+        id: generateUUID(),
+        icon: ollamaIcon({ className: "w-4 h-4" }),
+        label: "Llama",
+        model: "llama",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
+      },
+      {
+        id: generateUUID(),
+        icon: chatGptIcon({ className: "w-5 h-5 fill-white" }),
+        label: "OpenAI",
+        model: "openai",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#10a37f] to-white text-transparent bg-clip-text",
+      },
+      {
+        id: generateUUID(),
+        icon: geminiIcon({ className: "w-5 h-5 fill-white" }),
+        label: "Gemini",
+        model: "gemini",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#8b6ac2] to-[#2f96dc] text-transparent bg-clip-text",
+      },
+      {
+        id: generateUUID(),
+        icon: claudeAIIcon({ className: "w-5 h-5" }),
+        label: "Claude AI",
+        model: "anthroic",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-white to-[#cc9b7a] text-transparent bg-clip-text",
+      },
+    ];
+  }, []);
 
   console.log("Tab session manager", tabSessionManager); // TODO: PENDING
 
@@ -54,6 +119,37 @@ function App() {
                   </button>
                 </div>
               )}
+
+              {/* Change the model */}
+              <div className="p-1">
+                <Select>
+                  <SelectTrigger className="h-8 w-[150px] focus:ring-0 bg-background-1">
+                    <SelectValue
+                      className=""
+                      placeholder={
+                        activeChatSessionOnCurrentTab?.aiProvider ?? (
+                          <div>None</div>
+                        )
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {startNewChatWithAvailableModels?.map((opt) => (
+                      <SelectItem value={opt.label}>
+                        <div
+                          className={cn(
+                            "flex items-center space-x-2",
+                            opt.className
+                          )}
+                        >
+                          <span>{opt.icon}</span>
+                          <span>{opt.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
