@@ -1,4 +1,4 @@
-import { ISidebarItem } from "@/core/types";
+import { ISidebarItem } from "@/core/types/sidebar";
 import { cn } from "@/lib/utils";
 import { Ellipsis } from "lucide-react";
 import React from "react";
