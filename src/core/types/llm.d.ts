@@ -1,4 +1,6 @@
+export type IRoleLlm = "user" | "assistant";
+
 export interface ILlmMessage {
-  role: "user" | "assistant";
+  role: IRoleLlm;
   content: string;
 }

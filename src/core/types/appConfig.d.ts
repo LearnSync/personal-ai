@@ -1,15 +1,17 @@
+import { EAiProvider } from "./enum";
+
 export interface IApiConfig {
-  anthropic: {
+  anthropic?: {
     apikey: string;
     model: string;
     maxTokens: string;
   };
-  openai: {
+  openai?: {
     apikey: string;
     model: string;
     maxTokens: string;
   };
-  greptile: {
+  greptile?: {
     apikey: string;
     githubPAT: string;
     repoinfo: {
@@ -18,10 +20,10 @@ export interface IApiConfig {
       branch: string;
     };
   };
-  ollama: {
+  ollama?: {
     endpoint: string;
     model: string;
     maxTokens: string;
   };
-  whichApi: string;
+  whichApi: EAiProvider;
 }

@@ -11,10 +11,3 @@ export interface ISidebarItem {
     className?: string;
   }[];
 }
-
-export enum EChatHistoryTime {
-  TODAY = "today",
-  YESTERDAY = "yesterday",
-  PAST_7_DAYS = "week",
-  PAST_30_DAYS = "month",
-}
