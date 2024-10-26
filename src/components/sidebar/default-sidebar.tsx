@@ -14,6 +14,9 @@ import {
   ollamaIcon,
 } from "./sidebar-icon";
 import { SidebarItem } from "./sidebar-item";
+import { usePlatformContext } from "@/context/platform.context";
+import { EAiProvider } from "@/core/types/enum";
+import { useToast } from "@/hooks/use-toast";
 
 interface DefaultSidebarProps {
   className?: string;
@@ -23,15 +26,31 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
   className,
   ...props
 }) => {
+  const [open, setOpen] = React.useState(false);
+
+  const { startChatSession } = usePlatformContext();
+
+  const { toast } = useToast();
+
   const startNewChatOptions = React.useMemo(() => {
     // The Default AI Model
     return [
       {
         id: generateUUID(),
         icon: <Plus className="w-5 h-5" />,
-        label: "Start New Chat",
-        action: () => console.log("Start New Chat"),
+        label: `Start New Chat with Local (llama3.2)`,
         className: "",
+        action: () => {
+          const response = startChatSession(EAiProvider.LOCAL);
+          if (response) {
+            setOpen((prev) => !prev);
+          } else {
+            toast({
+              title: "Uh oh! Something went wrong.",
+              description: "There was a problem with your request.",
+            });
+          }
+        },
       },
     ];
   }, []);
@@ -77,9 +96,9 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
   return (
     <div className={cn("w-full h-screen", className)} {...props}>
       <div className="flex items-center justify-center w-full h-[4rem] py-4">
-        <Popover>
-          <PopoverTrigger className="flex items-center justify-center">
-            <Button>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild className="flex items-center justify-center">
+            <Button onClick={() => setOpen((prev) => !prev)}>
               <Plus className="w-6 h-6" />
               <span>Start New Chat</span>
             </Button>

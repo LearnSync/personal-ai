@@ -1,7 +1,11 @@
 import ActivityExtensionManager, {
   IExtension,
 } from "@/core/platform/extensions/activityExtensionManager";
-import { SessionManager } from "@/core/platform/sessionManager";
+import {
+  INewSessionResponse,
+  SessionManager,
+  Tab,
+} from "@/core/platform/sessionManager";
 import { IApiConfig } from "@/core/types/appConfig";
 import { EAiProvider } from "@/core/types/enum";
 import * as React from "react";
@@ -13,8 +17,12 @@ interface IPlatformContextProps {
   activeExtensionTab: IExtension;
   activeWorkbenchTab: string | null;
 
+  workbenchTabs: Tab[];
+
   setActiveTab: (id: string) => void;
   setActiveExtensionTab: (id: string) => void;
+
+  startChatSession: (aiProvider: EAiProvider) => INewSessionResponse | null;
 }
 
 const PlatformContext = React.createContext<IPlatformContextProps | undefined>(
@@ -55,6 +63,19 @@ export const PlatformProvider = ({
   const [activeWorkbenchTab, setActiveWorkbenchTab] = React.useState<
     string | null
   >(sessionManager.getActiveTab()?.id ?? "");
+  const [workbenchTabs, setWorkbenchTabs] = React.useState<Tab[]>(
+    sessionManager.getTabs()
+  );
+
+  const startChatSession = (
+    aiProvider: EAiProvider
+  ): INewSessionResponse | null => {
+    const newSession = sessionManager.startChatSession(aiProvider);
+    const allTabs = sessionManager.getTabs();
+    setWorkbenchTabs(allTabs);
+
+    return newSession;
+  };
 
   /**
    * Set the currently active tab
@@ -93,6 +114,10 @@ export const PlatformProvider = ({
         activeWorkbenchTab,
         setActiveTab,
         setActiveExtensionTab,
+
+        // Extras
+        workbenchTabs,
+        startChatSession,
       }}
     >
       {children}

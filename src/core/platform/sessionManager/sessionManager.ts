@@ -14,6 +14,11 @@ interface SessionManagerOptions {
   apiConfig: IApiConfig;
 }
 
+export interface INewSessionResponse {
+  chat: ChatSessionData;
+  tab: Tab;
+}
+
 export class SessionManager {
   private chatSessionManager: ChatSessionManager;
   private tabSessionManager: TabSessionManager;
@@ -35,10 +40,13 @@ export class SessionManager {
    * @param {string} tabId - Unique ID for the tab.
    * @param {EAiProvider} aiProvider - The AI provider for the chat.
    */
-  public startChatSession(aiProvider: EAiProvider) {
+  public startChatSession(aiProvider: EAiProvider): INewSessionResponse | null {
     const label = `Chat with ${aiProvider}`;
     const tab = this.tabSessionManager.createTab(label);
-    this.chatSessionManager.startNewChat(tab.id, aiProvider);
+    const chat = this.chatSessionManager.startNewChat(tab.id, aiProvider);
+
+    if (!tab && !chat) return null;
+    return { chat, tab };
   }
 
   /**

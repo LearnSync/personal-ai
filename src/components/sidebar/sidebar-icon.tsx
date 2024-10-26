@@ -9,7 +9,7 @@ export const chatGptIcon = ({ className }: { className?: string }) => {
       text-rendering="geometricPrecision"
       image-rendering="optimizeQuality"
       fill-rule="evenodd"
-      clip-rule="evenodd"
+      clipRule="evenodd"
       viewBox="0 0 512 512"
     >
       <rect fill="#10A37F" width="512" height="512" rx="104.187" ry="105.042" />
@@ -43,9 +43,9 @@ export const geminiIcon = ({ className }: { className?: string }) => {
           gradientUnits="userSpaceOnUse"
           gradientTransform="matrix(16.1326 5.4553 -43.70045 129.2322 1.588 6.503)"
         >
-          <stop offset=".067" stop-color="#9168C0" />
-          <stop offset=".343" stop-color="#5684D1" />
-          <stop offset=".672" stop-color="#1BA1E3" />
+          <stop offset=".067" stopColor="#9168C0" />
+          <stop offset=".343" stopColor="#5684D1" />
+          <stop offset=".672" stopColor="#1BA1E3" />
         </radialGradient>
       </defs>
     </svg>
@@ -61,7 +61,7 @@ export const claudeAIIcon = ({ className }: { className?: string }) => {
       text-rendering="geometricPrecision"
       image-rendering="optimizeQuality"
       fill-rule="evenodd"
-      clip-rule="evenodd"
+      clipRule="evenodd"
       viewBox="0 0 512 512"
     >
       <rect fill="#CC9B7A" width="512" height="512" rx="104.187" ry="105.042" />
