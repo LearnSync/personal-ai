@@ -1,26 +1,20 @@
 import ActivityExtensionManager, {
   IExtension,
 } from "@/core/platform/extensions/activityExtensionManager";
-import { ChatSessionManager } from "@/core/platform/sessionManager/chatSessionManager";
-import { TabSessionManager } from "@/core/platform/sessionManager/tabSessionManager";
-import { EAiProvider } from "@/core/types";
+import { SessionManager } from "@/core/platform/sessionManager";
+import { IApiConfig } from "@/core/types/appConfig";
+import { EAiProvider } from "@/core/types/enum";
 import * as React from "react";
 
 interface IPlatformContextProps {
-  tabSessionManager: TabSessionManager;
-  chatSessionManager: ChatSessionManager;
+  sessionManager: SessionManager;
   activityExtensionManager: ActivityExtensionManager;
 
   activeExtensionTab: IExtension;
   activeWorkbenchTab: string | null;
 
   setActiveTab: (id: string) => void;
-  removeTab: (id: string) => void;
-  addTab: (label: string) => void;
-  startChatInTab: (uuid: string, aiProvider: EAiProvider) => void;
-  updateTabLabel: (id: string, label: string) => void;
   setActiveExtensionTab: (id: string) => void;
-  removeExtension: (id: string) => void;
 }
 
 const PlatformContext = React.createContext<IPlatformContextProps | undefined>(
@@ -32,11 +26,27 @@ export const PlatformProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const tabSessionManager = TabSessionManager.getInstance();
-  const chatSessionManager = ChatSessionManager.getInstance();
   const activityExtensionManager = ActivityExtensionManager.getInstance();
 
-  // States
+  /**
+   * Memoisation in top layer
+   */
+
+  const apiConfig: IApiConfig = React.useMemo(() => {
+    // TODO: Load the AppConfig from the Database for all the configurations
+    return {
+      whichApi: EAiProvider.LOCAL,
+    };
+  }, []);
+
+  const sessionManager = React.useMemo(
+    () => new SessionManager({ apiConfig }),
+    [apiConfig]
+  );
+
+  /**
+   * Global States
+   */
   const [activeExtensionTab, setActiveExtensionTabState] =
     React.useState<IExtension>(
       activityExtensionManager.getActiveExtensionTab()
@@ -44,53 +54,15 @@ export const PlatformProvider = ({
 
   const [activeWorkbenchTab, setActiveWorkbenchTab] = React.useState<
     string | null
-  >(tabSessionManager.getActiveTabId());
+  >(sessionManager.getActiveTabId());
 
   /**
    * Set the currently active tab
-   * @param id - Tab ID to activate
+   * @param tabId - Tab ID to activate
    */
-  const setActiveTab = (id: string) => {
-    tabSessionManager.setActiveTab(id);
-    setActiveWorkbenchTab(id);
-  };
-
-  /**
-   * Add a new tab and set it as active
-   * @param label - Label for the new tab
-   */
-  const addTab = (label: string) => {
-    const newTab = tabSessionManager.createTab(label);
-    /**
-     * Updating the State for initiating a re-render in the react ui
-     */
-    setActiveTab(newTab.id);
-  };
-
-  /**
-   * Remove a tab by its ID
-   * @param id - ID of the tab to remove
-   */
-  const removeTab = (id: string) => {
-    tabSessionManager.removeTab(id);
-  };
-
-  /**
-   * Start a new chat session in a new tab
-   * @param aiProvider - AI provider (e.g., OpenAI, Gemini)
-   */
-  const startChatInTab = (uuid: string, aiProvider: EAiProvider) => {
-    chatSessionManager.startNewChat(uuid, aiProvider);
-    addTab(`Chat with ${aiProvider}`);
-  };
-
-  /**
-   * Update the label of an existing tab
-   * @param id - Tab ID
-   * @param label - New label for the tab
-   */
-  const updateTabLabel = (id: string, label: string) => {
-    tabSessionManager.updateTabLabel(id, label);
+  const setActiveTab = (tabId: string) => {
+    sessionManager.setActiveTabId(tabId);
+    setActiveWorkbenchTab(tabId);
   };
 
   /**
@@ -99,19 +71,7 @@ export const PlatformProvider = ({
    */
   const setActiveExtensionTab = (id: string) => {
     const extension = activityExtensionManager.setActiveExtensionTab(id);
-
-    /**
-     * Updating the State for initiating a re-render in the react ui
-     */
     setActiveExtensionTabState(extension);
-  };
-
-  /**
-   * Remove an extension by its id
-   * @param id - The id of the extension to remove
-   */
-  const removeExtension = (id: string) => {
-    activityExtensionManager.removeExtension(id);
   };
 
   // Side Effect
@@ -125,15 +85,8 @@ export const PlatformProvider = ({
   return (
     <PlatformContext.Provider
       value={{
-        tabSessionManager,
-        chatSessionManager,
+        sessionManager,
         activityExtensionManager,
-
-        removeTab,
-        addTab,
-        startChatInTab,
-        updateTabLabel,
-        removeExtension,
 
         // States
         activeExtensionTab,
