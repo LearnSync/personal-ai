@@ -6,7 +6,7 @@
 import { IApiConfig } from "@/core/types/appConfig";
 import { EAiProvider } from "@/core/types/enum";
 import { ChatService } from "../services";
-import ChatSessionManager from "./chatSessionManager";
+import ChatSessionManager, { ChatSessionData } from "./chatSessionManager";
 import TabSessionManager, { Tab } from "./tabSessionManager";
 import { ILlmMessage } from "@/core/types/llm";
 
@@ -44,13 +44,21 @@ export class SessionManager {
   /**
    * Retrieves the ID of the currently active tab.
    *
-   * @returns {string | null} - The ID of the active tab, or `null` if no active tab exists.
+   * @returns {Tab | null} - The active tab, or `null` if no active tab exists.
    */
-  public getActiveTabId(): string | null {
-    return this.tabSessionManager.getActiveTabId();
+  public getActiveTab(): Tab | null {
+    return this.tabSessionManager.getActiveTab();
   }
 
-  public setActiveTabId(tabId: string): void {
+  public getChatSession(id: string): ChatSessionData | undefined {
+    return this.chatSessionManager.getChatSession(id);
+  }
+
+  public getTabs(): Tab[] {
+    return this.tabSessionManager.getTabs();
+  }
+
+  public setActiveTab(tabId: string): void {
     this.tabSessionManager.setActiveTab(tabId);
   }
 

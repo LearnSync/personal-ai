@@ -1,7 +1,7 @@
 import { EAiProvider } from "@/core/types/enum";
 import { ILlmMessage, IRoleLlm } from "@/core/types/llm";
 
-interface ChatSessionData {
+export interface ChatSessionData {
   id: string;
   aiProvider: EAiProvider;
   messages: ILlmMessage[];

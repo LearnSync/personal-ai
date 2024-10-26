@@ -54,14 +54,14 @@ export const PlatformProvider = ({
 
   const [activeWorkbenchTab, setActiveWorkbenchTab] = React.useState<
     string | null
-  >(sessionManager.getActiveTabId());
+  >(sessionManager.getActiveTab()?.id ?? "");
 
   /**
    * Set the currently active tab
    * @param tabId - Tab ID to activate
    */
   const setActiveTab = (tabId: string) => {
-    sessionManager.setActiveTabId(tabId);
+    sessionManager.setActiveTab(tabId);
     setActiveWorkbenchTab(tabId);
   };
 

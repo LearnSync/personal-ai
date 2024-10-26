@@ -33,15 +33,16 @@ function App() {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { tabSessionManager, activeExtensionTab, chatSessionManager } =
-    usePlatformContext();
+  const { activeExtensionTab, sessionManager } = usePlatformContext();
 
   /**
    * Memoised the Response
    */
 
   const activeChatSessionOnCurrentTab = React.useMemo(() => {
-    return chatSessionManager.getChatSession(activeExtensionTab.id);
+    const activeTab = sessionManager.getActiveTab();
+    if (!activeTab) return null;
+    return sessionManager.getChatSession(activeTab.id);
   }, [activeExtensionTab]);
 
   const startNewChatWithAvailableModels = React.useMemo(() => {
@@ -78,15 +79,13 @@ function App() {
         id: generateUUID(),
         icon: claudeAIIcon({ className: "w-5 h-5" }),
         label: "Claude AI",
-        model: "anthroic",
+        model: "anthropic",
         action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-white to-[#cc9b7a] text-transparent bg-clip-text",
       },
     ];
   }, []);
-
-  console.log("Tab session manager", tabSessionManager); // TODO: PENDING
 
   return (
     <ThemeProvider defaultTheme="system">
@@ -153,7 +152,7 @@ function App() {
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
-                {tabSessionManager.getTabs()?.map((tab) => (
+                {sessionManager.getTabs()?.map((tab) => (
                   <TabItem
                     key={tab.id}
                     id={tab.id}

@@ -80,8 +80,13 @@ export class TabSessionManager {
    * Get the active tab ID
    * @returns The active tab's ID
    */
-  public getActiveTabId(): string | null {
-    return this.activeTabId;
+  public getActiveTab(): Tab | null {
+    const activeTabId = this.activeTabId;
+    if (activeTabId) {
+      this.getTab(activeTabId);
+    }
+
+    return null;
   }
 
   /**
@@ -117,6 +122,10 @@ export class TabSessionManager {
     if (this.activeTabId === id) {
       this.activeTabId = null; // Clear active tab if it was removed
     }
+  }
+
+  public getTab(id: string): Tab | null {
+    return this.tabs.get(id) || null;
   }
 
   /**
