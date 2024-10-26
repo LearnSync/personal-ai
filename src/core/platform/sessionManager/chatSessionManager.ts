@@ -1,14 +1,34 @@
-import { EAiProvider } from "@/core/types";
+import { EAiProvider } from "@/core/types/enum";
+import { ILlmMessage, IRoleLlm } from "@/core/types/llm";
 
 interface ChatSessionData {
   id: string;
   aiProvider: EAiProvider;
-  messages: string[];
+  messages: ILlmMessage[];
   isActive: boolean;
+  abortFunction?: () => void;
 }
 
 export class ChatSessionManager {
+  private static instance: ChatSessionManager | null = null;
   private chatSessions: Map<string, ChatSessionData> = new Map();
+
+  /**
+   * Private constructor to enforce singleton pattern.
+   */
+  private constructor() {}
+
+  /**
+   * Retrieves the singleton instance of ChatSessionManager.
+   * If no instance exists, creates a new one.
+   * @returns {ChatSessionManager} The singleton instance.
+   */
+  public static getInstance(): ChatSessionManager {
+    if (!ChatSessionManager.instance) {
+      ChatSessionManager.instance = new ChatSessionManager();
+    }
+    return ChatSessionManager.instance;
+  }
 
   /**
    * Start a new chat session with a specified AI provider.
@@ -35,6 +55,7 @@ export class ChatSessionManager {
     const session = this.chatSessions.get(chatId);
     if (session) {
       session.isActive = false;
+      session.abortFunction?.();
       this.chatSessions.set(chatId, session);
     }
   }
@@ -74,7 +95,7 @@ export class ChatSessionManager {
    * @param {string} chatId - The unique ID of the chat session.
    * @param {string[]} messages - The messages to be updated in the chat session.
    */
-  public setChatMessages(chatId: string, messages: string[]): void {
+  public setChatMessages(chatId: string, messages: ILlmMessage[]): void {
     const session = this.chatSessions.get(chatId);
     if (session) {
       session.messages = messages;
@@ -85,22 +106,68 @@ export class ChatSessionManager {
   /**
    * Add a message to an existing chat session.
    * @param {string} chatId - The unique ID of the chat session.
-   * @param {string} message - The message to add to the chat.
+   * @param {string} content - The content to add to the chat.
+   * @param {IRoleLlm} [role] - The role of the message (default is "user").
    */
-  public addChatMessage(chatId: string, message: string): void {
+  public addChatMessage(
+    chatId: string,
+    content: string,
+    role: IRoleLlm = "user"
+  ): void {
     const session = this.chatSessions.get(chatId);
     if (session) {
-      session.messages.push(message);
-      this.chatSessions.set(chatId, session); // Update session with the new message
+      session.messages.push({ content, role });
+      this.chatSessions.set(chatId, session);
+    }
+  }
+
+  /**
+   * Updates the latest message in a specific chat session.
+   *
+   * @param chatId - The unique ID of the chat session.
+   * @param content - The new content for the latest message.
+   * @param role - The role of the latest message (default is "user").
+   *
+   * @returns {void} - This method does not return any value.
+   *
+   * @throws Will throw an error if the chat session is not found or if there are no messages in the session.
+   */
+  public updateLatestMessage(
+    chatId: string,
+    content: string,
+    role: IRoleLlm
+  ): void {
+    const session = this.chatSessions.get(chatId);
+    if (session && session.messages.length > 0) {
+      session.messages[session.messages.length - 1] = { content, role };
+      this.chatSessions.set(chatId, session);
+    }
+  }
+
+  /**
+   * Sets an abort function for a specific chat session.
+   * This function allows you to associate an abort function with a chat session, which can be used to stop the chat session gracefully.
+   * @param {string} chatId - The unique ID of the chat session to which the abort function will be associated.
+   * @param {() => void} abortFunction - A function that will be called to stop the chat session.
+   */
+  public setAbortFunction(chatId: string, abortFunction: () => void): void {
+    const session = this.chatSessions.get(chatId);
+    if (session) {
+      session.abortFunction = abortFunction;
+      this.chatSessions.set(chatId, session);
     }
   }
 
   /**
    * Get all messages from a specific chat session.
+   *
+   * This method retrieves all messages from a specific chat session identified by the provided `chatId`.
+   *
    * @param {string} chatId - The unique ID of the chat session.
-   * @returns {string[]} - The array of messages from the chat session, or undefined if not found.
+   *
+   * @returns {ILlmMessage[] | undefined} - An array of messages from the chat session, or undefined if not found.
    */
-  public getChatMessages(chatId: string): string[] | undefined {
+  public getChatMessages(chatId: string): ILlmMessage[] | undefined {
     return this.chatSessions.get(chatId)?.messages;
   }
 }

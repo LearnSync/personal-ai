@@ -1,14 +1,16 @@
 import { generateUUID } from "@/core/base/common/uuid";
 
-interface Tab {
+export interface Tab {
   id: string;
   label: string;
   isLocked: boolean;
 }
+export type TabCloseCallback = (tabId: string) => void;
 
 export class TabSessionManager {
   private tabs: Map<string, Tab> = new Map();
   private activeTabId: string | null = null;
+  private tabCloseListeners: TabCloseCallback[] = [];
 
   /**
    * Private constructor to implement Singleton pattern.
@@ -21,6 +23,14 @@ export class TabSessionManager {
   public static getInstance(): TabSessionManager {
     const newSessionManager = new TabSessionManager();
     return newSessionManager;
+  }
+
+  /**
+   * Register a listener for tab close events.
+   * @param callback - Function to call when a tab is closed.
+   */
+  public onTabClose(callback: TabCloseCallback): void {
+    this.tabCloseListeners.push(callback);
   }
 
   /**
@@ -81,6 +91,7 @@ export class TabSessionManager {
   public lockTab(id: string): void {
     const tab = this.tabs.get(id);
     if (tab) {
+      tab.isLocked = true;
       this.tabs.set(id, tab);
     }
   }
@@ -114,6 +125,14 @@ export class TabSessionManager {
    */
   public getTabs(): Tab[] {
     return Array.from(this.tabs.values());
+  }
+
+  /**
+   * Close all open tabs.
+   */
+  public closeAllTabs(): void {
+    this.tabs.clear(); // Clears all tabs from the Map
+    this.activeTabId = null; // Resets the active tab
   }
 }
 
