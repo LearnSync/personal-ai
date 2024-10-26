@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { Ollama } from "ollama/browser";
 
-import { EAiProvider } from "@/core/types";
+import { EAiProvider } from "@/core/types/enum";
 import { IApiConfig } from "@/core/types/appConfig";
 import { ILlmMessage } from "@/core/types/llm";
 
@@ -12,6 +12,7 @@ interface ISendLLMMessageParams {
   messages: ILlmMessage[];
   onText: OnText;
   onFinalMessage: (input: string) => void;
+  onError: (input: string) => void;
   apiConfig: IApiConfig;
 }
 
@@ -84,6 +85,7 @@ export class ChatService {
     messages,
     onText,
     onFinalMessage,
+    onError,
   }: ISendLLMMessageParams): ISendLLMMessageResponse {
     const openai = new OpenAI({
       apiKey: this.apiConfig.openai.apikey,
@@ -106,7 +108,7 @@ export class ChatService {
       })
       .catch((error) => {
         console.error("OpenAI Error:", error);
-        onFinalMessage(fullText);
+        onError(fullText);
       });
 
     return { abort: () => (didAbort = true) };
@@ -116,6 +118,7 @@ export class ChatService {
     messages,
     onText,
     onFinalMessage,
+    onError,
   }: ISendLLMMessageParams): ISendLLMMessageResponse {
     const ollama = new Ollama({ host: this.apiConfig.ollama.endpoint });
     let didAbort = false;
@@ -134,7 +137,7 @@ export class ChatService {
       })
       .catch((error) => {
         console.error("Ollama Error:", error);
-        onFinalMessage(fullText);
+        onError(fullText);
       });
 
     return { abort: () => (didAbort = true) };
@@ -144,6 +147,7 @@ export class ChatService {
     messages,
     onText,
     onFinalMessage,
+    onError,
   }: ISendLLMMessageParams): ISendLLMMessageResponse {
     let didAbort = false;
     let fullText = "";
@@ -176,7 +180,7 @@ export class ChatService {
       })
       .catch((e) => {
         console.error("Greptile Error:", e);
-        onFinalMessage(fullText);
+        onError(fullText);
       });
 
     return { abort: () => (didAbort = true) };
@@ -186,11 +190,12 @@ export class ChatService {
     messages,
     onText,
     onFinalMessage,
+    onError,
   }: ISendLLMMessageParams): ISendLLMMessageResponse {
     let didAbort = false;
     let fullText = "";
 
-    fetch("http://localhost:25696/api/llm", {
+    fetch("http://localhost:25696/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
@@ -205,7 +210,7 @@ export class ChatService {
       })
       .catch((error) => {
         console.error("Local LLM Error:", error);
-        onFinalMessage(fullText);
+        onError(fullText);
       });
 
     return { abort: () => (didAbort = true) };
