@@ -1,6 +1,11 @@
-import Anthropic from "@anthropic-ai/sdk";
-import OpenAI from "openai";
-import { Ollama } from "ollama/browser";
+/***********************************************************************************************************************************
+ * TODO: Currently, working on Local LLM | Other LLM implementation is pending @SOUMITRO-SAHA
+ ************************************************************************************************************************************/
+
+// import Anthropic from "@anthropic-ai/sdk";
+// import OpenAI from "openai";
+// import { Ollama } from "ollama/browser";
+import axios from "axios";
 
 import { EAiProvider } from "@/core/types/enum";
 import { IApiConfig } from "@/core/types/appConfig";
@@ -34,14 +39,14 @@ export class ChatService {
    */
   public sendMessage(params: ISendLLMMessageParams): ISendLLMMessageResponse {
     switch (this.apiConfig.whichApi) {
-      case EAiProvider.ANTHROPIC:
-        return this.sendClaudeMsg(params);
-      case EAiProvider.OPENAI:
-        return this.sendOpenAIMsg(params);
-      case EAiProvider.GREPTILE:
-        return this.sendGreptileMsg(params);
-      case EAiProvider.OLLAMA:
-        return this.sendOllamaMsg(params);
+      // case EAiProvider.ANTHROPIC:
+      //   return this.sendClaudeMsg(params);
+      // case EAiProvider.OPENAI:
+      //   return this.sendOpenAIMsg(params);
+      // case EAiProvider.GREPTILE:
+      //   return this.sendGreptileMsg(params);
+      // case EAiProvider.OLLAMA:
+      //   return this.sendOllamaMsg(params);
       case EAiProvider.LOCAL:
         return this.sendLocalLLMMsg(params);
       default:
@@ -49,19 +54,20 @@ export class ChatService {
     }
   }
 
+  /** 
   private sendClaudeMsg({
     messages,
     onText,
     onFinalMessage,
   }: ISendLLMMessageParams): ISendLLMMessageResponse {
     const anthropic = new Anthropic({
-      apiKey: this.apiConfig.anthropic.apikey,
+      apiKey: this?.apiConfig?.anthropic?.apikey,
       dangerouslyAllowBrowser: true,
     });
 
     const stream = anthropic.messages.stream({
-      model: this.apiConfig.anthropic.model,
-      max_tokens: parseInt(this.apiConfig.anthropic.maxTokens),
+      model: this?.apiConfig?.anthropic?.model,
+      max_tokens: parseInt(this?.apiConfig?.anthropic?.maxTokens),
       messages,
     });
 
@@ -185,7 +191,7 @@ export class ChatService {
 
     return { abort: () => (didAbort = true) };
   }
-
+*/
   private sendLocalLLMMsg({
     messages,
     onText,
@@ -195,25 +201,66 @@ export class ChatService {
     let didAbort = false;
     let fullText = "";
 
+    // Make the fetch request
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     fetch("http://localhost:25696/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),
+      signal: signal,
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (didAbort) return;
-        const { content } = data;
-        fullText += content;
-        onText(content, fullText);
-        onFinalMessage(fullText);
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error("Failed to get reader from response body");
+        }
+
+        const decoder = new TextDecoder("utf-8");
+
+        const readStream = () => {
+          reader
+            .read()
+            .then(({ done, value }) => {
+              if (done) {
+                onFinalMessage(fullText);
+                return;
+              }
+
+              const chunk = decoder.decode(value, { stream: true });
+              fullText += chunk;
+              onText(chunk, fullText);
+
+              readStream();
+            })
+            .catch((error) => {
+              if (!didAbort) {
+                console.error("Local LLM Error:", error);
+                onError(fullText);
+              }
+            });
+        };
+
+        readStream();
       })
       .catch((error) => {
-        console.error("Local LLM Error:", error);
-        onError(fullText);
+        if (!didAbort) {
+          console.error("Local LLM Error:", error);
+          onError(fullText);
+        }
       });
 
-    return { abort: () => (didAbort = true) };
+    return {
+      abort: () => {
+        didAbort = true;
+        controller.abort();
+      },
+    };
   }
 }
 

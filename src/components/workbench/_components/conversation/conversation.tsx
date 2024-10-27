@@ -2,19 +2,16 @@ import { cn } from "@/lib/utils";
 import * as React from "react";
 import LLMResponse from "./llm-response";
 import UserMessage from "./user-message";
-
-export interface IMessage {
-  type: "user" | "llm";
-  text: string;
-}
+import { ILlmMessage } from "@/core/types";
 
 interface ConversationProps {
-  messages?: IMessage[];
+  response: string;
+  messages: ILlmMessage[];
 }
 
 export const Conversation: React.FC<ConversationProps> = React.memo(
-  ({ messages = [] }) => {
-    const [messageHistory] = React.useState<IMessage[]>(messages);
+  ({ response = "", messages = [] }) => {
+    console.log("State Chat History form Conversation: ", messages);
 
     return (
       <main
@@ -22,12 +19,18 @@ export const Conversation: React.FC<ConversationProps> = React.memo(
           "flex flex-col w-full h-full gap-5 p-6 overflow-y-auto justify-end"
         )}
       >
-        {messageHistory.map((message, index) => (
+        {messages.map((message, index) => (
           <div key={index}>
-            {message.type === "user" ? (
-              <UserMessage message={message.text} />
+            {message.role === "user" ? (
+              <UserMessage message={message.content} />
+            ) : message.role === "assistant" && response ? (
+              <LLMResponse
+                message={
+                  index === messages.length - 1 ? response : message.content
+                }
+              />
             ) : (
-              <LLMResponse message={message.text} />
+              ""
             )}
           </div>
         ))}
@@ -36,4 +39,4 @@ export const Conversation: React.FC<ConversationProps> = React.memo(
   }
 );
 
-export default Conversation;
+export default React.memo(Conversation);
