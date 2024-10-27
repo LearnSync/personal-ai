@@ -3,6 +3,23 @@ import GenerateTextEffect from "../_components/generate-text-effect";
 import PinnedCard from "@/components/general-components/pined-card";
 import { Conversation, IMessage } from "../_components/conversation";
 import { AutoResizingInput } from "../_components";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { generateUUID } from "@/core";
+import {
+  chatGptIcon,
+  claudeAIIcon,
+  geminiIcon,
+  ollamaIcon,
+} from "@/components/sidebar/sidebar-icon";
+import { usePlatformContext } from "@/context/platform.context";
+import EmptyWorkspace from "./empty-workspace";
 
 // Dummy message data for the conversation
 const messages = [
@@ -92,38 +109,108 @@ const messages = [
 ];
 
 export const Chat = () => {
-  const [conversationStarted, setConversationStarted] = React.useState(true);
+  const [conversationStarted, setConversationStarted] = React.useState(false);
+  const { sessionManager, activeExtensionTab } = usePlatformContext();
+
+  /**
+   * Memoised the Response
+   */
+
+  const activeChatSessionOnCurrentTab = React.useMemo(() => {
+    const activeTab = sessionManager.getActiveTab();
+    if (!activeTab) return null;
+    return sessionManager.getChatSession(activeTab.id);
+  }, [activeExtensionTab]);
+
+  const startNewChatWithAvailableModels = React.useMemo(() => {
+    // Except Default Options
+    return [
+      {
+        id: generateUUID(),
+        icon: ollamaIcon({ className: "w-4 h-4" }),
+        label: "Llama",
+        model: "llama",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
+      },
+      {
+        id: generateUUID(),
+        icon: chatGptIcon({ className: "w-5 h-5 fill-white" }),
+        label: "OpenAI",
+        model: "openai",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#10a37f] to-white text-transparent bg-clip-text",
+      },
+      {
+        id: generateUUID(),
+        icon: geminiIcon({ className: "w-5 h-5 fill-white" }),
+        label: "Gemini",
+        model: "gemini",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#8b6ac2] to-[#2f96dc] text-transparent bg-clip-text",
+      },
+      {
+        id: generateUUID(),
+        icon: claudeAIIcon({ className: "w-5 h-5" }),
+        label: "Claude AI",
+        model: "anthropic",
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-white to-[#cc9b7a] text-transparent bg-clip-text",
+      },
+    ];
+  }, []);
 
   return (
-    <div className="w-[85%] mx-auto">
-      {!conversationStarted ? (
-        <div className="w-full">
-          <h1 className="mt-32 text-3xl font-semibold tracking-wide capitalize">
-            <GenerateTextEffect
-              fullText={"Start your conversation"}
-              interval={60}
-              cursorClassName="text-blue-500"
-            />
-          </h1>
-
-          <div className="mt-12">
-            <PinnedCard>
-              <div>Please setup the local LLM with Ollama</div>
-            </PinnedCard>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col w-full h-full pb-4">
-          <Conversation messages={messages as IMessage[]} />
+    <section className="relative h-full">
+      {conversationStarted && (
+        <div className="sticky top-0 left-0 p-1">
+          <Select>
+            <SelectTrigger className="h-8 w-[150px] focus:ring-0 bg-background-2 shadow-inner shadow-background-1/40">
+              <SelectValue
+                className=""
+                placeholder={
+                  activeChatSessionOnCurrentTab?.aiProvider ?? <div>None</div>
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {startNewChatWithAvailableModels?.map((opt) => (
+                <SelectItem value={opt.label}>
+                  <div
+                    className={cn("flex items-center space-x-2", opt.className)}
+                  >
+                    <span>{opt.icon}</span>
+                    <span>{opt.label}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
-      <div className="sticky bottom-0 z-50 w-full mx-auto bg-background-1">
+      <div className="container h-full mx-auto max-w-7xl">
+        <div className="lg:w-[85%] mx-auto ">
+          {!conversationStarted ? (
+            <EmptyWorkspace />
+          ) : (
+            <div className="flex flex-col w-full h-full pb-4">
+              <Conversation messages={messages as IMessage[]} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-50 w-full lg:w-[85%] mx-auto bg-background-1">
         <div className="pb-5">
           <AutoResizingInput />
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
