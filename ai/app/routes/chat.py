@@ -1,14 +1,22 @@
-from typing import List
+from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 
-from .route import router
-from app.models.request import PromptRequest
 from app.services.ai import AIService
+from app.models.request import PromptRequest
 # from app.database.chat import ChatSession, ChatMessage
+
+# Initializing Router
+router = APIRouter()
 
 
 # TODO: Implementation is Pending
+
+
+@router.get("/ct")
+async def testing():
+    return {"success": True, "message": "Welcome to LSP-AI"}
+
 
 @router.post("/generate")
 async def generate(request: "PromptRequest"):

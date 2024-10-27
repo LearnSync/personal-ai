@@ -1,6 +1,7 @@
-from typing import List, Dict, AsyncGenerator
+from typing import List, Dict, AsyncGenerator, Optional
 
-from langchain_community.llms import Ollama, OpenAI, Anthropic
+from langchain_ollama import ChatOllama
+from langchain_community.llms import OpenAI, Anthropic
 from langchain_core.output_parsers import StrOutputParser
 from app.utils.helpers import build_prompt_from_messages
 from app.enums.ai_provider import AIProvider
@@ -8,21 +9,26 @@ from app.enums.ai_provider import AIProvider
 
 class AIService:
     @staticmethod
-    async def generate_ai_response(messages: List[Dict[str, str]], model: str = "llama3.2", api_key: str = None) -> AsyncGenerator[str, None]:
+    async def generate_ai_response(messages: List[Dict[str, str]], model: Optional[str] = None,
+                                   api_key: str = None) -> AsyncGenerator[str, None]:
         # Create prompt from messages
         prompt = build_prompt_from_messages(messages)
         output_parser = StrOutputParser()
 
         # Default to llama(this can be set in the UI) if no model is specified
         # for now use llama3.2 later throw an error and redirect the user to setup local llms
-        if not model or model.lower() == AIProvider.LLAMA:
-            llm = Ollama(model=model)
-        elif model.lower().startswith(str(AIProvider.OPENAI)):
+        if model and model.lower() == AIProvider.LLAMA:
+            llm = ChatOllama(model=model)
+        elif model and model.lower().startswith(str(AIProvider.OPENAI)):
+            if api_key is None:
+                raise ValueError("API key must be provided for OpenAI.")
             llm = OpenAI(model=model, openai_api_key=api_key)  # TODO: Testing Pending
-        elif model.lower().startswith(str(AIProvider.ANTHROPIC)):
+        elif model and model.lower().startswith(str(AIProvider.ANTHROPIC)):
+            if api_key is None:
+                raise ValueError("API key must be provided for OpenAI.")
             llm = Anthropic(model=model, api_key=api_key)  # TODO: Testing Pending
         else:
-            llm =  Ollama(model="llama3.2")
+            llm =  ChatOllama(model="llama3.2")
 
         # Chain the prompt with the LLM and output parser
         chain = prompt | llm | output_parser
