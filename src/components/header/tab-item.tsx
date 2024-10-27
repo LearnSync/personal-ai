@@ -1,9 +1,8 @@
 import { Lock, MessageCircle, X } from "lucide-react";
 import * as React from "react";
 
+import { usePlatformContext } from "@/context/platform.context";
 import { Button } from "../ui/button";
-import useTabStore from "@/store/tab";
-import { cn } from "@/lib/utils";
 
 interface TabItemProps {
   id: string;
@@ -21,19 +20,21 @@ const TabItem: React.FC<TabItemProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
-  // Store
-  const { activeTabId, lockTab, setActiveTab, removeTab, unlockTab } =
-    useTabStore();
+  const { activeWorkbenchTab, setActiveTab, unlockTab, lockTab, removeTab } =
+    usePlatformContext();
 
-  const handleTabLock = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    isLocked ? unlockTab(id) : removeTab(id);
-  };
+  const handleTabLock = React.useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      isLocked ? unlockTab(id) : removeTab(id);
+    },
+    [activeWorkbenchTab]
+  );
 
   return (
     <Button
       size={"sm"}
-      variant={activeTabId === id ? "secondary" : "ghost"}
+      variant={activeWorkbenchTab?.id === id ? "secondary" : "ghost"}
       onClick={() => setActiveTab(id)}
       {...props}
     >
