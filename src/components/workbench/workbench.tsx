@@ -7,7 +7,7 @@ import ImportantChat from "./important-chat/important-chat";
 
 export const Workbench = () => {
   return (
-    <main className="container h-full mx-auto max-w-7xl">
+    <main className="h-full">
       <ScrollArea className="flex-grow h-full">
         <Routes>
           <Route path="/*" element={<Chat />} />
