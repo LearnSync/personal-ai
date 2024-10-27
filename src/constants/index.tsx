@@ -32,7 +32,7 @@ export interface IDefaultExtensionItems {
  *
  * @returns {Array<{ key: string, modifiers: Array<string> }>} An array of objects containing the platform and its corresponding modifiers.
  */
-function generateShortCuts({
+export function generateShortCuts({
   key,
   ctrl = false,
   shift = false,
