@@ -10,3 +10,4 @@ export * from "./base/common/platform";
 export * from "./base/common/uri";
 export * from "./base/common/uuid";
 export * from "./base/common/generateText";
+export * from "./base/common/sleep";

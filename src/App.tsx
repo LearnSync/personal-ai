@@ -19,7 +19,8 @@ function App() {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { activeExtensionTab, sessionManager } = usePlatformContext();
+  const { activeExtensionTab, sessionManager, workbenchTabs } =
+    usePlatformContext();
 
   return (
     <ThemeProvider defaultTheme="system">
@@ -55,7 +56,7 @@ function App() {
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
-                {sessionManager.getTabs()?.map((tab) => (
+                {workbenchTabs?.map((tab) => (
                   <TabItem
                     key={tab.id}
                     id={tab.id}

@@ -7,6 +7,7 @@ import App from "./App";
 import { PlatformProvider } from "./context/platform.context";
 import "./core/base/common/platform";
 import "./index.css";
+import { Toaster } from "./components/ui/toaster";
 
 /**
  * Create a client
@@ -20,6 +21,8 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <Router>
           <App />
         </Router>
+
+        <Toaster />
       </PlatformProvider>
     </QueryClientProvider>
   </React.StrictMode>
