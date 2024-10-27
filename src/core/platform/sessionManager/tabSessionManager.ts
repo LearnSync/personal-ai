@@ -70,10 +70,12 @@ export class TabSessionManager {
    * Set a tab as active by its ID
    * @param id - The tab ID to set as active
    */
-  public setActiveTab(id: string): void {
+  public setActiveTab(id: string): Tab | null {
     if (this.tabs.has(id)) {
       this.activeTabId = id;
+      return this.getTab(id)!;
     }
+    return null;
   }
 
   /**
@@ -83,7 +85,7 @@ export class TabSessionManager {
   public getActiveTab(): Tab | null {
     const activeTabId = this.activeTabId;
     if (activeTabId) {
-      this.getTab(activeTabId);
+      return this.getTab(activeTabId);
     }
 
     return null;
@@ -93,24 +95,28 @@ export class TabSessionManager {
    * Lock a tab by its ID
    * @param id - The tab ID to lock
    */
-  public lockTab(id: string): void {
+  public lockTab(id: string): Tab | null {
     const tab = this.tabs.get(id);
     if (tab) {
       tab.isLocked = true;
       this.tabs.set(id, tab);
+      return tab;
     }
+    return null;
   }
 
   /**
    * Unlock a tab by its ID
    * @param id - The tab ID to unlock
    */
-  public unlockTab(id: string): void {
+  public unlockTab(id: string): Tab | null {
     const tab = this.tabs.get(id);
     if (tab) {
       tab.isLocked = false;
       this.tabs.set(id, tab);
+      return tab;
     }
+    return null;
   }
 
   /**
@@ -120,12 +126,14 @@ export class TabSessionManager {
   public removeTab(id: string): void {
     this.tabs.delete(id);
     if (this.activeTabId === id) {
-      this.activeTabId = null; // Clear active tab if it was removed
+      this.activeTabId = null;
     }
   }
 
   public getTab(id: string): Tab | null {
-    return this.tabs.get(id) || null;
+    const tab = this.tabs.get(id);
+    if (tab) return tab;
+    return null;
   }
 
   /**

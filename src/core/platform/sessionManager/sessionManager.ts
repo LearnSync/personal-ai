@@ -8,7 +8,6 @@ import { EAiProvider } from "@/core/types/enum";
 import { ChatService } from "../services";
 import ChatSessionManager, { ChatSessionData } from "./chatSessionManager";
 import TabSessionManager, { Tab } from "./tabSessionManager";
-import { ILlmMessage } from "@/core/types/llm";
 
 interface SessionManagerOptions {
   apiConfig: IApiConfig;
@@ -43,31 +42,35 @@ export class SessionManager {
   public startChatSession(aiProvider: EAiProvider): INewSessionResponse | null {
     const label = `Chat with ${aiProvider}`;
     const tab = this.tabSessionManager.createTab(label);
+    this.setActiveTab(tab.id);
+
     const chat = this.chatSessionManager.startNewChat(tab.id, aiProvider);
 
     if (!tab && !chat) return null;
     return { chat, tab };
   }
 
+  // ----- Tabs
   /**
    * Retrieves the ID of the currently active tab.
    *
    * @returns {Tab | null} - The active tab, or `null` if no active tab exists.
    */
-  public getActiveTab(): Tab | null {
-    return this.tabSessionManager.getActiveTab();
-  }
 
-  public getChatSession(id: string): ChatSessionData | undefined {
-    return this.chatSessionManager.getChatSession(id);
+  public getTab(tabId: string): Tab | null {
+    return this.tabSessionManager.getTab(tabId);
   }
 
   public getTabs(): Tab[] {
     return this.tabSessionManager.getTabs();
   }
 
-  public setActiveTab(tabId: string): void {
-    this.tabSessionManager.setActiveTab(tabId);
+  public getActiveTab(): Tab | null {
+    return this.tabSessionManager.getActiveTab();
+  }
+
+  public setActiveTab(tabId: string): Tab | null {
+    return this.tabSessionManager.setActiveTab(tabId);
   }
 
   public createTab(label: string): Tab {
@@ -78,12 +81,27 @@ export class SessionManager {
     this.tabSessionManager.updateTabLabel(tabId, label);
   }
 
+  public unlockTab(tabId: string): Tab | null {
+    return this.tabSessionManager.unlockTab(tabId);
+  }
+
+  public lockTab(tabId: string): Tab | null {
+    return this.tabSessionManager.lockTab(tabId);
+  }
+
+  // ----- Sessions
+
+  public getChatSession(id: string): ChatSessionData | undefined {
+    return this.chatSessionManager.getChatSession(id);
+  }
+
   /**
    * Handle closing a tab by closing its associated chat session.
    * @param {string} tabId - Unique ID of the tab to close.
    */
   public removeTab(tabId: string) {
     this.chatSessionManager.closeChat(tabId);
+    this.tabSessionManager.removeTab(tabId);
   }
 
   /**
@@ -102,34 +120,33 @@ export class SessionManager {
    * @param {Function} onFinalMessage - Callback when the final response is ready.
    * @param {Function} onError - Callback when an error occurs.
    */
-  public async sendMessageToLLM(
-    tabId: string,
-    messages: ILlmMessage[],
-    onText: (newText: string, fullText: string) => void,
-    onFinalMessage: (fullText: string) => void,
-    onError: (error: any) => void
-  ) {
+  public async sendMessageToLLM({
+    tabId,
+    message,
+    onText,
+    onFinalMessage,
+    onError,
+  }: {
+    tabId: string;
+    message: string;
+    onText: (newText: string, fullText: string) => void;
+    onFinalMessage: (fullText: string) => void;
+    onError: (error: any) => void;
+  }) {
     const chatSession = this.chatSessionManager.getChatSession(tabId);
-    if (!chatSession) return;
+    if (!chatSession) throw new Error("Chat session not found!!!");
 
-    const lastMessage = messages[messages.length - 1];
-
-    this.chatSessionManager.addChatMessage(
-      tabId,
-      lastMessage.content,
-      lastMessage.role
-    );
+    this.chatSessionManager.addChatMessage(tabId, message, "user");
 
     const { abort } = this.chatService.sendMessage({
       messages: chatSession.messages,
       apiConfig: this.apiConfig,
       onText: (newText: string, fullText: string) => {
         onText(newText, fullText);
-        this.chatSessionManager.addChatMessage(tabId, fullText);
       },
       onFinalMessage: (fullText: string) => {
         onFinalMessage(fullText);
-        this.chatSessionManager.addChatMessage(tabId, fullText);
+        this.chatSessionManager.addChatMessage(tabId, fullText, "assistant");
       },
       onError: (error: any) => {
         console.error("Error in chat:", error);

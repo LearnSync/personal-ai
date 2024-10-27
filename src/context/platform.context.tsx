@@ -12,16 +12,21 @@ import * as React from "react";
 
 interface IPlatformContextProps {
   sessionManager: SessionManager;
+
+  // ----- Extensions
   activityExtensionManager: ActivityExtensionManager;
-
   activeExtensionTab: IExtension;
-  activeWorkbenchTab: string | null;
 
+  // ----- Workbench Tabs
+  activeWorkbenchTab: Tab | null;
   workbenchTabs: Tab[];
-
   setActiveTab: (id: string) => void;
   setActiveExtensionTab: (id: string) => void;
+  unlockTab: (tabId: string) => void;
+  lockTab: (tabId: string) => void;
+  removeTab: (tabId: string) => void;
 
+  // ----- Chat Sessions
   startChatSession: (aiProvider: EAiProvider) => INewSessionResponse | null;
 }
 
@@ -60,9 +65,9 @@ export const PlatformProvider = ({
       activityExtensionManager.getActiveExtensionTab()
     );
 
-  const [activeWorkbenchTab, setActiveWorkbenchTab] = React.useState<
-    string | null
-  >(sessionManager.getActiveTab()?.id ?? "");
+  const [activeWorkbenchTab, setActiveWorkbenchTab] =
+    React.useState<Tab | null>(sessionManager.getActiveTab());
+
   const [workbenchTabs, setWorkbenchTabs] = React.useState<Tab[]>(
     sessionManager.getTabs()
   );
@@ -71,21 +76,18 @@ export const PlatformProvider = ({
     aiProvider: EAiProvider
   ): INewSessionResponse | null => {
     const newSession = sessionManager.startChatSession(aiProvider);
-    const allTabs = sessionManager.getTabs();
-    setWorkbenchTabs(allTabs);
 
-    return newSession;
+    if (newSession) {
+      const allTabs = sessionManager.getTabs();
+
+      setActiveWorkbenchTab(newSession.tab);
+      setWorkbenchTabs(allTabs);
+      return newSession;
+    }
+    return null;
   };
 
-  /**
-   * Set the currently active tab
-   * @param tabId - Tab ID to activate
-   */
-  const setActiveTab = (tabId: string) => {
-    sessionManager.setActiveTab(tabId);
-    setActiveWorkbenchTab(tabId);
-  };
-
+  // --- Extensions
   /**
    * Set the active extension tab
    * @param id - The id of the extension to set as active
@@ -93,6 +95,73 @@ export const PlatformProvider = ({
   const setActiveExtensionTab = (id: string) => {
     const extension = activityExtensionManager.setActiveExtensionTab(id);
     setActiveExtensionTabState(extension);
+  };
+
+  // ----- Workbench Tabs
+  const unlockTab = (tabId: string) => {
+    const tab = sessionManager.unlockTab(tabId);
+    const allTabs = sessionManager.getTabs();
+
+    setActiveWorkbenchTab(tab);
+    setWorkbenchTabs(allTabs);
+  };
+  const lockTab = (tabId: string) => {
+    const tab = sessionManager.lockTab(tabId);
+    const allTabs = sessionManager.getTabs();
+
+    setActiveWorkbenchTab(tab);
+    setWorkbenchTabs(allTabs);
+  };
+
+  const removeTab = (tabId: string) => {
+    // First Storing all the tabs
+    let allTabs = sessionManager.getTabs();
+
+    // Checking whether the removed tab is the active one or not
+    const activeTab = sessionManager.getActiveTab();
+
+    if (activeTab?.id === tabId) {
+      // Now Finding the index
+      const currentTabIndex = allTabs.findIndex((tab) => tab.id === tabId);
+
+      // Now Removing the tab
+      sessionManager.removeTab(tabId);
+
+      // Again fetching all the tabs
+      allTabs = sessionManager.getTabs();
+
+      // Now this will determine which tab will be the active tab after removing the current tab
+      if (allTabs.length > 0) {
+        if (currentTabIndex > 0 && currentTabIndex < allTabs.length) {
+          const justNextTab = allTabs[currentTabIndex - 1];
+          setActiveWorkbenchTab(justNextTab);
+        } else {
+          const firstTab = allTabs[0];
+          setActiveWorkbenchTab(firstTab);
+        }
+      } else {
+        setActiveWorkbenchTab(null);
+      }
+    } else {
+      // Just remove the tab form the stack
+      sessionManager.removeTab(tabId);
+    }
+
+    // Finally fetching all the tabs
+    allTabs = sessionManager.getTabs();
+    setWorkbenchTabs(allTabs);
+  };
+
+  /**
+   * Set the currently active tab
+   * @param tabId - Tab ID to activate
+   */
+  const setActiveTab = (tabId: string) => {
+    const activeTab = sessionManager.setActiveTab(tabId);
+    const allTabs = sessionManager.getTabs();
+
+    setActiveWorkbenchTab(activeTab);
+    setWorkbenchTabs(allTabs);
   };
 
   // Side Effect
@@ -109,14 +178,20 @@ export const PlatformProvider = ({
         sessionManager,
         activityExtensionManager,
 
-        // States
+        // ----- Extensions
         activeExtensionTab,
+
+        // ----- Workbench Tabs
         activeWorkbenchTab,
+        workbenchTabs,
+
+        lockTab,
+        removeTab,
         setActiveTab,
         setActiveExtensionTab,
+        unlockTab,
 
-        // Extras
-        workbenchTabs,
+        // ----- Chat Sessions
         startChatSession,
       }}
     >
