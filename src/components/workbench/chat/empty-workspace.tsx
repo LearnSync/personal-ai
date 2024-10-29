@@ -9,7 +9,7 @@ export const EmptyWorkspace = () => {
     <div className="flex flex-col items-center w-full">
       <h1 className="mt-32 text-3xl font-semibold tracking-wide capitalize">
         <GenerateTextEffect
-          fullText={"Start your conversation"}
+          text={"Start your conversation"}
           interval={60}
           cursorClassName="text-blue-500"
         />

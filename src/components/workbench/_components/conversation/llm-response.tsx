@@ -1,3 +1,12 @@
+import { MessageSquareDot } from "lucide-react";
+import * as React from "react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
+import "katex/dist/katex.min.css";
+
 import {
   chatGptIcon,
   claudeAIIcon,
@@ -5,8 +14,6 @@ import {
   ollamaIcon,
 } from "@/components/sidebar";
 import { cn } from "@/lib/utils";
-import { MessageSquareDot } from "lucide-react";
-import * as React from "react";
 
 interface LLMResponseProps {
   model?: string;
@@ -24,13 +31,16 @@ export const LLMResponse: React.FC<LLMResponseProps> = ({
 
   return (
     <div
-      className={cn("bg-transparent flex items-center space-x-4", className)}
+      className={cn(
+        "flex p-5 rounded-xl space-x-4 mb-16 bg-transparent",
+        className
+      )}
       {...props}
     >
       <div
         className={cn(
-          "rounded-full w-fit h-fit bg-white/20",
-          message ? "" : "p-4 "
+          "rounded-full max-w-10 max-h-10 min-w-10 min-h-10 bg-white/20",
+          message ? "" : "p-4 mt-auto"
         )}
       >
         {model?.toLowerCase() === "llama" ? (
@@ -46,7 +56,36 @@ export const LLMResponse: React.FC<LLMResponseProps> = ({
         )}
       </div>
 
-      <div>{message}</div>
+      <div className="overflow-hidden ">
+        <ReactMarkdown
+          children={message}
+          remarkPlugins={[remarkMath]}
+          rehypePlugins={[rehypeKatex]}
+          components={{
+            code(props) {
+              const { children, className, node, ...rest } = props;
+              const match = /language-(\w+)/.exec(className || "");
+              return match ? (
+                <SyntaxHighlighter
+                  PreTag="div"
+                  children={String(children).replace(/\n$/, "")}
+                  language={match[1]}
+                  // @ts-ignore-next-line
+                  style={oneDark}
+                  className={cn(
+                    "border border-muted-foreground shadow-inner overflow-x-auto"
+                  )}
+                  {...rest}
+                />
+              ) : (
+                <code {...rest} className={className}>
+                  {children}
+                </code>
+              );
+            },
+          }}
+        />
+      </div>
     </div>
   );
 };
