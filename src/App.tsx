@@ -19,8 +19,7 @@ function App() {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { activeExtensionTab, sessionManager, workbenchTabs } =
-    usePlatformContext();
+  const { activeExtensionTab, workbenchTabs } = usePlatformContext();
 
   return (
     <ThemeProvider defaultTheme="system">
