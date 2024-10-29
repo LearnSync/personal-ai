@@ -6,12 +6,12 @@ import {
   geminiIcon,
   ollamaIcon,
 } from "@/components/sidebar";
-import { generateUUID } from "@/core";
-import { AiModel } from "@/core/types/aiProvider";
 import { AI_MODEL_VARIANTS } from "@/constants";
+import { generateUUID } from "@/core";
+import { IAiModel } from "@/core/types/aiProvider";
 
 export const useAvailableModels = () => {
-  const models = React.useMemo<AiModel[]>(() => {
+  const models = React.useMemo<IAiModel[]>(() => {
     return [
       {
         id: generateUUID(),

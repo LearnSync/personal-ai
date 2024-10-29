@@ -26,17 +26,11 @@ import { AutoResizingInput } from "../_components";
 import { Conversation } from "../_components/conversation";
 import EmptyWorkspace from "./empty-workspace";
 
-interface IChatMessage extends ILlmMessage {
-  timestamp: number;
-  chatId: string;
-}
-
 export const Chat = () => {
   const [messages, setMessages] = React.useState<ILlmMessage[]>([]);
   const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
     undefined
   );
-  const [aiResponseText, setAiResponseText] = React.useState<string>("");
 
   // ----- Context
   const {
@@ -60,17 +54,38 @@ export const Chat = () => {
       sessionId: string;
       value: string;
     }) => {
+      const chatSession = sessionManager.getChatSession(sessionId);
+
+      if (chatSession) {
+        setMessages(() => chatSession.messages);
+      }
+
       await sessionManager.sendMessageToLLM({
         tabId: String(sessionId),
         message: value,
-        onText: (text) => {
-          setAiResponseText(text);
+        onText: (_, fullText) => {
+          setMessages((prev) => {
+            const updatedMessages = [...prev];
+
+            const lastMessage = updatedMessages[updatedMessages.length - 1];
+
+            if (lastMessage && lastMessage.role === "assistant") {
+              lastMessage.content = fullText;
+            } else {
+              updatedMessages.push({
+                role: "assistant",
+                content: fullText,
+              });
+            }
+
+            return updatedMessages;
+          });
         },
         onFinalMessage: () => {
           const chatHistory = sessionManager.getChatSession(sessionId);
 
           if (chatHistory) {
-            setMessages(chatHistory.messages);
+            setMessages(() => chatHistory.messages);
           }
         },
         onError: (error) => {
@@ -161,7 +176,7 @@ export const Chat = () => {
             </SelectTrigger>
             <SelectContent>
               {models?.map((opt) => (
-                <SelectItem value={opt.label}>
+                <SelectItem key={opt.id} value={opt.label}>
                   <div
                     className={cn("flex items-center space-x-2", opt.className)}
                   >
@@ -219,9 +234,12 @@ export const Chat = () => {
 
       <div className="container h-full mx-auto max-w-7xl">
         <div className="lg:w-[85%] mx-auto ">
-          {activeWorkbenchTab && activeExtensionTab.id ? (
+          {messages.length > 0 ? (
             <div className="flex flex-col w-full h-full pb-4">
-              <Conversation response={aiResponseText} messages={messages} />
+              <Conversation
+                isLoading={chatMutation.isPaused && chatMutation.isIdle}
+                messages={messages}
+              />
             </div>
           ) : (
             <EmptyWorkspace />

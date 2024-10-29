@@ -5,10 +5,9 @@
 // import Anthropic from "@anthropic-ai/sdk";
 // import OpenAI from "openai";
 // import { Ollama } from "ollama/browser";
-import axios from "axios";
 
-import { EAiProvider } from "@/core/types/enum";
 import { IApiConfig } from "@/core/types/appConfig";
+import { EAiProvider } from "@/core/types/enum";
 import { ILlmMessage } from "@/core/types/llm";
 
 type OnText = (newText: string, fullText: string) => void;
@@ -205,7 +204,7 @@ export class ChatService {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    fetch("http://localhost:25696/generate", {
+    fetch("http://localhost:8000/assistant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages }),

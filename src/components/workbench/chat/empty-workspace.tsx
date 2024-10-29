@@ -1,9 +1,8 @@
 import PinnedCard from "@/components/general-components/pined-card";
-import GenerateTextEffect from "../_components/generate-text-effect";
 import { APPLICATION_SHORTCUTS } from "@/constants";
 import { platform } from "@/core";
-import Slugify from "@/core/base/common/slugify";
 import { CaseConverter } from "@/core/base/common/caseConverter";
+import GenerateTextEffect from "../_components/generate-text-effect";
 
 export const EmptyWorkspace = () => {
   return (

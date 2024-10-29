@@ -10,11 +10,6 @@ interface GenerateTextEffectProps {
   text?: string;
 
   /**
-   * The full sentence to be generated character by character. Overrides the text prop if provided.
-   */
-  fullText?: string;
-
-  /**
    * Optional custom class name for styling.
    */
   className?: string;
@@ -33,17 +28,16 @@ interface GenerateTextEffectProps {
 
 export const GenerateTextEffect: React.FC<GenerateTextEffectProps> = ({
   text = "Loading",
-  fullText,
   className,
   cursorClassName,
-  interval = 50, // Default interval if not specified
+  interval = 50,
   ...rest
 }) => {
   const [generatedText, setGeneratedText] = React.useState<string>("");
   const [isBlinking, setIsBlinking] = React.useState<boolean>(true);
 
   React.useEffect(() => {
-    const contentToGenerate = fullText || text;
+    const contentToGenerate = text;
 
     generateText(contentToGenerate, {
       interval,
@@ -54,7 +48,7 @@ export const GenerateTextEffect: React.FC<GenerateTextEffectProps> = ({
         setIsBlinking(false);
       },
     });
-  }, [fullText, text, interval]);
+  }, [text, interval]);
 
   return (
     <div className={cn("generate-text-effect", className)} {...rest}>
