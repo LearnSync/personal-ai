@@ -26,6 +26,11 @@ import { AutoResizingInput } from "../_components";
 import { Conversation } from "../_components/conversation";
 import EmptyWorkspace from "./empty-workspace";
 
+interface IChatMessage extends ILlmMessage {
+  timestamp: number;
+  chatId: string;
+}
+
 export const Chat = () => {
   const [messages, setMessages] = React.useState<ILlmMessage[]>([]);
   const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
