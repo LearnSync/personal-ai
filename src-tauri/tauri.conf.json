@@ -14,7 +14,17 @@
       {
         "title": "personal-ai",
         "width": 1400,
-        "height": 800
+        "height": 800,
+        "visible": false,
+        "url": "index.html",
+        "label": "main"
+      },
+      {
+        "width": 1400,
+        "height": 800,
+        "decorations": false,
+        "url": "splashscreen.html",
+        "label": "splashscreen"
       }
     ],
     "security": {
