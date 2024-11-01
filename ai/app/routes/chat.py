@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
@@ -12,23 +14,25 @@ router = APIRouter()
 
 
 # TODO: Implementation is Pending
-
-
-@router.get("/ct")
-async def testing():
-    return {"success": True, "message": "Welcome to LSP-AI"}
-
-
 @router.post("/generate")
 async def generate(request: PromptRequest):
     try:
+        messages = request.messages,
+        model = request.model,
+        variant = request.variant,
+        api_key = request.api_key # This will be encrypted so we need to decrypt it here
+        decoded_api_key = api_key # TODO: Decode the key here
+
         # Streaming generator function for chain output
         async def generate_response() -> AsyncGenerator[str, None]:
-            async for part in AIService.generate_ai_response(
-                messages=request.messages,
-                model=request.model,
-                api_key=request.api_key
+            for part in AIService.generate_ai_response(
+                messages=messages[0],
+                model=model[0],
+                variant=variant[0],
+                api_key=decoded_api_key
             ):
+                print(part)
+                await asyncio.sleep(0.01)
                 yield part
 
         return StreamingResponse(generate_response(), media_type="application/json")

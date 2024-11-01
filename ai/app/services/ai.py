@@ -9,8 +9,8 @@ from app.enums.ai_provider import AIProvider
 
 class AIService:
     @staticmethod
-    async def generate_ai_response(messages: List[Dict[str, str]], model: Optional[str] = None,
-                                   api_key: str = None) -> AsyncGenerator[str, None]:
+    def generate_ai_response(messages: List[Dict[str, str]], model: Optional[str], variant: Optional[str],
+                             api_key: Optional[str]) -> [str, None]:
         # Create prompt from messages
         prompt = build_prompt_from_messages(messages)
         output_parser = StrOutputParser()
@@ -18,7 +18,7 @@ class AIService:
         # Default to llama(this can be set in the UI) if no model is specified
         # for now use llama3.2 later throw an error and redirect the user to setup local llms
         if model and model.lower() == AIProvider.LLAMA:
-            llm = ChatOllama(model=model)
+            llm = ChatOllama(model=variant)
         elif model and model.lower().startswith(str(AIProvider.OPENAI)):
             if api_key is None:
                 raise ValueError("API key must be provided for OpenAI.")
@@ -28,7 +28,7 @@ class AIService:
                 raise ValueError("API key must be provided for OpenAI.")
             llm = Anthropic(model=model, api_key=api_key)  # TODO: Testing Pending
         else:
-            llm =  ChatOllama(model="llama3.2")
+            llm =  ChatOllama(model=variant)
 
         # Chain the prompt with the LLM and output parser
         chain = prompt | llm | output_parser

@@ -25,5 +25,6 @@ export interface IApiConfig {
     model: string;
     maxTokens: string;
   };
-  whichApi: EAiProvider;
+  model: EAiProvider;
+  variant: string;
 }

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LSP Ai</title>
+    <style>
+      /* Reset */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Main container styles */
+      body,
+      html {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Centered flexbox container */
+      main {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        height: 100vh;
+        background-color: hsl(0 0% 3.9%);
+      }
+
+      /* Loader container */
+      .loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        text-align: center;
+      }
+
+      /* Loader bar */
+      .progress-bar {
+        width: 200px;
+        height: 10px;
+        background-color: #ddd;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      /* Progress animation */
+      .progress-bar::before {
+        content: "";
+        display: block;
+        width: 0;
+        height: 100%;
+        background-color: #fff;
+        animation: loading 15s infinite;
+      }
+
+      /* Progress animation keyframes */
+      @keyframes loading {
+        0% {
+          width: 0;
+        }
+        100% {
+          width: 100%;
+        }
+      }
+
+      /* Loading text */
+      .loading-text {
+        font-size: 16px;
+        color: #333;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="loader-container">
+        <div class="progress-bar"></div>
+      </div>
+    </main>
+  </body>
+</html>

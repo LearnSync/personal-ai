@@ -1,11 +1,12 @@
-/***********************************************************************************************************************************
+/******************************************************************************************************************************
  * TODO: Currently, working on Local LLM | Other LLM implementation is pending @SOUMITRO-SAHA
- ************************************************************************************************************************************/
+ *****************************************************************************************************************************/
 
 // import Anthropic from "@anthropic-ai/sdk";
 // import OpenAI from "openai";
 // import { Ollama } from "ollama/browser";
 
+import { endpoint } from "@/config/endpoint";
 import { IApiConfig } from "@/core/types/appConfig";
 import { EAiProvider } from "@/core/types/enum";
 import { ILlmMessage } from "@/core/types/llm";
@@ -37,7 +38,7 @@ export class ChatService {
    * @returns {ISendLLMMessageResponse} - An abort function to cancel the request if necessary.
    */
   public sendMessage(params: ISendLLMMessageParams): ISendLLMMessageResponse {
-    switch (this.apiConfig.whichApi) {
+    switch (this.apiConfig.model) {
       // case EAiProvider.ANTHROPIC:
       //   return this.sendClaudeMsg(params);
       // case EAiProvider.OPENAI:
@@ -49,7 +50,7 @@ export class ChatService {
       case EAiProvider.LOCAL:
         return this.sendLocalLLMMsg(params);
       default:
-        throw new Error(`Unsupported AI provider: ${this.apiConfig.whichApi}`);
+        throw new Error(`Unsupported AI provider: ${this.apiConfig.model}`);
     }
   }
 
@@ -204,10 +205,14 @@ export class ChatService {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    fetch("http://localhost:8000/assistant", {
+    fetch(endpoint.CHAT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        messages,
+        model: this.apiConfig.model,
+        variant: this.apiConfig.variant,
+      }),
       signal: signal,
     })
       .then((response) => {

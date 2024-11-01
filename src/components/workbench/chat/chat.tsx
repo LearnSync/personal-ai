@@ -16,18 +16,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { usePlatformContext } from "@/context/platform.context";
-import { ILlmMessage } from "@/core/types";
 import { EAiProvider } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
 import useAvailableModels from "@/hooks/useAvailableModels";
 import { cn } from "@/lib/utils";
-import { useMutation } from "@tanstack/react-query";
 import { AutoResizingInput } from "../_components";
 import { Conversation } from "../_components/conversation";
 import EmptyWorkspace from "./empty-workspace";
 
 export const Chat = () => {
-  const [messages, setMessages] = React.useState<ILlmMessage[]>([]);
   const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
     undefined
   );
@@ -38,66 +35,14 @@ export const Chat = () => {
     activeExtensionTab,
     activeWorkbenchTab,
     startChatSession,
+    messages,
+    handleChatWithLLM,
+    isChatLoading,
   } = usePlatformContext();
 
   // ----- Hooks
   const { toast } = useToast();
   const { models } = useAvailableModels();
-
-  // ----- React Query
-  const chatMutation = useMutation({
-    mutationKey: ["chat_with_llm", activeWorkbenchTab?.id],
-    mutationFn: async ({
-      sessionId,
-      value,
-    }: {
-      sessionId: string;
-      value: string;
-    }) => {
-      const chatSession = sessionManager.getChatSession(sessionId);
-
-      if (chatSession) {
-        setMessages(() => chatSession.messages);
-      }
-
-      await sessionManager.sendMessageToLLM({
-        tabId: String(sessionId),
-        message: value,
-        onText: (_, fullText) => {
-          setMessages((prev) => {
-            const updatedMessages = [...prev];
-
-            const lastMessage = updatedMessages[updatedMessages.length - 1];
-
-            if (lastMessage && lastMessage.role === "assistant") {
-              lastMessage.content = fullText;
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: fullText,
-              });
-            }
-
-            return updatedMessages;
-          });
-        },
-        onFinalMessage: () => {
-          const chatHistory = sessionManager.getChatSession(sessionId);
-
-          if (chatHistory) {
-            setMessages(() => chatHistory.messages);
-          }
-        },
-        onError: (error) => {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: error,
-          });
-        },
-      });
-    },
-  });
 
   // ----- Memoisation
   const activeChatSessionOnCurrentTab = React.useMemo(() => {
@@ -105,16 +50,6 @@ export const Chat = () => {
     if (!activeTab) return null;
     return sessionManager.getChatSession(activeTab.id);
   }, [activeExtensionTab]);
-
-  const handleChatWithLLM = React.useCallback(
-    async (value: string, sessionId: string) => {
-      await chatMutation.mutateAsync({
-        sessionId,
-        value,
-      });
-    },
-    [activeWorkbenchTab, sessionManager, toast]
-  );
 
   const handleConverSation = async (value: string) => {
     if (!selectedValue) {
@@ -236,10 +171,7 @@ export const Chat = () => {
         <div className="lg:w-[85%] mx-auto ">
           {messages.length > 0 ? (
             <div className="flex flex-col w-full h-full pb-4">
-              <Conversation
-                isLoading={chatMutation.isPaused && chatMutation.isIdle}
-                messages={messages}
-              />
+              <Conversation isLoading={isChatLoading} messages={messages} />
             </div>
           ) : (
             <EmptyWorkspace />
