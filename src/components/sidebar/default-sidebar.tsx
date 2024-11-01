@@ -1,4 +1,11 @@
-import { Archive, Bookmark, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Archive,
+  Bookmark,
+  MessageCircleDashed,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +46,23 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
         id: generateUUID(),
         icon: <Plus className="w-5 h-5" />,
         label: `Start New Chat with Local (llama3.2)`,
+        className: "",
+        action: () => {
+          const response = startChatSession(EAiProvider.LOCAL);
+          if (response) {
+            setOpen((prev) => !prev);
+          } else {
+            toast({
+              title: "Uh oh! Something went wrong.",
+              description: "There was a problem with your request.",
+            });
+          }
+        },
+      },
+      {
+        id: generateUUID(),
+        icon: <MessageCircleDashed className="w-5 h-5" />,
+        label: `Start Temporary Chat`,
         className: "",
         action: () => {
           const response = startChatSession(EAiProvider.LOCAL);
