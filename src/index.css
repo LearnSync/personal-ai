@@ -32,6 +32,8 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+
+    --primary-font: "Poppins", sans-serif;
   }
 
   .dark {
@@ -62,6 +64,7 @@
 
     --background-1: 0, 0%, 13%;
     --background-2: 0, 0%, 9%;
+    --background-3: 0, 0%, 18%;
   }
 }
 

@@ -172,8 +172,8 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
       {/* Chat History */}
       <ScrollArea className="flex-1 h-[calc(100vh-4rem)]">
         <div className="w-full">
-          {new Array(10).fill(Math.random()).map(() => (
-            <div className="px-4 pb-4 border-b">
+          {new Array(1).fill(Math.random()).map((_, idx) => (
+            <div className="px-4 pb-4 border-b" key={idx}>
               <p className="capitalize font-[600] text-sm text-muted-foreground py-3 pb-2">
                 today
               </p>
@@ -195,34 +195,6 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
                     label: "Bookmark",
                     icon: <Bookmark className="w-5 h-5" />,
                     action: () => console.log("Start"),
-                  },
-                  {
-                    id: generateUUID(),
-                    label: "Archive",
-                    icon: <Archive className="w-5 h-5" />,
-                    action: () => console.log("Archive"),
-                  },
-                  {
-                    id: generateUUID(),
-                    label: "Delete",
-                    icon: <Trash2 className="w-5 h-5" />,
-                    action: () => console.log("Delete"),
-                    className: "text-red-500 hover:text-red-500",
-                  },
-                ]}
-              />
-              <SidebarItem
-                id={generateUUID()}
-                label="Chat 2"
-                onClick={() => {
-                  console.log("Clicked Chat 2!");
-                }}
-                options={[
-                  {
-                    id: generateUUID(),
-                    label: "Rename",
-                    icon: <Pencil className="w-5 h-5" />,
-                    action: () => console.log("Rename"),
                   },
                   {
                     id: generateUUID(),

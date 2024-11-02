@@ -58,5 +58,6 @@ export const Conversation: React.FC<ConversationProps> = ({
     </main>
   );
 };
+Conversation.displayName = "Conversation";
 
 export default Conversation;

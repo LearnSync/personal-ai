@@ -36,3 +36,6 @@ resources.md
 
 # Binaries
 /binaries/
+
+# Python
+__pycache__/

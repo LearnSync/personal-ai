@@ -4,10 +4,10 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 
 import App from "./App";
+import { Toaster } from "./components/ui/toaster";
 import { PlatformProvider } from "./context/platform.context";
 import "./core/base/common/platform";
 import "./index.css";
-import { Toaster } from "./components/ui/toaster";
 
 /**
  * Create a client

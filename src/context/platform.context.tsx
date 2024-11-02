@@ -1,3 +1,5 @@
+import * as React from "react";
+
 import ActivityExtensionManager, {
   IExtension,
 } from "@/core/platform/extensions/activityExtensionManager";
@@ -6,12 +8,8 @@ import {
   SessionManager,
   Tab,
 } from "@/core/platform/sessionManager";
-import { ILlmMessage } from "@/core/types";
 import { IApiConfig } from "@/core/types/appConfig";
 import { EAiProvider } from "@/core/types/enum";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import * as React from "react";
 
 interface IPlatformContextProps {
   sessionManager: SessionManager;
@@ -32,10 +30,7 @@ interface IPlatformContextProps {
   removeTab: (tabId: string) => void;
 
   // ----- Chat Sessions
-  isChatLoading: boolean;
-  messages: ILlmMessage[];
   startChatSession: (aiProvider: EAiProvider) => INewSessionResponse | null;
-  handleChatWithLLM: (value: string, sessionId: string) => void;
 }
 
 const PlatformContext = React.createContext<IPlatformContextProps | undefined>(
@@ -81,70 +76,6 @@ export const PlatformProvider = ({
     sessionManager.getTabs()
   );
 
-  const [messages, setMessages] = React.useState<ILlmMessage[]>([]);
-  const [isChatLoading, setIsChatLoading] = React.useState<boolean>(false);
-
-  // ----- Hooks
-  const { toast } = useToast();
-
-  // ----- React Query
-  const chatMutation = useMutation({
-    mutationKey: ["chat_with_llm", activeWorkbenchTab?.id],
-    mutationFn: async ({
-      sessionId,
-      value,
-    }: {
-      sessionId: string;
-      value: string;
-    }) => {
-      setIsChatLoading(true);
-      const chatSession = sessionManager.getChatSession(sessionId);
-
-      if (chatSession) {
-        setMessages(() => chatSession.messages);
-      }
-
-      await sessionManager.sendMessageToLLM({
-        tabId: String(sessionId),
-        message: value,
-        onText: (_, fullText) => {
-          setIsChatLoading(false);
-
-          setMessages((prev) => {
-            const updatedMessages = [...prev];
-
-            const lastMessage = updatedMessages[updatedMessages.length - 1];
-
-            if (lastMessage && lastMessage.role === "assistant") {
-              lastMessage.content = fullText;
-            } else {
-              updatedMessages.push({
-                role: "assistant",
-                content: fullText,
-              });
-            }
-
-            return updatedMessages;
-          });
-        },
-        onFinalMessage: () => {
-          const chatHistory = sessionManager.getChatSession(sessionId);
-
-          if (chatHistory) {
-            setMessages(() => chatHistory.messages);
-          }
-        },
-        onError: (error) => {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: error,
-          });
-        },
-      });
-    },
-  });
-
   // ----- Functions ----- //
   // ----- Chat With LLM
   const startChatSession = (
@@ -161,16 +92,6 @@ export const PlatformProvider = ({
     }
     return null;
   };
-
-  const handleChatWithLLM = React.useCallback(
-    async (value: string, sessionId: string) => {
-      await chatMutation.mutateAsync({
-        sessionId,
-        value,
-      });
-    },
-    []
-  );
 
   // ----- Extensions
   const setActiveExtensionTab = (id: string) => {
@@ -241,20 +162,6 @@ export const PlatformProvider = ({
     setWorkbenchTabs(allTabs);
   };
 
-  React.useEffect(() => {
-    if (activeWorkbenchTab) {
-      const activeChatSession = sessionManager.getChatSession(
-        activeWorkbenchTab.id
-      );
-
-      if (activeChatSession) {
-        setMessages(activeChatSession.messages);
-      }
-    } else {
-      setMessages([]);
-    }
-  }, [activeWorkbenchTab]);
-
   return (
     <PlatformContext.Provider
       value={{
@@ -276,10 +183,7 @@ export const PlatformProvider = ({
         unlockTab,
 
         // ----- Chat
-        messages,
-        isChatLoading,
         startChatSession,
-        handleChatWithLLM,
       }}
     >
       {children}

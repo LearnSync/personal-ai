@@ -18,6 +18,7 @@ export default {
           DEFAULT: "hsl(var(--background))",
           1: "hsl(var(--background-1))", // #212121
           2: "hsl(var(--background-2))", // #171717
+          3: "hsl(var(--background-3))", // #2f2f2f
         },
         foreground: "hsl(var(--foreground))",
         card: {
@@ -58,6 +59,9 @@ export default {
           4: "hsl(var(--chart-4))",
           5: "hsl(var(--chart-5))",
         },
+      },
+      fontFamily: {
+        primary: "var(--primary-font)",
       },
     },
   },

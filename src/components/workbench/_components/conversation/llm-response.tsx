@@ -1,12 +1,7 @@
-import { MessageSquareDot } from "lucide-react";
 import * as React from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
-import rehypeKatex from "rehype-katex";
-import remarkMath from "remark-math";
-import "katex/dist/katex.min.css";
 
+import { MessageSquareDot } from "lucide-react";
+import { MarkdownRender } from "@/components/general-components/markdown.component";
 import {
   chatGptIcon,
   claudeAIIcon,
@@ -57,34 +52,7 @@ export const LLMResponse: React.FC<LLMResponseProps> = ({
       </div>
 
       <div className="overflow-hidden ">
-        <ReactMarkdown
-          children={message}
-          remarkPlugins={[remarkMath]}
-          rehypePlugins={[rehypeKatex]}
-          components={{
-            code(props) {
-              const { children, className, node, ...rest } = props;
-              const match = /language-(\w+)/.exec(className || "");
-              return match ? (
-                <SyntaxHighlighter
-                  PreTag="div"
-                  children={String(children).replace(/\n$/, "")}
-                  language={match[1]}
-                  // @ts-ignore-next-line
-                  style={oneDark}
-                  className={cn(
-                    "border border-muted-foreground shadow-inner overflow-x-auto"
-                  )}
-                  {...rest}
-                />
-              ) : (
-                <code {...rest} className={className}>
-                  {children}
-                </code>
-              );
-            },
-          }}
-        />
+        <MarkdownRender content={message} />
       </div>
     </div>
   );

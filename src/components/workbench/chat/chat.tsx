@@ -23,8 +23,9 @@ import { cn } from "@/lib/utils";
 import { AutoResizingInput } from "../_components";
 import { Conversation } from "../_components/conversation";
 import EmptyWorkspace from "./empty-workspace";
+import useChat from "@/hooks/useChat";
 
-export const Chat = () => {
+export const Chat = React.memo(() => {
   const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
     undefined
   );
@@ -35,14 +36,12 @@ export const Chat = () => {
     activeExtensionTab,
     activeWorkbenchTab,
     startChatSession,
-    messages,
-    handleChatWithLLM,
-    isChatLoading,
   } = usePlatformContext();
 
   // ----- Hooks
   const { toast } = useToast();
   const { models } = useAvailableModels();
+  const chat = useChat();
 
   // ----- Memoisation
   const activeChatSessionOnCurrentTab = React.useMemo(() => {
@@ -62,12 +61,12 @@ export const Chat = () => {
     if (!activeWorkbenchTab) {
       const sessionStatus = startChatSession(EAiProvider.LOCAL);
       if (sessionStatus) {
-        handleChatWithLLM(value, sessionStatus.tab.id);
+        chat.sendMessageToLLM(value, sessionStatus.tab.id);
       }
     } else {
       const sessionId =
         activeWorkbenchTab.id ?? sessionManager.getActiveTab()?.id;
-      handleChatWithLLM(value, sessionId);
+      chat.sendMessageToLLM(value, sessionId);
     }
   };
 
@@ -169,9 +168,12 @@ export const Chat = () => {
 
       <div className="container h-full mx-auto max-w-7xl">
         <div className="lg:w-[85%] mx-auto ">
-          {messages.length > 0 ? (
+          {chat.messages.length > 0 ? (
             <div className="flex flex-col w-full h-full pb-4">
-              <Conversation isLoading={isChatLoading} messages={messages} />
+              <Conversation
+                isLoading={chat.isLoading}
+                messages={chat.messages}
+              />
             </div>
           ) : (
             <EmptyWorkspace />
@@ -181,11 +183,17 @@ export const Chat = () => {
 
       <div className="sticky bottom-0 z-50 w-full lg:w-[85%] mx-auto bg-background-1">
         <div className="pb-5">
-          <AutoResizingInput onEnter={handleConverSation} />
+          <AutoResizingInput
+            isGenerating={chat.isGenerating}
+            success={chat.success}
+            onEnter={handleConverSation}
+            onAbort={chat.abort}
+          />
         </div>
       </div>
     </section>
   );
-};
+});
+Chat.displayName = "Chat";
 
-export default React.memo(Chat);
+export default Chat;
