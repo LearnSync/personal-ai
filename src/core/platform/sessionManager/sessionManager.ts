@@ -160,6 +160,14 @@ export class SessionManager {
 
     this.chatSessionManager.setAbortFunction(tabId, abort);
   }
+
+  /**
+   * Aborts the chat session with the specified session ID.
+   * @param {string} sessionId - The unique ID of the chat session to be aborted.
+   */
+  public abortFunction(sessionId: string): void {
+    this.chatSessionManager.abortSession(sessionId);
+  }
 }
 
 export default SessionManager;

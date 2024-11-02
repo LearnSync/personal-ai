@@ -159,6 +159,23 @@ export class ChatSessionManager {
   }
 
   /**
+   * Aborts a specific chat session by calling its associated abort function.
+   *
+   * This method retrieves the chat session identified by the provided `sessionId` and calls its associated abort function.
+   * If the session is not found or does not have an associated abort function, this method does nothing.
+   *
+   * @param {string} sessionId - The unique ID of the chat session to abort.
+   *
+   * @returns {void} - This method does not return any value.
+   */
+  public abortSession(sessionId: string): void {
+    const session = this.chatSessions.get(sessionId);
+    if (session) {
+      session.abortFunction?.();
+    }
+  }
+
+  /**
    * Get all messages from a specific chat session.
    *
    * This method retrieves all messages from a specific chat session identified by the provided `chatId`.
