@@ -3,7 +3,8 @@ import { ILlmMessage, IRoleLlm } from "@/core/types/llm";
 
 export interface ChatSessionData {
   id: string;
-  aiProvider: EAiProvider;
+  model: EAiProvider;
+  variant: string;
   messages: ILlmMessage[];
   isActive: boolean;
   abortFunction?: () => void;
@@ -36,10 +37,15 @@ export class ChatSessionManager {
    * @param {EAiProvider} aiProvider - The AI provider for the chat (e.g., OpenAI, Gemmini).
    * @returns {ChatSessionData} - The new chat session data.
    */
-  public startNewChat(id: string, aiProvider: EAiProvider): ChatSessionData {
+  public startNewChat(
+    id: string,
+    model: EAiProvider,
+    variant: string
+  ): ChatSessionData {
     const newSession: ChatSessionData = {
       id,
-      aiProvider,
+      model,
+      variant,
       messages: [],
       isActive: true,
     };

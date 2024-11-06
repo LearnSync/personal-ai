@@ -27,7 +27,7 @@ export interface INodeProcess {
 
 declare const process: INodeProcess | undefined;
 
-const $globalThis: any = typeof globalThis !== "undefined" ? globalThis : {};
+// const $globalThis: any = typeof globalThis !== "undefined" ? globalThis : {};
 
 // Try to access Node process if available
 let nodeProcess: INodeProcess | undefined =

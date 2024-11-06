@@ -6,7 +6,7 @@ export function formatMessage(
     return message;
   }
 
-  return message.replace(/\{(\d+)\}/g, (match, index) => {
+  return message.replace(/\{(\d+)\}/g, (_match, index) => {
     const argIndex = Number(index);
     const arg = args[argIndex];
 
