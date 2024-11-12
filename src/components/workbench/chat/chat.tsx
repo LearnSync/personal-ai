@@ -19,11 +19,11 @@ import { usePlatformContext } from "@/context/platform.context";
 import { EAiProvider } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
 import useAvailableModels from "@/hooks/useAvailableModels";
+import useChat from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import { AutoResizingInput } from "../_components";
 import { Conversation } from "../_components/conversation";
-import EmptyWorkspace from "./empty-workspace";
-import useChat from "@/hooks/useChat";
+import { EmptyWorkspace } from "./empty-workspace";
 
 export const Chat = React.memo(() => {
   const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
@@ -31,12 +31,7 @@ export const Chat = React.memo(() => {
   );
 
   // ----- Context
-  const {
-    sessionManager,
-    activeExtensionTab,
-    activeWorkbenchTab,
-    startChatSession,
-  } = usePlatformContext();
+  const { sessionManager, activityExtensionManager } = usePlatformContext();
 
   // ----- Hooks
   const { toast } = useToast();
@@ -45,10 +40,10 @@ export const Chat = React.memo(() => {
 
   // ----- Memoisation
   const activeChatSessionOnCurrentTab = React.useMemo(() => {
-    const activeTab = sessionManager.getActiveTab();
+    const activeTab = sessionManager.activeTab;
     if (!activeTab) return null;
-    return sessionManager.getChatSession(activeTab.id);
-  }, [activeExtensionTab]);
+    return sessionManager.getChatSessionById(activeTab.id);
+  }, [activityExtensionManager]);
 
   const handleConverSation = async (value: string) => {
     if (!selectedValue) {
@@ -58,15 +53,17 @@ export const Chat = React.memo(() => {
       });
     }
 
-    if (!activeWorkbenchTab) {
-      const sessionStatus = startChatSession(EAiProvider.LOCAL);
+    if (!sessionManager.tabs) {
+      const sessionStatus = sessionManager.startChatSession(
+        EAiProvider.LOCAL,
+        "llama3.2"
+      );
       if (sessionStatus) {
         chat.sendMessageToLLM(value, sessionStatus.tab.id);
       }
     } else {
-      const sessionId =
-        activeWorkbenchTab.id ?? sessionManager.getActiveTab()?.id;
-      chat.sendMessageToLLM(value, sessionId);
+      const sessionId = sessionManager.activeTab?.id;
+      if (sessionId) chat.sendMessageToLLM(value, sessionId);
     }
   };
 
@@ -85,7 +82,7 @@ export const Chat = React.memo(() => {
 
   return (
     <section className="relative h-full">
-      {activeWorkbenchTab && activeExtensionTab.id && (
+      {sessionManager.tabs && activityExtensionManager.activeExtension?.id && (
         <div className="sticky top-0 left-0 flex items-center justify-between w-full pr-5 bg-background-1 h-fit">
           <Select
             value={selectedValue && selectedValue}
@@ -102,7 +99,7 @@ export const Chat = React.memo(() => {
               <SelectValue
                 className={cn("")}
                 placeholder={
-                  activeChatSessionOnCurrentTab?.aiProvider ?? (
+                  activeChatSessionOnCurrentTab?.model ?? (
                     <div>Not Selected</div>
                   )
                 }

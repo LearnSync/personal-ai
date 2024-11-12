@@ -35,7 +35,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  const { startChatSession } = usePlatformContext();
+  const { sessionManager } = usePlatformContext();
 
   const { toast } = useToast();
 
@@ -48,7 +48,10 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
         label: `Start New Chat with Local (llama3.2)`,
         className: "",
         action: () => {
-          const response = startChatSession(EAiProvider.LOCAL);
+          const response = sessionManager.startChatSession(
+            EAiProvider.LOCAL,
+            "llama3.2"
+          );
           if (response) {
             setOpen((prev) => !prev);
           } else {
@@ -65,7 +68,10 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
         label: `Start Temporary Chat`,
         className: "",
         action: () => {
-          const response = startChatSession(EAiProvider.LOCAL);
+          const response = sessionManager.startChatSession(
+            EAiProvider.LOCAL,
+            "llama3.2"
+          );
           if (response) {
             setOpen((prev) => !prev);
           } else {

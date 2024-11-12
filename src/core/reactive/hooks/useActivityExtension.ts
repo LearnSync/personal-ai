@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { IShortCut } from "@/constants";
 import { Platform } from "@/core/base/common/platform";
 import {
   ActivityExtensionManager,
@@ -13,56 +14,68 @@ interface UseActivityExtensionManagerResult {
   addExtension: (
     label: string,
     icon: React.ReactNode,
-    shortCut: { key: Platform; modifiers: string[] }[],
+    shortCut: IShortCut[],
     displaySidebar: boolean
   ) => void;
   removeExtension: (id: string) => void;
 }
 
-const useActivityExtensionManager = (): UseActivityExtensionManagerResult => {
-  const manager = ActivityExtensionManager.getInstance();
-  const [extensions, setExtensions] = React.useState<IExtension[]>(
-    manager.getExtensions()
-  );
-  const [activeExtension, setActiveExtension] =
-    React.useState<IExtension | null>(manager.getActiveExtensionTab());
+export const useActivityExtensionManager =
+  (): UseActivityExtensionManagerResult => {
+    const activityExtensionManager = React.useMemo(
+      () => ActivityExtensionManager.getInstance(),
+      []
+    );
 
-  // ----- Effect
-  React.useEffect(() => {
-    const unsubscribe = manager.subscribe(() => {
-      setExtensions(manager.getExtensions());
-      setActiveExtension(manager.getActiveExtensionTab());
-    });
+    const [extensions, setExtensions] = React.useState<IExtension[]>(
+      activityExtensionManager.getExtensions()
+    );
+    const [activeExtension, setActiveExtension] =
+      React.useState<IExtension | null>(
+        activityExtensionManager.getActiveExtensionTab()
+      );
 
-    return () => {
-      unsubscribe();
+    // ----- Effect
+    React.useEffect(() => {
+      const unsubscribe = activityExtensionManager.subscribe(() => {
+        setExtensions(activityExtensionManager.getExtensions());
+        setActiveExtension(activityExtensionManager.getActiveExtensionTab());
+      });
+
+      return () => {
+        unsubscribe();
+      };
+    }, [activityExtensionManager]);
+
+    const setActiveExtensionTab = (id: string) => {
+      activityExtensionManager.setActiveExtensionTab(id);
     };
-  }, [manager]);
 
-  const setActiveExtensionTab = (id: string) => {
-    manager.setActiveExtensionTab(id);
-  };
+    const addExtension = (
+      label: string,
+      icon: React.ReactNode,
+      shortCut: { key: Platform; modifiers: string[] }[],
+      displaySidebar: boolean
+    ) => {
+      activityExtensionManager.addExternalExtension(
+        label,
+        icon,
+        shortCut,
+        displaySidebar
+      );
+    };
 
-  const addExtension = (
-    label: string,
-    icon: React.ReactNode,
-    shortCut: { key: Platform; modifiers: string[] }[],
-    displaySidebar: boolean
-  ) => {
-    manager.addExternalExtension(label, icon, shortCut, displaySidebar);
-  };
+    const removeExtension = (id: string) => {
+      activityExtensionManager.removeExtension(id);
+    };
 
-  const removeExtension = (id: string) => {
-    manager.removeExtension(id);
+    return {
+      extensions,
+      activeExtension,
+      setActiveExtensionTab,
+      addExtension,
+      removeExtension,
+    };
   };
-
-  return {
-    extensions,
-    activeExtension,
-    setActiveExtensionTab,
-    addExtension,
-    removeExtension,
-  };
-};
 
 export default useActivityExtensionManager;

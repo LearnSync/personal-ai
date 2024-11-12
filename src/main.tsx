@@ -8,6 +8,7 @@ import { Toaster } from "./components/ui/toaster";
 import { PlatformProvider } from "./context/platform.context";
 import "./core/base/common/platform";
 import "./index.css";
+import { ThemeProvider } from "./components/theme-provider";
 
 /**
  * Create a client
@@ -17,13 +18,15 @@ const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <PlatformProvider>
-        <Router>
-          <App />
-        </Router>
+      <ThemeProvider defaultTheme="dark" storageKey="local-first-ui-theme">
+        <PlatformProvider>
+          <Router>
+            <App />
+          </Router>
 
-        <Toaster />
-      </PlatformProvider>
+          <Toaster />
+        </PlatformProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

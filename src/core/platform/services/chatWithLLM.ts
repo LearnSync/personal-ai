@@ -7,7 +7,7 @@
 // import { Ollama } from "ollama/browser";
 
 import { endpoint } from "@/config/endpoint";
-import { IApiConfig } from "@/core/types/appConfig";
+import { ApiConfig } from "@/core/platform/settings/apiConfig";
 import { EAiProvider } from "@/core/types/enum";
 import { ILlmMessage } from "@/core/types/llm";
 
@@ -18,7 +18,7 @@ interface ISendLLMMessageParams {
   onText: OnText;
   onFinalMessage: (input: string) => void;
   onError: (input: string) => void;
-  apiConfig: IApiConfig;
+  apiConfig: ApiConfig;
 }
 
 interface ISendLLMMessageResponse {
@@ -26,9 +26,9 @@ interface ISendLLMMessageResponse {
 }
 
 export class ChatService {
-  private apiConfig: IApiConfig;
+  private apiConfig: ApiConfig;
 
-  constructor(apiConfig: IApiConfig) {
+  constructor(apiConfig: ApiConfig) {
     this.apiConfig = apiConfig;
   }
 
@@ -38,7 +38,7 @@ export class ChatService {
    * @returns {ISendLLMMessageResponse} - An abort function to cancel the request if necessary.
    */
   public sendMessage(params: ISendLLMMessageParams): ISendLLMMessageResponse {
-    switch (this.apiConfig.model) {
+    switch (this.apiConfig.getModel()) {
       // case EAiProvider.ANTHROPIC:
       //   return this.sendClaudeMsg(params);
       // case EAiProvider.OPENAI:
@@ -50,7 +50,9 @@ export class ChatService {
       case EAiProvider.LOCAL:
         return this.sendLocalLLMMsg(params);
       default:
-        throw new Error(`Unsupported AI provider: ${this.apiConfig.model}`);
+        throw new Error(
+          `Unsupported AI provider: ${this.apiConfig.getModel()}`
+        );
     }
   }
 
@@ -210,8 +212,8 @@ export class ChatService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         messages,
-        model: this.apiConfig.model,
-        variant: this.apiConfig.variant,
+        model: this.apiConfig.getModel(),
+        variant: this.apiConfig.getVariant(),
       }),
       signal: signal,
     })

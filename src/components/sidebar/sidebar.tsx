@@ -12,15 +12,14 @@ export const Sidebar = () => {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { activeExtensionTab, activityExtensionManager } = usePlatformContext();
-
+  const { activityExtensionManager } = usePlatformContext();
   const renderSidebarContent = () => {
-    switch (activeExtensionTab?.label) {
-      case activityExtensionManager.getExtensions()?.[1]?.label:
+    switch (activityExtensionManager.activeExtension?.label) {
+      case activityExtensionManager.extensions?.[1]?.label:
         return <ContextSearchSidebar />;
-      case activityExtensionManager.getExtensions()?.[2]?.label:
+      case activityExtensionManager.extensions?.[2]?.label:
         return <ImportantChatSidebar />;
-      case activityExtensionManager.getExtensions()?.[3]?.label:
+      case activityExtensionManager.extensions?.[3]?.label:
         return <ExtensionsSidebar />;
       default:
         return <DefaultSidebar />;
@@ -31,7 +30,7 @@ export const Sidebar = () => {
     <aside className={cn("relative h-full w-full")}>
       <div className="flex items-center justify-between w-full px-2 border-b">
         <div className="text-sm uppercase font-[500]">
-          {activeExtensionTab.label}
+          {activityExtensionManager.activeExtension?.label}
         </div>
         <button className="p-2 rounded-md cursor-pointer m ax-w-10 max-h-10 hover:bg-white/10">
           <PanelLeftClose

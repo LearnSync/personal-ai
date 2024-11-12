@@ -1,12 +1,7 @@
-import React from "react";
-import SearchBox from "../general-components/search-box";
 import { cn } from "@/lib/utils";
+import SearchBox from "../general-components/search-box";
 
-interface ContextSearchSidebarProps {
-  //Props
-}
-
-const ContextSearchSidebar: React.FC<ContextSearchSidebarProps> = (props) => {
+const ContextSearchSidebar = () => {
   return (
     <div className={cn("px-2")}>
       <div className="mt-2">

@@ -19,6 +19,8 @@ const ImportantChat = () => {
     },
   });
 
+  console.log("Data form Important Chat", data);
+
   return (
     <main>
       <div className="w-[60%] mx-auto mt-3">

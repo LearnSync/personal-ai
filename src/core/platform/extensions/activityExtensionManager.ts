@@ -1,12 +1,14 @@
 import * as React from "react";
 
-import { DEFAULT_EXTENSIONS_ITEMS, IDefaultExtensionItems } from "@/constants";
-import { Platform } from "@/core/base/common/platform";
+import {
+  DEFAULT_EXTENSIONS_ITEMS,
+  IDefaultExtensionItems,
+  IShortCut,
+  Subscriber,
+} from "@/constants";
 import { generateUUID } from "@/core/base/common/uuid";
 
 export interface IExtension extends IDefaultExtensionItems {}
-
-type Subscriber = () => void;
 
 export class ActivityExtensionManager {
   private static _instance: ActivityExtensionManager;
@@ -88,7 +90,7 @@ export class ActivityExtensionManager {
   public addExternalExtension(
     label: string,
     icon: React.ReactNode,
-    shortCut: { key: Platform; modifiers: string[] }[],
+    shortCut: IShortCut[],
     displaySidebar: boolean
   ): void {
     const newExtension: IExtension = {

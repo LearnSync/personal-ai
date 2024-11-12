@@ -4,14 +4,15 @@
  * Provides reactivity via Proxy and Subscription pattern.
  ***********************************************/
 
-import { IApiConfig } from "@/core/types/appConfig";
+import { Subscriber } from "@/constants";
+import { ApiConfig } from "@/core/platform/settings/apiConfig";
 import { EAiProvider } from "@/core/types/enum";
 import { ChatService } from "../services";
 import ChatSessionManager, { ChatSessionData } from "./chatSessionManager";
 import TabSessionManager, { Tab } from "./tabSessionManager";
 
 export interface SessionManagerOptions {
-  apiConfig: IApiConfig;
+  apiConfig: ApiConfig;
 }
 
 export interface INewSessionResponse {
@@ -24,8 +25,8 @@ export class SessionManager {
   private chatSessionManager: ChatSessionManager;
   private tabSessionManager: TabSessionManager;
   private chatService: ChatService;
-  private apiConfig: IApiConfig;
-  private subscribers: Set<() => void> = new Set();
+  private apiConfig: ApiConfig;
+  private subscribers: Set<Subscriber> = new Set();
 
   private constructor({ apiConfig }: SessionManagerOptions) {
     this.chatSessionManager = ChatSessionManager.getInstance();
@@ -97,7 +98,6 @@ export class SessionManager {
   }
 
   // ----- Tab Management ----- //
-
   /** Retrieves a tab by ID. */
   public getTab(tabId: string): Tab | null {
     return this.tabSessionManager.getTab(tabId);
@@ -169,7 +169,6 @@ export class SessionManager {
   }
 
   // ----- Chat Session Management -----
-
   /** Retrieves a chat session by its ID. */
   public getChatSession(id: string): ChatSessionData | undefined {
     return this.chatSessionManager.getChatSession(id);

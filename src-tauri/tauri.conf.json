@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "personal-ai",
+  "productName": "local-first-ai",
   "version": "0.1.0",
-  "identifier": "com.personal-ai.app",
+  "identifier": "com.local-first-ai.app",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "personal-ai",
+        "title": "local-first-ai",
         "width": 1400,
         "height": 800,
         "visible": false,

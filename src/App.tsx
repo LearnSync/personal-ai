@@ -19,7 +19,9 @@ function App() {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { activeExtensionTab, workbenchTabs } = usePlatformContext();
+  const { activityExtensionManager, sessionManager } = usePlatformContext();
+
+  console.log("App: ", activityExtensionManager.activeExtension);
 
   return (
     <ThemeProvider defaultTheme="system">
@@ -31,11 +33,13 @@ function App() {
           </div>
 
           {/* Primary Side Bar */}
-          {showSideBar && activeExtensionTab.displaySidebar && (
-            <div className={cn("min-w-64 max-w-64 h-screen bg-background-2")}>
-              <Sidebar />
-            </div>
-          )}
+          {showSideBar &&
+            activityExtensionManager.activeExtension &&
+            activityExtensionManager.activeExtension.displaySidebar && (
+              <div className={cn("min-w-64 max-w-64 h-screen bg-background-2")}>
+                <Sidebar />
+              </div>
+            )}
 
           <div className="flex flex-col w-screen h-screen">
             {/* Top Header */}
@@ -45,24 +49,28 @@ function App() {
               )}
             >
               {/* Display Show SideBar toggle button */}
-              {!showSideBar && activeExtensionTab.displaySidebar && (
-                <div className="flex items-center justify-center p-2 border-r-2 cursor-pointer h-fit min-h-8 min-w-8 hover:bg-white/10">
-                  <button onClick={() => setShowSideBar(!showSideBar)}>
-                    <PanelLeftOpen className="w-6 h-6 text-muted-foreground" />
-                  </button>
-                </div>
-              )}
+              {false &&
+                !showSideBar &&
+                activityExtensionManager.activeExtension &&
+                activityExtensionManager.activeExtension?.displaySidebar && (
+                  <div className="flex items-center justify-center p-2 border-r-2 cursor-pointer h-fit min-h-8 min-w-8 hover:bg-white/10">
+                    <button onClick={() => setShowSideBar(!showSideBar)}>
+                      <PanelLeftOpen className="w-6 h-6 text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
-                {workbenchTabs?.map((tab) => (
-                  <TabItem
-                    key={tab.id}
-                    id={tab.id}
-                    label={tab.label}
-                    isLocked={tab.isLocked}
-                  />
-                ))}
+                {false &&
+                  sessionManager.tabs?.map((tab) => (
+                    <TabItem
+                      key={tab.id}
+                      id={tab.id}
+                      label={tab.label}
+                      isLocked={tab.isLocked}
+                    />
+                  ))}
               </div>
             </TopHeader>
 

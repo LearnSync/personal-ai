@@ -20,22 +20,21 @@ const TabItem: React.FC<TabItemProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
-  const { activeWorkbenchTab, setActiveTab, unlockTab, lockTab, removeTab } =
-    usePlatformContext();
+  const { sessionManager } = usePlatformContext();
 
   const handleTabLock = React.useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      isLocked ? unlockTab(id) : removeTab(id);
+      isLocked ? sessionManager.unlockTab(id) : sessionManager.removeTab(id);
     },
-    [activeWorkbenchTab]
+    [sessionManager.getActiveTab()]
   );
 
   return (
     <Button
       size={"sm"}
-      variant={activeWorkbenchTab?.id === id ? "secondary" : "ghost"}
-      onClick={() => setActiveTab(id)}
+      variant={sessionManager.getActiveTab()?.id === id ? "secondary" : "ghost"}
+      onClick={() => sessionManager.setActiveTab(id)}
       {...props}
     >
       {/* Icon */}
@@ -46,7 +45,7 @@ const TabItem: React.FC<TabItemProps> = ({
         onClick={(e) => {
           e.stopPropagation();
           setIsHovered(false);
-          return !isLocked && lockTab(id);
+          return !isLocked && sessionManager.lockTab(id);
         }}
       >
         {isHovered ? <Lock /> : <MessageCircle />}

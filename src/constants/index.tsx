@@ -13,6 +13,8 @@ export interface IShortCut {
   modifiers: string[]; // i.e. ["ctrl", "shift"];
 }
 
+export type Subscriber = () => void;
+
 export interface IDefaultExtensionItems {
   id: string;
   icon: React.ReactNode;

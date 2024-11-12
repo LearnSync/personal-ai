@@ -23,12 +23,12 @@ const useChat = (): UseChatResponse => {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isGenerating, setIsGenerating] = React.useState<boolean>(false);
 
-  const { sessionManager, activeWorkbenchTab } = usePlatformContext();
+  const { sessionManager } = usePlatformContext();
   const { toast } = useToast();
 
   // React Query Mutation for sending chat message
   const chatMutation = useMutation({
-    mutationKey: ["chat_with_llm", sessionManager.getActiveTab()],
+    mutationKey: ["chat_with_llm", sessionManager.activeTab],
     mutationFn: async ({
       sessionId,
       value,
@@ -37,7 +37,7 @@ const useChat = (): UseChatResponse => {
       value: string;
     }) => {
       setIsLoading(true);
-      const chatSession = sessionManager.getChatSession(sessionId);
+      const chatSession = sessionManager.getChatSessionById(sessionId);
       if (chatSession) setMessages(chatSession.messages);
 
       await sessionManager.sendMessageToLLM({
@@ -68,7 +68,7 @@ const useChat = (): UseChatResponse => {
         onFinalMessage: () => {
           setIsGenerating(false);
 
-          const chatHistory = sessionManager.getChatSession(sessionId);
+          const chatHistory = sessionManager.getChatSessionById(sessionId);
 
           if (chatHistory) {
             setMessages(() => chatHistory.messages);
@@ -96,7 +96,7 @@ const useChat = (): UseChatResponse => {
   );
 
   const abort = async () => {
-    const sessionId = activeWorkbenchTab?.id;
+    const sessionId = sessionManager.activeTab?.id;
     if (sessionId) {
       sessionManager.abortFunction(sessionId);
       setIsGenerating(false);
@@ -108,15 +108,17 @@ const useChat = (): UseChatResponse => {
   // Load chat messages for the active tab
   React.useEffect(() => {
     const loadMessages = () => {
-      if (activeWorkbenchTab && sessionManager) {
-        const activeChatSession = sessionManager.getChatSession(
-          activeWorkbenchTab.id
+      const activeSession = sessionManager.activeTab;
+
+      if (activeSession && sessionManager) {
+        const activeChatSession = sessionManager.getChatSessionById(
+          activeSession.id
         );
         setMessages(activeChatSession?.messages || []);
       }
       loadMessages();
     };
-  }, [activeWorkbenchTab, sessionManager]);
+  }, [sessionManager.activeTab, sessionManager]);
 
   return {
     success,

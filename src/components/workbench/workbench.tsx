@@ -1,23 +1,20 @@
 import { Route, Routes } from "react-router-dom";
 
-import { ScrollArea } from "../ui/scroll-area";
-import { Chat } from "./chat";
-import { Settings } from "./settings";
-import ImportantChat from "./important-chat/important-chat";
 import TestingPage from "@/screen/test.ui";
+import { Chat } from "./chat";
+import ImportantChat from "./important-chat/important-chat";
+import { Settings } from "./settings";
 
 export const Workbench = () => {
   return (
-    <main className="h-full">
-      <ScrollArea className="flex-grow h-full">
-        <Routes>
-          <Route element={<TestingPage />} path="/test" />
-          <Route path="/*" element={<Chat />} />
-          <Route path="/c/:sessionId" element={<Chat />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/important-chat/:tag" element={<ImportantChat />} />
-        </Routes>
-      </ScrollArea>
+    <main className="flex-1 h-full">
+      <Routes>
+        <Route element={<TestingPage />} path="/test" />
+        <Route path="/*" element={<Chat />} />
+        <Route path="/c/:sessionId" element={<Chat />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/important-chat/:tag" element={<ImportantChat />} />
+      </Routes>
     </main>
   );
 };

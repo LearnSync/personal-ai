@@ -71,7 +71,6 @@ describe("updateStateIfChanged", () => {
 
   it("should return updated data if data changes, otherwise previous data", () => {
     const mockSetState = jest.fn();
-    const prevData = { key: "oldValue" };
     const newData = { key: "newValue" };
 
     // Mock setState function to return data directly
