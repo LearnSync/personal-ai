@@ -1,22 +1,8 @@
-import { EAiProvider } from "@/core/types/enum";
 import { create } from "zustand";
 
-export interface IGeneralAiProvider {
-  apikey: string;
-  model: EAiProvider;
-  variant: string | null;
-  maxTokens?: string;
-}
-
-export interface IApiConfig {
-  anthropicConfigs?: IGeneralAiProvider[];
-  geminiConfigs?: IGeneralAiProvider[];
-  openaiConfigs?: IGeneralAiProvider[];
-  ollamaConfigs?: IGeneralAiProvider[];
-  localConfigs?: boolean;
-  model: EAiProvider;
-  variant: string;
-}
+import { IGeneralAiProvider } from "@/core/types/aiProvider";
+import { IApiConfig } from "@/core/types/apiConfig";
+import { EAiProvider } from "@/core/types/enum";
 
 // ----- Default max tokens
 const DEFAULT_MAX_TOKENS = "2048";
@@ -46,7 +32,7 @@ interface ApiConfigState {
   setVariant: (variant: string) => void;
 }
 
-export const useApiConfigStore = create<ApiConfigState>((set) => ({
+export const useApiConfigStore = create<ApiConfigState>()((set) => ({
   // Initial State
   anthropicConfigs: [],
   geminiConfigs: [],
@@ -58,7 +44,7 @@ export const useApiConfigStore = create<ApiConfigState>((set) => ({
 
   // ----- Actions
   setConfig: (config) =>
-    set((state) => ({
+    set(() => ({
       anthropicConfigs: addDefaultTokens(config.anthropicConfigs),
       geminiConfigs: addDefaultTokens(config.geminiConfigs),
       openaiConfigs: addDefaultTokens(config.openaiConfigs),
@@ -68,41 +54,47 @@ export const useApiConfigStore = create<ApiConfigState>((set) => ({
       variant: config.variant ?? "",
     })),
 
-  addConfig: (type, provider) =>
+  addConfig: (type, provider) => {
     set((state) => ({
       [type]: [...(state[type] as IGeneralAiProvider[]), provider],
-    })),
+    }));
+  },
 
-  updateProvider: (type, index, updatedProvider) =>
+  updateProvider: (type, index, updatedProvider) => {
     set((state) => {
       const providers = [...(state[type] as IGeneralAiProvider[])];
       if (providers[index]) {
         providers[index] = { ...providers[index], ...updatedProvider };
       }
       return { [type]: providers };
-    }),
+    });
+  },
 
-  deleteProvider: (type, index) =>
+  deleteProvider: (type, index) => {
     set((state) => {
       const providers = [...(state[type] as IGeneralAiProvider[])];
       providers.splice(index, 1);
       return { [type]: providers };
-    }),
+    });
+  },
 
-  setLocalConfig: (isEnabled) =>
+  setLocalConfig: (isEnabled) => {
     set(() => ({
       localConfigs: isEnabled,
-    })),
+    }));
+  },
 
-  setModel: (model) =>
+  setModel: (model) => {
     set(() => ({
       model,
-    })),
+    }));
+  },
 
-  setVariant: (variant) =>
+  setVariant: (variant) => {
     set(() => ({
       variant,
-    })),
+    }));
+  },
 }));
 
 function addDefaultTokens(
