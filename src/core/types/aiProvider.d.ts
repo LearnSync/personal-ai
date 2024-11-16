@@ -13,6 +13,6 @@ export interface IAiModel {
 export interface IGeneralAiProvider {
   apikey: string;
   model: EAiProvider;
-  variant: string | null;
+  variant: string;
   maxTokens?: string;
 }

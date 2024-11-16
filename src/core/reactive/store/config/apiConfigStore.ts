@@ -1,102 +1,148 @@
 import { create } from "zustand";
+import { devtools, persist } from "zustand/middleware";
 
 import { IGeneralAiProvider } from "@/core/types/aiProvider";
 import { IApiConfig } from "@/core/types/apiConfig";
 import { EAiProvider } from "@/core/types/enum";
 
-// ----- Default max tokens
+// Default max tokens
 const DEFAULT_MAX_TOKENS = "2048";
 
-// ----- Store
-interface ApiConfigState {
-  // ----- States
-  anthropicConfigs: IGeneralAiProvider[];
-  geminiConfigs: IGeneralAiProvider[];
-  openaiConfigs: IGeneralAiProvider[];
-  ollamaConfigs: IGeneralAiProvider[];
-  localConfigs: boolean | null;
-  model: EAiProvider | null;
-  variant: string | null;
+// Store interface
+interface ApiConfigState extends IApiConfig {
+  // Getters
+  getConfig: (type: EAiProvider) => IGeneralAiProvider[];
 
-  // ----- Actions
+  // Actions
   setConfig: (config: IApiConfig) => void;
-  addConfig: (type: keyof IApiConfig, provider: IGeneralAiProvider) => void;
+  addConfig: (type: EAiProvider, provider: IGeneralAiProvider) => void;
   updateProvider: (
-    type: keyof IApiConfig,
+    type: EAiProvider,
     index: number,
     updatedProvider: Partial<IGeneralAiProvider>
   ) => void;
-  deleteProvider: (type: keyof IApiConfig, index: number) => void;
-  setLocalConfig: (isEnabled: boolean) => void;
+  deleteProvider: (type: EAiProvider, index: number) => void;
   setModel: (model: EAiProvider) => void;
   setVariant: (variant: string) => void;
 }
 
-export const useApiConfigStore = create<ApiConfigState>()((set) => ({
-  // Initial State
-  anthropicConfigs: [],
-  geminiConfigs: [],
-  openaiConfigs: [],
-  ollamaConfigs: [],
-  localConfigs: null,
-  model: null,
-  variant: null,
+export const useApiConfigStore = create<ApiConfigState>()(
+  devtools(
+    persist(
+      (set, get) => ({
+        // Initial State
+        anthropicConfigs: [],
+        geminiConfigs: [],
+        openaiConfigs: [],
+        ollamaConfigs: [],
+        localConfigs: [],
+        model: null,
+        variant: "",
 
-  // ----- Actions
-  setConfig: (config) =>
-    set(() => ({
-      anthropicConfigs: addDefaultTokens(config.anthropicConfigs),
-      geminiConfigs: addDefaultTokens(config.geminiConfigs),
-      openaiConfigs: addDefaultTokens(config.openaiConfigs),
-      ollamaConfigs: addDefaultTokens(config.ollamaConfigs),
-      localConfigs: config.localConfigs ?? null,
-      model: config.model ?? EAiProvider.LOCAL,
-      variant: config.variant ?? "",
-    })),
+        // Getters
+        getConfig: (type) => {
+          const {
+            anthropicConfigs,
+            geminiConfigs,
+            openaiConfigs,
+            ollamaConfigs,
+            localConfigs,
+          } = get();
+          switch (type) {
+            case EAiProvider.ANTHROPIC:
+              return anthropicConfigs;
+            case EAiProvider.GEMINI:
+              return geminiConfigs;
+            case EAiProvider.OPENAI:
+              return openaiConfigs;
+            case EAiProvider.OLLAMA:
+              return ollamaConfigs;
+            case EAiProvider.LOCAL:
+              return localConfigs;
+            default:
+              throw new Error(`Invalid config type: ${type}`);
+          }
+        },
 
-  addConfig: (type, provider) => {
-    set((state) => ({
-      [type]: [...(state[type] as IGeneralAiProvider[]), provider],
-    }));
-  },
+        // Actions
+        setConfig: (config) =>
+          set(() => ({
+            anthropicConfigs: addDefaultTokens(config.anthropicConfigs),
+            geminiConfigs: addDefaultTokens(config.geminiConfigs),
+            openaiConfigs: addDefaultTokens(config.openaiConfigs),
+            ollamaConfigs: addDefaultTokens(config.ollamaConfigs),
+            localConfigs: addDefaultTokens(config.localConfigs),
+            model: config.model ?? EAiProvider.LOCAL,
+            variant: config.variant ?? "",
+          })),
 
-  updateProvider: (type, index, updatedProvider) => {
-    set((state) => {
-      const providers = [...(state[type] as IGeneralAiProvider[])];
-      if (providers[index]) {
-        providers[index] = { ...providers[index], ...updatedProvider };
+        addConfig: (type, provider) => {
+          set((state) => {
+            if (state.hasOwnProperty(type)) {
+              const currentConfigs = state.getConfig(type);
+
+              if (!currentConfigs) {
+                throw new Error(`Invalid config type: ${type}`);
+              }
+              return {
+                [type]: [...currentConfigs, provider],
+              };
+            } else {
+              return state;
+            }
+          });
+        },
+
+        updateProvider: (type, index, updatedProvider) =>
+          set((state) => {
+            const providers = state.getConfig(type);
+
+            if (!providers || !providers[index]) {
+              throw new Error(
+                `Invalid provider index: ${index} for type: ${type}`
+              );
+            }
+            const updatedProviders = [...providers];
+            updatedProviders[index] = {
+              ...providers[index],
+              ...updatedProvider,
+            };
+            return { [type]: updatedProviders };
+          }),
+
+        deleteProvider: (type, index) =>
+          set((state) => {
+            const providers = state.getConfig(type);
+            if (!providers || !providers[index]) {
+              throw new Error(
+                `Invalid provider index: ${index} for type: ${type}`
+              );
+            }
+            const updatedProviders = providers.filter((_, i) => i !== index);
+            return { [type]: updatedProviders };
+          }),
+
+        setModel: (model) => set(() => ({ model })),
+        setVariant: (variant) => set(() => ({ variant })),
+      }),
+      {
+        name: "api-config-store",
+        partialize: (state) => ({
+          anthropicConfigs: state.anthropicConfigs,
+          geminiConfigs: state.geminiConfigs,
+          openaiConfigs: state.openaiConfigs,
+          ollamaConfigs: state.ollamaConfigs,
+          localConfigs: state.localConfigs,
+          model: state.model,
+          variant: state.variant,
+        }),
       }
-      return { [type]: providers };
-    });
-  },
+    ),
+    { name: "ApiConfigStore" }
+  )
+);
 
-  deleteProvider: (type, index) => {
-    set((state) => {
-      const providers = [...(state[type] as IGeneralAiProvider[])];
-      providers.splice(index, 1);
-      return { [type]: providers };
-    });
-  },
-
-  setLocalConfig: (isEnabled) => {
-    set(() => ({
-      localConfigs: isEnabled,
-    }));
-  },
-
-  setModel: (model) => {
-    set(() => ({
-      model,
-    }));
-  },
-
-  setVariant: (variant) => {
-    set(() => ({
-      variant,
-    }));
-  },
-}));
-
+// Utility function to add default tokens
 function addDefaultTokens(
   providers?: IGeneralAiProvider[]
 ): IGeneralAiProvider[] {
