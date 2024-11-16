@@ -1,8 +1,8 @@
 import { Lock, MessageCircle, X } from "lucide-react";
 import * as React from "react";
 
-import { usePlatformContext } from "@/context/platform.context";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
+import { useTabSessionStore } from "@/core/reactive/store/sessionManager/tabSessionManager";
 
 interface TabItemProps {
   id: string;
@@ -11,7 +11,7 @@ interface TabItemProps {
   className?: string;
 }
 
-const TabItem: React.FC<TabItemProps> = ({
+export const TabItem: React.FC<TabItemProps> = ({
   id,
   label,
   isLocked,
@@ -20,21 +20,23 @@ const TabItem: React.FC<TabItemProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
-  const { sessionManager } = usePlatformContext();
+  const tabSessionManager = useTabSessionStore();
 
   const handleTabLock = React.useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      isLocked ? sessionManager.unlockTab(id) : sessionManager.removeTab(id);
+      isLocked
+        ? tabSessionManager.unlockTab(id)
+        : tabSessionManager.removeTab(id);
     },
-    [sessionManager.getActiveTab()]
+    [tabSessionManager]
   );
 
   return (
     <Button
       size={"sm"}
-      variant={sessionManager.getActiveTab()?.id === id ? "secondary" : "ghost"}
-      onClick={() => sessionManager.setActiveTab(id)}
+      variant={tabSessionManager.activeTab?.id === id ? "secondary" : "ghost"}
+      onClick={() => tabSessionManager.setActiveTab(id)}
       {...props}
     >
       {/* Icon */}
@@ -45,7 +47,7 @@ const TabItem: React.FC<TabItemProps> = ({
         onClick={(e) => {
           e.stopPropagation();
           setIsHovered(false);
-          return !isLocked && sessionManager.lockTab(id);
+          return !isLocked && tabSessionManager.lockTab(id);
         }}
       >
         {isHovered ? <Lock /> : <MessageCircle />}
@@ -54,7 +56,7 @@ const TabItem: React.FC<TabItemProps> = ({
       {/* Label */}
       <span className="flex-grow">{label}</span>
 
-      {/* Lock/Unlock button */}
+      {/* (Lock/Unlock) button */}
       <button
         className="p-1 ml-2 rounded text-muted-foreground hover:bg-white/20"
         onClick={handleTabLock}
@@ -65,5 +67,6 @@ const TabItem: React.FC<TabItemProps> = ({
     </Button>
   );
 };
+TabItem.displayName = "TabItem";
 
 export default TabItem;

@@ -1,6 +1,7 @@
 export type IRoleLlm = "user" | "assistant";
 
 export interface ILlmMessage {
+  id: string;
   role: IRoleLlm;
-  content: string;
+  message: string;
 }

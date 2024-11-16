@@ -7,18 +7,18 @@
 // import { Ollama } from "ollama/browser";
 
 import { endpoint } from "@/config/endpoint";
-import { ApiConfig } from "@/core/platform/settings/apiConfig";
+import { IApiConfig } from "@/core/types/apiConfig";
+
 import { EAiProvider } from "@/core/types/enum";
 import { ILlmMessage } from "@/core/types/llm";
 
 type OnText = (newText: string, fullText: string) => void;
 
-interface ISendLLMMessageParams {
+export interface ISendLLMMessageParams {
   messages: ILlmMessage[];
   onText: OnText;
   onFinalMessage: (input: string) => void;
   onError: (input: string) => void;
-  apiConfig: ApiConfig;
 }
 
 interface ISendLLMMessageResponse {
@@ -26,9 +26,9 @@ interface ISendLLMMessageResponse {
 }
 
 export class ChatService {
-  private apiConfig: ApiConfig;
+  private apiConfig: IApiConfig;
 
-  constructor(apiConfig: ApiConfig) {
+  constructor(apiConfig: IApiConfig) {
     this.apiConfig = apiConfig;
   }
 
@@ -38,7 +38,7 @@ export class ChatService {
    * @returns {ISendLLMMessageResponse} - An abort function to cancel the request if necessary.
    */
   public sendMessage(params: ISendLLMMessageParams): ISendLLMMessageResponse {
-    switch (this.apiConfig.getModel()) {
+    switch (this.apiConfig.model) {
       // case EAiProvider.ANTHROPIC:
       //   return this.sendClaudeMsg(params);
       // case EAiProvider.OPENAI:
@@ -50,9 +50,7 @@ export class ChatService {
       case EAiProvider.LOCAL:
         return this.sendLocalLLMMsg(params);
       default:
-        throw new Error(
-          `Unsupported AI provider: ${this.apiConfig.getModel()}`
-        );
+        throw new Error(`Unsupported AI provider: ${this.apiConfig.model}`);
     }
   }
 
@@ -212,8 +210,8 @@ export class ChatService {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         messages,
-        model: this.apiConfig.getModel(),
-        variant: this.apiConfig.getVariant(),
+        model: this.apiConfig.model,
+        variant: this.apiConfig.variant,
       }),
       signal: signal,
     })

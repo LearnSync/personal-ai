@@ -23,6 +23,7 @@ export interface IDefaultExtensionItems {
   hasMore?: boolean;
   displaySidebar?: boolean;
   position?: "default" | "bottom";
+  newTab?: boolean;
 }
 
 /**
@@ -92,6 +93,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     shortCut: APPLICATION_SHORTCUTS.CONTEXT_SEARCH,
     displaySidebar: true,
     hasMore: false,
+    newTab: false,
   },
   {
     id: generateUUID(),
@@ -100,6 +102,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     shortCut: APPLICATION_SHORTCUTS.IMPORTANT_CHAT,
     displaySidebar: true,
     hasMore: false,
+    newTab: false,
   },
   {
     id: generateUUID(),
@@ -108,6 +111,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     shortCut: APPLICATION_SHORTCUTS.EXTENSIONS,
     displaySidebar: true,
     hasMore: false,
+    newTab: false,
   },
   {
     id: generateUUID(),
@@ -117,6 +121,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     displaySidebar: false,
     hasMore: false,
     position: "bottom",
+    newTab: true,
   },
 ];
 

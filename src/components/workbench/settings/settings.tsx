@@ -120,7 +120,7 @@ export const Settings = () => {
         <h1 className="text-2xl font-[700] mt-3">Settings</h1>
 
         <Section className="flex-1 mt-3">
-          <div className="h-full col-span-2">
+          <div className="h-full col-span-3 xl:col-span-2">
             {SETTING_TABS.map((st) => (
               <Button
                 variant={"ghost"}
@@ -133,7 +133,7 @@ export const Settings = () => {
             ))}
           </div>
 
-          <div className="col-span-10">
+          <div className="col-span-9 xl:col-span-10">
             {selectedSettingsItem(selectedItem)}
           </div>
         </Section>

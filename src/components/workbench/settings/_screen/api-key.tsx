@@ -6,7 +6,7 @@ import { EAiProvider } from "@/core/types/enum";
 import { Plus } from "lucide-react";
 import { H3, INotice, NoticeBoard } from "../_components";
 import { ApiKeyInputBox } from "../_components/api-key-input-box";
-import { useApiConfigStore } from "@/core/reactive/store/apiConfigStore";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
 
 const notice: INotice[] = [
   {

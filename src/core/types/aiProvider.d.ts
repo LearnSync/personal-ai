@@ -9,3 +9,10 @@ export interface IAiModel {
   action: () => void;
   className?: string;
 }
+
+export interface IGeneralAiProvider {
+  apikey: string;
+  model: EAiProvider;
+  variant: string | null;
+  maxTokens?: string;
+}

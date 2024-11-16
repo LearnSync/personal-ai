@@ -8,7 +8,8 @@ import { SecondarySidebar, Sidebar } from "./components/sidebar";
 import { ThemeProvider } from "./components/theme-provider";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Workbench } from "./components/workbench";
-import { usePlatformContext } from "./context/platform.context";
+import { useActivityExtensionStore } from "./core/reactive/store/sessionManager/activityExtensionManager";
+import { useTabSessionStore } from "./core/reactive/store/sessionManager/tabSessionManager";
 import { cn } from "./lib/utils";
 import { useStore } from "./store";
 
@@ -17,11 +18,12 @@ function App() {
 
   // Store
   const { showSideBar, setShowSideBar } = useStore();
+  const tabSessionManager = useTabSessionStore();
 
   // Context
-  const { activityExtensionManager, sessionManager } = usePlatformContext();
+  const { activeExtensionTab } = useActivityExtensionStore();
 
-  console.log("App: ", activityExtensionManager.activeExtension);
+  console.log("App: ", tabSessionManager);
 
   return (
     <ThemeProvider defaultTheme="system">
@@ -34,8 +36,8 @@ function App() {
 
           {/* Primary Side Bar */}
           {showSideBar &&
-            activityExtensionManager.activeExtension &&
-            activityExtensionManager.activeExtension.displaySidebar && (
+            activeExtensionTab &&
+            activeExtensionTab.displaySidebar && (
               <div className={cn("min-w-64 max-w-64 h-screen bg-background-2")}>
                 <Sidebar />
               </div>
@@ -49,10 +51,9 @@ function App() {
               )}
             >
               {/* Display Show SideBar toggle button */}
-              {false &&
-                !showSideBar &&
-                activityExtensionManager.activeExtension &&
-                activityExtensionManager.activeExtension?.displaySidebar && (
+              {!showSideBar &&
+                activeExtensionTab &&
+                activeExtensionTab?.displaySidebar && (
                   <div className="flex items-center justify-center p-2 border-r-2 cursor-pointer h-fit min-h-8 min-w-8 hover:bg-white/10">
                     <button onClick={() => setShowSideBar(!showSideBar)}>
                       <PanelLeftOpen className="w-6 h-6 text-muted-foreground" />
@@ -62,15 +63,14 @@ function App() {
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
-                {false &&
-                  sessionManager.tabs?.map((tab) => (
-                    <TabItem
-                      key={tab.id}
-                      id={tab.id}
-                      label={tab.label}
-                      isLocked={tab.isLocked}
-                    />
-                  ))}
+                {tabSessionManager.getTabs()?.map((tab) => (
+                  <TabItem
+                    key={tab.id}
+                    id={tab.id}
+                    label={tab.label}
+                    isLocked={tab.isLocked}
+                  />
+                ))}
               </div>
             </TopHeader>
 

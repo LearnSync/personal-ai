@@ -1,111 +1,144 @@
-import {
-  INewSessionResponse,
-  SessionManager,
-  Tab,
-} from "@/core/platform/sessionManager";
-import { EAiProvider } from "@/core/types/enum";
 import * as React from "react";
-import { useApiConfigStore } from "../store/apiConfigStore";
 
-export function useSessionManager() {
-  const [tabs, setTabs] = React.useState<Tab[]>([]);
-  const [activeTab, setActiveTab] = React.useState<Tab | null>(null);
+import { ChatService, ISendLLMMessageParams } from "@/core/platform/services";
+import { IApiConfig } from "@/core/types/apiConfig";
+import { EAiProvider } from "@/core/types/enum";
+import { useApiConfigStore } from "../store/config/apiConfigStore";
+import useChatSessionStore, {
+  ChatSessionData,
+} from "../store/sessionManager/chatSessionManager";
+import useTabSessionStore, {
+  ITab,
+} from "../store/sessionManager/tabSessionManager";
 
-  // ----- Hooks
-  const apiConfig = useApiConfigStore();
+interface INewSessionResponse {
+  chat: ChatSessionData;
+  tab: ITab;
+}
 
-  const sessionManager = React.useMemo(
-    () => SessionManager.getInstance({ apiConfig }),
-    []
-  );
+interface ISendMessageToLLM {
+  tabId: string;
+  message: string;
+}
 
-  const refreshState = React.useCallback(() => {
-    setTabs(sessionManager.getTabs());
-    setActiveTab(sessionManager.getActiveTab());
-  }, [sessionManager]);
+export const useSessionManager = () => {
+  // ----- Store
+  const tabSessionManager = useTabSessionStore();
+  const chatSessionManager = useChatSessionStore();
+  const apiConfigStore = useApiConfigStore();
 
-  // ----- Effect
+  // ----- Api Config
+  const apiConfig: IApiConfig = {
+    model: apiConfigStore.model,
+    variant: apiConfigStore.variant ?? "",
+    localConfigs: apiConfigStore.localConfigs ?? undefined,
+    anthropicConfigs: apiConfigStore.anthropicConfigs,
+    geminiConfigs: apiConfigStore.geminiConfigs,
+    openaiConfigs: apiConfigStore.openaiConfigs,
+    ollamaConfigs: apiConfigStore.ollamaConfigs,
+  };
+
+  // ----- Chat Service
+  const chatService = React.useMemo(() => new ChatService(apiConfig), []);
+
+  // ----- Actions
+  function createNewTab(label: string) {
+    console.log("Label: ", label);
+    tabSessionManager.createTab(label);
+  }
+  function startChatSession({
+    model,
+    variant,
+  }: {
+    model: EAiProvider;
+    variant: string;
+  }): INewSessionResponse | null {
+    const label = `Chat with ${model}`;
+    const tab = tabSessionManager.createTab(label);
+
+    if (!tab) return null;
+    const chat = chatSessionManager.startNewChat(tab.id, model, variant);
+
+    return { chat, tab };
+  }
+  function removeSession() {}
+  function closeAllSessions() {}
+
+  async function sendMessageToLLM(params: ISendMessageToLLM): Promise<void> {
+    const chatSession = chatSessionManager.getChatSession(params.tabId);
+
+    if (!chatSession) throw new Error("Chat session not found.");
+
+    // Adding the last message to the chat session
+    chatSessionManager.addOrUpdateChatMessage(
+      params.tabId,
+      params.message,
+      "user"
+    );
+
+    const messages = chatSessionManager.getChatMessages(params.tabId);
+
+    if (messages && messages.length > 0) {
+      // If First Message then create a new Active Session
+      if (messages.length === 1) {
+        startChatSession({
+          model: apiConfig.model,
+          variant: apiConfig.variant,
+        });
+      }
+
+      const chatServiceParam: ISendLLMMessageParams = {
+        messages,
+        onText: (_, fullText) => {
+          chatSessionManager.addOrUpdateChatMessage(
+            params.tabId,
+            fullText,
+            "assistant"
+          );
+        },
+        onFinalMessage: (fullText) => {
+          chatSessionManager.addOrUpdateChatMessage(
+            params.tabId,
+            fullText,
+            "assistant"
+          );
+        },
+        onError: (error) => {
+          console.error("Error in chat:", error);
+          chatSessionManager.addOrUpdateChatMessage(
+            params.tabId,
+            "An error occurred.",
+            "assistant"
+          );
+        },
+      };
+
+      const { abort } = chatService.sendMessage(chatServiceParam);
+      chatSessionManager.setAbortFunction(params.tabId, abort);
+    }
+  }
+
+  async function abortFunction(sessionId: string) {
+    chatSessionManager.abortSession(sessionId);
+  }
+
+  // --- Effects
   React.useEffect(() => {
-    refreshState();
-
-    const unsubscribe = sessionManager.subscribe(refreshState);
-
-    return () => {
-      unsubscribe();
-    };
-  }, [sessionManager, refreshState]);
-
-  const startChatSession = React.useCallback(
-    (model: EAiProvider, variant: string): INewSessionResponse | null => {
-      const response = sessionManager.startChatSession(model, variant);
-      refreshState();
-      return response;
-    },
-    [sessionManager, refreshState]
-  );
-
-  const getChatSessionById = React.useCallback(
-    (tabId: string) => {
-      return sessionManager.getChatSession(tabId);
-    },
-    [sessionManager]
-  );
-
-  const setActiveTabById = React.useCallback(
-    (tabId: string) => {
-      sessionManager.setActiveTab(tabId);
-      refreshState();
-    },
-    [sessionManager, refreshState]
-  );
-
-  const closeAllSessions = React.useCallback(() => {
-    sessionManager.closeAllSessions();
-    refreshState();
-  }, [sessionManager, refreshState]);
-
-  const sendMessageToLLM = React.useCallback(
-    ({
-      tabId,
-      message,
-      onText,
-      onFinalMessage,
-      onError,
-    }: {
-      tabId: string;
-      message: string;
-      onText: (newText: string, fullText: string) => void;
-      onFinalMessage: (fullText: string) => void;
-      onError: (error: any) => void;
-    }) => {
-      sessionManager.sendMessageToLLM({
-        tabId,
-        message,
-        onText,
-        onFinalMessage,
-        onError,
+    (async function () {
+      apiConfigStore.addConfig("localConfigs", {
+        model: "llama",
+        variant: "llama3.2",
+        apikey: "", // Not Required for Local LLMs
       });
-    },
-    [sessionManager]
-  );
-
-  const abortFunction = React.useCallback(
-    (sessionId: string) => {
-      return sessionManager.abortFunction(sessionId);
-    },
-    [sessionManager]
-  );
+    })();
+  }, []);
 
   return {
-    tabs,
-    activeTab,
-
-    // ----- Functions
-    abortFunction,
-    closeAllSessions,
-    getChatSessionById,
     startChatSession,
-    setActiveTabById,
+    removeSession,
+    closeAllSessions,
     sendMessageToLLM,
+    abortFunction,
+    createNewTab,
   };
-}
+};
