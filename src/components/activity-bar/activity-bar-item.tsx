@@ -1,4 +1,5 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 
 import {
   Tooltip,
@@ -7,29 +8,36 @@ import {
 } from "@/components/ui/tooltip";
 import { IDefaultExtensionItems } from "@/constants";
 import { platform } from "@/core";
-import { cn } from "@/lib/utils";
-import { usePlatformContext } from "@/context/platform.context";
-import { Link } from "react-router-dom";
 import Slugify from "@/core/base/common/slugify";
+import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
+import { useActivityExtensionStore } from "@/core/reactive/store/sessionManager/activityExtensionManager";
+import { cn } from "@/lib/utils";
 
 interface IActivityBarItemProps extends IDefaultExtensionItems {
   className?: string;
 }
 
 export const ActivityBarItem: React.FC<IActivityBarItemProps> = (props) => {
-  const { activityExtensionManager } = usePlatformContext();
+  const { activeExtensionTab, setActiveExtensionTab } =
+    useActivityExtensionStore();
+
+  // ----- Store
+  const { createNewTab } = useSessionManager();
 
   return (
     <div
       className={cn(
         "w-full h-fit flex py-4 items-center justify-center border-l-2 border-transparent hover:bg-muted cursor-pointer select-none",
-        activityExtensionManager.activeExtension &&
-          activityExtensionManager.activeExtension.id === props.id &&
+        activeExtensionTab &&
+          activeExtensionTab.id === props.id &&
           "border-muted-foreground bg-muted shadow",
         props.className
       )}
       onClick={() => {
-        activityExtensionManager.setActiveExtensionTab(props.id);
+        setActiveExtensionTab(props.id);
+        if (props.newTab) {
+          createNewTab(props.label);
+        }
       }}
     >
       <Link

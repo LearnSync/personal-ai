@@ -1,6 +1,6 @@
 import { PanelLeftClose } from "lucide-react";
 
-import { usePlatformContext } from "@/context/platform.context";
+import { useActivityExtensionStore } from "@/core/reactive/store/sessionManager/activityExtensionManager";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store";
 import ContextSearchSidebar from "./context-search-sidebar";
@@ -12,14 +12,14 @@ export const Sidebar = () => {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { activityExtensionManager } = usePlatformContext();
+  const { activeExtensionTab, extensions } = useActivityExtensionStore();
   const renderSidebarContent = () => {
-    switch (activityExtensionManager.activeExtension?.label) {
-      case activityExtensionManager.extensions?.[1]?.label:
+    switch (activeExtensionTab?.label) {
+      case extensions?.[1]?.label:
         return <ContextSearchSidebar />;
-      case activityExtensionManager.extensions?.[2]?.label:
+      case extensions?.[2]?.label:
         return <ImportantChatSidebar />;
-      case activityExtensionManager.extensions?.[3]?.label:
+      case extensions?.[3]?.label:
         return <ExtensionsSidebar />;
       default:
         return <DefaultSidebar />;
@@ -30,7 +30,7 @@ export const Sidebar = () => {
     <aside className={cn("relative h-full w-full")}>
       <div className="flex items-center justify-between w-full px-2 border-b">
         <div className="text-sm uppercase font-[500]">
-          {activityExtensionManager.activeExtension?.label}
+          {activeExtensionTab?.label}
         </div>
         <button className="p-2 rounded-md cursor-pointer m ax-w-10 max-h-10 hover:bg-white/10">
           <PanelLeftClose

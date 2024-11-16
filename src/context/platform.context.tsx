@@ -1,14 +1,10 @@
 import * as React from "react";
 
-import { useActivityExtensionManager } from "@/core/reactive/hooks/useActivityExtension";
 import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 
 interface IPlatformContextProps {
   // ----- Sessions Managers
   sessionManager: ReturnType<typeof useSessionManager>;
-
-  // ----- Extensions
-  activityExtensionManager: ReturnType<typeof useActivityExtensionManager>;
 }
 
 const PlatformContext = React.createContext<IPlatformContextProps | undefined>(
@@ -20,14 +16,12 @@ export const PlatformProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const activityExtensionManager = useActivityExtensionManager();
   const sessionManager = useSessionManager();
 
   return (
     <PlatformContext.Provider
       value={{
         sessionManager,
-        activityExtensionManager,
       }}
     >
       {children}
