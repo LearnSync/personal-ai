@@ -3,6 +3,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { useTabSessionStore } from "@/core/reactive/store/sessionManager/tabSessionManager";
+import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 
 interface TabItemProps {
   id: string;
@@ -20,14 +21,16 @@ export const TabItem: React.FC<TabItemProps> = ({
 }) => {
   const [isHovered, setIsHovered] = React.useState(false);
 
+  // ----- Hooks
+  const { onTabClose, onTabClick } = useSessionManager();
+
+  // ----- Store
   const tabSessionManager = useTabSessionStore();
 
   const handleTabLock = React.useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      isLocked
-        ? tabSessionManager.unlockTab(id)
-        : tabSessionManager.removeTab(id);
+      isLocked ? tabSessionManager.unlockTab(id) : onTabClose(id);
     },
     [tabSessionManager]
   );
@@ -36,7 +39,7 @@ export const TabItem: React.FC<TabItemProps> = ({
     <Button
       size={"sm"}
       variant={tabSessionManager.activeTab?.id === id ? "secondary" : "ghost"}
-      onClick={() => tabSessionManager.setActiveTab(id)}
+      onClick={() => onTabClick(id)}
       {...props}
     >
       {/* Icon */}

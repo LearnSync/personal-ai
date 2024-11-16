@@ -13,3 +13,11 @@ export enum EChatHistoryTime {
   PAST_7_DAYS = "week",
   PAST_30_DAYS = "month",
 }
+
+export enum EXTENSION_KEY {
+  CHAT = "chat",
+  CONTEXT_SEARCH = "context_search",
+  IMPORTANT_CHAT = "important_chat",
+  EXTENSION = "extension",
+  SETTINGS = "settings",
+}

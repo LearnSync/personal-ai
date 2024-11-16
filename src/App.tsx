@@ -23,8 +23,6 @@ function App() {
   // Context
   const { activeExtensionTab } = useActivityExtensionStore();
 
-  console.log("App: ", tabSessionManager);
-
   return (
     <ThemeProvider defaultTheme="system">
       <TooltipProvider>

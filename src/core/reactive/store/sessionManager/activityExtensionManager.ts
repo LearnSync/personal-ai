@@ -4,6 +4,7 @@ import {
   IShortCut,
 } from "@/constants";
 import { generateUUID } from "@/core/base/common/uuid";
+import { EXTENSION_KEY } from "@/core/types/enum";
 import * as React from "react";
 import { create } from "zustand";
 
@@ -19,11 +20,13 @@ interface ActivityExtensionStore {
   addExternalExtension: (
     label: string,
     icon: React.ReactNode,
+    key: EXTENSION_KEY,
     shortCut: IShortCut[],
     displaySidebar?: boolean,
     newTab?: boolean
   ) => void;
   removeExtension: (id: string) => void;
+  getDefaultExtension: () => void;
 }
 
 export const useActivityExtensionStore = create<ActivityExtensionStore>(
@@ -43,6 +46,7 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>(
     addExternalExtension: (
       label: string,
       icon: React.ReactNode,
+      key: EXTENSION_KEY,
       shortCut: IShortCut[],
       displaySidebar?: boolean,
       newTab?: boolean
@@ -52,6 +56,7 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>(
         id: generateUUID(),
         label,
         icon,
+        key,
         shortCut,
         displaySidebar,
         newTab,
@@ -68,6 +73,9 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>(
           : activeExtensionTab;
 
       set({ extensions: filteredExtensions, activeExtensionTab: newActiveTab });
+    },
+    getDefaultExtension: () => {
+      set({ activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] });
     },
   })
 );

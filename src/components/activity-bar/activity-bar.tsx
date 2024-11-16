@@ -12,7 +12,7 @@ export const ActivityBar: React.FC = () => {
         {extensions
           ?.filter((item) => item?.position !== "bottom")
           ?.map((item) => (
-            <ActivityBarItem key={item.label} {...item} />
+            <ActivityBarItem {...item} />
           ))}
       </div>
 
@@ -20,7 +20,7 @@ export const ActivityBar: React.FC = () => {
       {extensions
         ?.filter((item) => item?.position === "bottom")
         ?.map((item) => (
-          <ActivityBarItem key={item.label} {...item} />
+          <ActivityBarItem {...item} />
         ))}
     </aside>
   );

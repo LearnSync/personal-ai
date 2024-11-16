@@ -14,6 +14,7 @@ import { useActivityExtensionStore } from "../store/sessionManager/activityExten
 import useChatSessionStore, {
   ChatSessionData,
 } from "../store/sessionManager/chatSessionManager";
+import useGeneralSessionStore from "../store/sessionManager/generalSessionManager";
 import {
   ITab,
   useTabSessionStore,
@@ -35,6 +36,7 @@ export const useSessionManager = () => {
   const chatSessionManager = useChatSessionStore();
   const apiConfigStore = useApiConfigStore();
   const activityExtensionManager = useActivityExtensionStore();
+  const generalSessionManager = useGeneralSessionStore();
 
   // ----- Api Config
   const apiConfig: IApiConfig = React.useMemo(
@@ -57,26 +59,43 @@ export const useSessionManager = () => {
   );
 
   // ----- Actions
-  function createNewTab(label: string) {
-    console.log("Label: ", label);
-  }
-
   function onActivityExtensionClick(extensionId: string) {
     const extension = activityExtensionManager.extensions.find(
       (extension) => extension.id === extensionId
     );
 
     if (extension) {
-      const label = extension.label;
-      tabSessionManager.createTab(label);
+      let newTab;
+      if (extension.newTab) {
+        const label = extension.label;
+        newTab = tabSessionManager.createTab(label)?.id;
+      }
+
+      generalSessionManager.createNewTabSession(newTab, extension);
+      activityExtensionManager.setActiveExtensionTab(extensionId);
     }
   }
 
   function onTabClose(tabId: string) {
-    // Removing the Tab
     tabSessionManager.closeTab(tabId);
+    generalSessionManager.removeSession(tabId);
 
-    // Updating the Extension to the next active tab and its extension
+    // Now set the active tab to and active session
+    const activeSession = tabSessionManager.activeTab;
+
+    if (activeSession) {
+      generalSessionManager.setActiveSession(activeSession.id);
+    }
+
+    // if there is no active session the reload the extension
+    if (tabSessionManager.tabs.size === 1) {
+      activityExtensionManager.getDefaultExtension();
+    }
+  }
+
+  function onTabClick(tabId: string) {
+    generalSessionManager.setActiveSession(tabId);
+    tabSessionManager.setActiveTab(tabId);
   }
 
   /**
@@ -102,18 +121,18 @@ export const useSessionManager = () => {
    * Remove a specific session.
    */
   const removeSession = (sessionId: string) => {
-    console.log("Removing session:", sessionId);
-    // chatSessionManager.endChatSession(sessionId);
-    // tabSessionManager.closeTab(sessionId);
+    generalSessionManager.removeSession(sessionId);
   };
 
   /**
    * Close all active sessions.
    */
   const closeAllSessions = () => {
-    console.log("Closing all sessions.");
-    // chatSessionManager.clearAllSessions();
-    // tabSessionManager.clearAllTabs();
+    // First Clear all the sessions
+    generalSessionManager.resetSession();
+
+    // Then Set the active extension to the chat
+    activityExtensionManager.getDefaultExtension();
   };
 
   async function sendMessageToLLM(params: ISendMessageToLLM): Promise<void> {
@@ -196,6 +215,8 @@ export const useSessionManager = () => {
     closeAllSessions,
     sendMessageToLLM,
     abortFunction,
-    createNewTab,
+    onActivityExtensionClick,
+    onTabClose,
+    onTabClick,
   };
 };
