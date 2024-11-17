@@ -49,19 +49,19 @@ export const useSessionManager = () => {
       openaiConfigs: apiConfigStore.openaiConfigs,
       ollamaConfigs: apiConfigStore.ollamaConfigs,
     }),
-    [apiConfigStore]
+    [apiConfigStore],
   );
 
   // ----- Chat Service
   const chatService = React.useMemo(
     () => new ChatService(apiConfig),
-    [apiConfig]
+    [apiConfig],
   );
 
   // ----- Actions
   function onActivityExtensionClick(extensionId: string) {
     const extension = activityExtensionManager.extensions.find(
-      (extension) => extension.id === extensionId
+      (extension) => extension.id === extensionId,
     );
 
     if (extension) {
@@ -82,7 +82,7 @@ export const useSessionManager = () => {
 
     // Now set the active tab to and active session
     const activeSession = tabSessionManager.activeTab;
-
+    console.log("Active Session: ", activeSession);
     if (activeSession) {
       generalSessionManager.setActiveSession(activeSession.id);
     }
@@ -144,7 +144,7 @@ export const useSessionManager = () => {
     chatSessionManager.addOrUpdateChatMessage(
       params.tabId,
       params.message,
-      "user"
+      "user",
     );
 
     const messages = chatSessionManager.getChatMessages(params.tabId);
@@ -165,14 +165,14 @@ export const useSessionManager = () => {
             chatSessionManager.addOrUpdateChatMessage(
               params.tabId,
               fullText,
-              "assistant"
+              "assistant",
             );
           },
           onFinalMessage: (fullText) => {
             chatSessionManager.addOrUpdateChatMessage(
               params.tabId,
               fullText,
-              "assistant"
+              "assistant",
             );
           },
           onError: (error) => {
@@ -180,7 +180,7 @@ export const useSessionManager = () => {
             chatSessionManager.addOrUpdateChatMessage(
               params.tabId,
               "An error occurred.",
-              "assistant"
+              "assistant",
             );
           },
         };

@@ -26,6 +26,7 @@ export interface ITab {
   label: string;
   isLocked: boolean;
   groupId?: string;
+  createdAt: string;
 }
 
 export interface ITabGroup {
@@ -76,7 +77,12 @@ export const useTabSessionStore = create<ITabSessionStore>()(
 
         // Tab Actions
         createTab: (label: string) => {
-          const newTab: ITab = { id: generateUUID(), label, isLocked: false };
+          const newTab: ITab = {
+            id: generateUUID(),
+            label,
+            isLocked: false,
+            createdAt: new Date().toISOString(),
+          };
           set(() => {
             let { tabs } = get();
 
@@ -142,10 +148,19 @@ export const useTabSessionStore = create<ITabSessionStore>()(
             const updatedTabs = new Map(state.tabs);
             updatedTabs.delete(id);
 
+            // If active tab then we have to remove the active tab to some other tab
             const isActiveTab = state.activeTab?.id === id;
             const remainingTabs = Array.from(updatedTabs.values());
+            const sortedTabs = remainingTabs.sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+            );
+
             const newActiveTab = isActiveTab
-              ? remainingTabs[remainingTabs.length - 1] || null
+              ? sortedTabs && sortedTabs.length > 0
+                ? sortedTabs[0]
+                : null
               : state.activeTab;
 
             return {
@@ -230,7 +245,7 @@ export const useTabSessionStore = create<ITabSessionStore>()(
       }),
       {
         name: "tab-session-store",
-      }
-    )
-  )
+      },
+    ),
+  ),
 );

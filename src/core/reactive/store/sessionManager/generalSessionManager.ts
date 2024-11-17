@@ -16,7 +16,7 @@ interface IGeneralSessionStore {
   setActiveSession: (tabId: string) => void;
   createNewTabSession: (
     tabId: string | undefined,
-    extension: IExtension
+    extension: IExtension,
   ) => void;
   removeSession: (tabId: string) => void;
 
@@ -98,7 +98,7 @@ export const useGeneralSessionStore = create<IGeneralSessionStore>()(
         tabExtensionMap: new Map(),
       });
     },
-  })
+  }),
 );
 
 export default useGeneralSessionStore;
