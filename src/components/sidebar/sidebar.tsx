@@ -1,25 +1,32 @@
 import { PanelLeftClose } from "lucide-react";
 
-import { useActivityExtensionStore } from "@/core/reactive/store/sessionManager/activityExtensionManager";
+import {
+  IExtension,
+  useActivityExtensionStore,
+} from "@/core/reactive/store/sessionManager/activityExtensionManager";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/store";
 import ContextSearchSidebar from "./context-search-sidebar";
 import DefaultSidebar from "./default-sidebar";
 import ExtensionsSidebar from "./extensions-sidebar";
 import { ImportantChatSidebar } from "./important-chat-sidebar";
+import { EXTENSION_KEY } from "@/core/types/enum";
 
 export const Sidebar = () => {
   const { showSideBar, setShowSideBar } = useStore();
 
   // Context
-  const { activeExtensionTab, extensions } = useActivityExtensionStore();
-  const renderSidebarContent = () => {
-    switch (activeExtensionTab?.label) {
-      case extensions?.[1]?.label:
+  const { activeExtensionTab } = useActivityExtensionStore();
+  const renderSidebarContent = (activeExtension: IExtension | null) => {
+    if (!activeExtension) return <DefaultSidebar />;
+
+    const key = activeExtension.key;
+    switch (key) {
+      case EXTENSION_KEY.CONTEXT_SEARCH:
         return <ContextSearchSidebar />;
-      case extensions?.[2]?.label:
+      case EXTENSION_KEY.IMPORTANT_CHAT:
         return <ImportantChatSidebar />;
-      case extensions?.[3]?.label:
+      case EXTENSION_KEY.EXTENSION:
         return <ExtensionsSidebar />;
       default:
         return <DefaultSidebar />;
@@ -40,7 +47,7 @@ export const Sidebar = () => {
         </button>
       </div>
 
-      <div>{renderSidebarContent()}</div>
+      <div>{renderSidebarContent(activeExtensionTab)}</div>
     </aside>
   );
 };
