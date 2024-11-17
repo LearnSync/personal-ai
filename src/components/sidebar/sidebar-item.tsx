@@ -31,6 +31,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
         "w-full justify-start h-8 overflow-hidden flex items-center",
         className
       )}
+      key={id}
       onClick={onClick}
       {...rest}
     >

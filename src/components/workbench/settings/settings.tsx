@@ -1,5 +1,3 @@
-import * as React from "react";
-import { Section } from "./_components/general-components";
 import {
   BellRing,
   Braces,
@@ -10,9 +8,11 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import * as React from "react";
 
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Section } from "./_components/general-components";
 import {
   AccountSettingScreen,
   ApiKeySettingScreen,
@@ -120,20 +120,23 @@ export const Settings = () => {
         <h1 className="text-2xl font-[700] mt-3">Settings</h1>
 
         <Section className="flex-1 mt-3">
-          <div className="h-full col-span-3 xl:col-span-2">
+          <ul className="grid h-full grid-cols-2 gap-3 col-span-full lg:block lg:col-span-3 xl:col-span-2">
             {SETTING_TABS.map((st) => (
-              <Button
-                variant={"ghost"}
-                className="justify-start w-full my-1 space-x-2"
-                onClick={() => handleSettingItemClick(st)}
-              >
-                <div>{st.icon}</div>
-                <div>{st.label}</div>
-              </Button>
+              <li key={`${st.key}__${st.label}`} className="">
+                <Button
+                  variant={"ghost"}
+                  className="justify-start w-full my-1 space-x-2"
+                  onClick={() => handleSettingItemClick(st)}
+                  key={st.key}
+                >
+                  <div>{st.icon}</div>
+                  <div>{st.label}</div>
+                </Button>
+              </li>
             ))}
-          </div>
+          </ul>
 
-          <div className="col-span-9 xl:col-span-10">
+          <div className="col-span-full lg:col-span-9 xl:col-span-10">
             {selectedSettingsItem(selectedItem)}
           </div>
         </Section>
