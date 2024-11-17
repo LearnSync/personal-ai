@@ -2,8 +2,8 @@ import { Lock, MessageCircle, X } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/ui/button";
-import { useTabSessionStore } from "@/core/reactive/store/sessionManager/tabSessionManager";
 import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
+import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
 
 interface TabItemProps {
   id: string;
@@ -25,20 +25,26 @@ export const TabItem: React.FC<TabItemProps> = ({
   const { onTabClose, onTabClick } = useSessionManager();
 
   // ----- Store
-  const tabSessionManager = useTabSessionStore();
+  const sessionManager = useSessionManagerStore();
 
   const handleTabLock = React.useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      isLocked ? tabSessionManager.unlockTab(id) : onTabClose(id);
+      isLocked ? sessionManager.unlockTab(id) : onTabClose(id);
     },
-    [tabSessionManager]
+    [sessionManager]
   );
 
   return (
     <Button
       size={"sm"}
-      variant={tabSessionManager.activeTab?.id === id ? "secondary" : "ghost"}
+      variant={
+        sessionManager.activeTab &&
+        sessionManager.activeTab.tab &&
+        sessionManager.activeTab.tab.id === id
+          ? "secondary"
+          : "ghost"
+      }
       onClick={() => onTabClick(id)}
       {...props}
     >
@@ -50,7 +56,7 @@ export const TabItem: React.FC<TabItemProps> = ({
         onClick={(e) => {
           e.stopPropagation();
           setIsHovered(false);
-          return !isLocked && tabSessionManager.lockTab(id);
+          return !isLocked && sessionManager.lockTab(id);
         }}
       >
         {isHovered ? <Lock /> : <MessageCircle />}

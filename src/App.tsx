@@ -9,7 +9,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import { TooltipProvider } from "./components/ui/tooltip";
 import { Workbench } from "./components/workbench";
 import { useActivityExtensionStore } from "./core/reactive/store/sessionManager/activityExtensionManager";
-import { useTabSessionStore } from "./core/reactive/store/sessionManager/tabSessionManager";
+import { useSessionManagerStore } from "./core/reactive/store/sessionManager/sessionManagerStore";
 import { cn } from "./lib/utils";
 import { useStore } from "./store";
 
@@ -18,7 +18,7 @@ function App() {
 
   // Store
   const { showSideBar, setShowSideBar } = useStore();
-  const tabSessionManager = useTabSessionStore();
+  const { getTabs } = useSessionManagerStore();
 
   // Context
   const { activeExtensionTab } = useActivityExtensionStore();
@@ -61,7 +61,7 @@ function App() {
 
               {/* There Will be Different Chat Tabs For Multiple Chat Windows */}
               <div className="flex items-center ml-1 space-x-1">
-                {tabSessionManager.getTabs()?.map((tab) => (
+                {getTabs()?.map((tab) => (
                   <TabItem
                     key={tab.id}
                     id={tab.id}

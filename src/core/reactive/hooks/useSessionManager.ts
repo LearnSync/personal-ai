@@ -14,15 +14,13 @@ import { useActivityExtensionStore } from "../store/sessionManager/activityExten
 import useChatSessionStore, {
   ChatSessionData,
 } from "../store/sessionManager/chatSessionManager";
-import useGeneralSessionStore from "../store/sessionManager/generalSessionManager";
 import {
-  ITab,
-  useTabSessionStore,
-} from "../store/sessionManager/tabSessionManager";
+  IActiveTabExtension,
+  useSessionManagerStore,
+} from "../store/sessionManager/sessionManagerStore";
 
-interface INewSessionResponse {
+interface INewSessionResponse extends IActiveTabExtension {
   chat: ChatSessionData;
-  tab: ITab;
 }
 
 interface ISendMessageToLLM {
@@ -32,11 +30,10 @@ interface ISendMessageToLLM {
 
 export const useSessionManager = () => {
   // ----- Store
-  const tabSessionManager = useTabSessionStore();
-  const chatSessionManager = useChatSessionStore();
   const apiConfigStore = useApiConfigStore();
   const activityExtensionManager = useActivityExtensionStore();
-  const generalSessionManager = useGeneralSessionStore();
+  const chatSessionManager = useChatSessionStore();
+  const sessionManager = useSessionManagerStore();
 
   // ----- Api Config
   const apiConfig: IApiConfig = React.useMemo(
@@ -49,53 +46,47 @@ export const useSessionManager = () => {
       openaiConfigs: apiConfigStore.openaiConfigs,
       ollamaConfigs: apiConfigStore.ollamaConfigs,
     }),
-    [apiConfigStore],
+    [apiConfigStore]
   );
 
   // ----- Chat Service
   const chatService = React.useMemo(
     () => new ChatService(apiConfig),
-    [apiConfig],
+    [apiConfig]
   );
 
   // ----- Actions
   function onActivityExtensionClick(extensionId: string) {
     const extension = activityExtensionManager.extensions.find(
-      (extension) => extension.id === extensionId,
+      (extension) => extension.id === extensionId
     );
 
     if (extension) {
-      let newTab;
-      if (extension.newTab) {
-        const label = extension.label;
-        newTab = tabSessionManager.createTab(label)?.id;
+      // First check whether any extension is already exists in the session
+      const isPresent = sessionManager.ifTabAvailableSetActive(extension);
+
+      // else
+      if (!isPresent) {
+        if (extension.newTab) {
+          const label = extension.label;
+          sessionManager.createTab(label, extension);
+        }
       }
 
-      generalSessionManager.createNewTabSession(newTab, extension);
       activityExtensionManager.setActiveExtensionTab(extensionId);
     }
   }
 
   function onTabClose(tabId: string) {
-    tabSessionManager.closeTab(tabId);
-    generalSessionManager.removeSession(tabId);
+    sessionManager.closeTab(tabId);
 
-    // Now set the active tab to and active session
-    const activeSession = tabSessionManager.activeTab;
-    console.log("Active Session: ", activeSession);
-    if (activeSession) {
-      generalSessionManager.setActiveSession(activeSession.id);
-    }
-
-    // if there is no active session the reload the extension
-    if (tabSessionManager.tabs.size === 1) {
+    if (sessionManager.tabs.size === 1) {
       activityExtensionManager.getDefaultExtension();
     }
   }
 
   function onTabClick(tabId: string) {
-    generalSessionManager.setActiveSession(tabId);
-    tabSessionManager.setActiveTab(tabId);
+    sessionManager.setActiveTab(tabId);
   }
 
   /**
@@ -110,26 +101,24 @@ export const useSessionManager = () => {
     variant: string;
   }): INewSessionResponse | null {
     const label = `Chat with ${model}`;
-    const tab = tabSessionManager.createTab(label);
+    const tabExtension = sessionManager.createTab(label);
 
-    if (!tab) return null;
-    const chat = chatSessionManager.startNewChat(tab.id, model, variant);
+    if (!tabExtension) return null;
+    const chat = chatSessionManager.startNewChat(
+      tabExtension.tab.id,
+      model,
+      variant
+    );
 
-    return { chat, tab };
+    return { ...tabExtension, chat };
   }
-  /**
-   * Remove a specific session.
-   */
-  const removeSession = (sessionId: string) => {
-    generalSessionManager.removeSession(sessionId);
-  };
 
   /**
    * Close all active sessions.
    */
-  const closeAllSessions = () => {
+  const closeAllTabs = () => {
     // First Clear all the sessions
-    generalSessionManager.resetSession();
+    sessionManager.resetSession();
 
     // Then Set the active extension to the chat
     activityExtensionManager.getDefaultExtension();
@@ -144,7 +133,7 @@ export const useSessionManager = () => {
     chatSessionManager.addOrUpdateChatMessage(
       params.tabId,
       params.message,
-      "user",
+      "user"
     );
 
     const messages = chatSessionManager.getChatMessages(params.tabId);
@@ -165,14 +154,14 @@ export const useSessionManager = () => {
             chatSessionManager.addOrUpdateChatMessage(
               params.tabId,
               fullText,
-              "assistant",
+              "assistant"
             );
           },
           onFinalMessage: (fullText) => {
             chatSessionManager.addOrUpdateChatMessage(
               params.tabId,
               fullText,
-              "assistant",
+              "assistant"
             );
           },
           onError: (error) => {
@@ -180,7 +169,7 @@ export const useSessionManager = () => {
             chatSessionManager.addOrUpdateChatMessage(
               params.tabId,
               "An error occurred.",
-              "assistant",
+              "assistant"
             );
           },
         };
@@ -211,8 +200,7 @@ export const useSessionManager = () => {
 
   return {
     startChatSession,
-    removeSession,
-    closeAllSessions,
+    closeAllTabs,
     sendMessageToLLM,
     abortFunction,
     onActivityExtensionClick,

@@ -125,7 +125,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     label: "Settings",
     key: EXTENSION_KEY.SETTINGS,
     shortCut: APPLICATION_SHORTCUTS.SETTINGS,
-    displaySidebar: false,
+    displaySidebar: true,
     hasMore: false,
     position: "bottom",
     newTab: true,
@@ -192,3 +192,22 @@ export const AI_MODEL_VARIANTS = {
     "claude-3-haiku-20240307",
   ],
 };
+
+export const TAB_COLORS = [
+  "#ef4444",
+  "#f59e0b",
+  "#10b981",
+  "#22c55e",
+  "#10b981",
+  "#14b8a6",
+  "#06b6d4",
+  "#0ea5e9",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#a855f7",
+  "#d946ef",
+  "#ec4899",
+  "#db2777",
+  "#f8fafc",
+];

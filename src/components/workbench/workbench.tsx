@@ -1,16 +1,16 @@
-import useGeneralSessionStore, {
-  IActiveExtension,
-} from "@/core/reactive/store/sessionManager/generalSessionManager";
+import {
+  IActiveTabExtension,
+  useSessionManagerStore,
+} from "@/core/reactive/store/sessionManager/sessionManagerStore";
 import { EXTENSION_KEY } from "@/core/types/enum";
 import { Chat } from "./chat";
 import ImportantChat from "./important-chat/important-chat";
 import { Settings } from "./settings";
 
 export const Workbench = () => {
-  const { activeExtension } = useGeneralSessionStore();
-  console.log("Active Extension: ", activeExtension);
+  const { activeTab } = useSessionManagerStore();
 
-  const getWorkbenchView = (activeExtension: IActiveExtension | null) => {
+  const getWorkbenchView = (activeExtension: IActiveTabExtension | null) => {
     if (!activeExtension) return <Chat />;
 
     const key = activeExtension.extension.key;
@@ -24,9 +24,7 @@ export const Workbench = () => {
     }
   };
 
-  return (
-    <main className="flex-1 h-full">{getWorkbenchView(activeExtension)}</main>
-  );
+  return <main className="flex-1 h-full">{getWorkbenchView(activeTab)}</main>;
 };
 
 export default Workbench;
