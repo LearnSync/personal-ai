@@ -86,7 +86,13 @@ export const useSessionManager = () => {
   }
 
   function onTabClick(tabId: string) {
-    sessionManager.setActiveTab(tabId);
+    const activeTab = sessionManager.setActiveTab(tabId);
+
+    if (activeTab) {
+      activityExtensionManager.setActiveExtensionTabByKey(
+        activeTab.extension.identificationKey
+      );
+    }
   }
 
   /**

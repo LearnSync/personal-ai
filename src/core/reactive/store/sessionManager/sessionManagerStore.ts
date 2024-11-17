@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { generateUUID } from "@/core/base/common/uuid";
-import { IExtension } from "./activityExtensionManager";
+
 import { DEFAULT_EXTENSIONS_ITEMS } from "@/constants";
+import { generateUUID } from "@/core/base/common/uuid";
+import { storage } from "..";
+import { IExtension } from "./activityExtensionManager";
 
 const TAB_COLORS = [
   "#ef4444",
@@ -58,7 +60,7 @@ interface ISessionManagerStore {
   updateTabLabel: (id: string, label: string) => void;
   lockTab: (id: string) => void;
   unlockTab: (id: string) => void;
-  setActiveTab: (id: string) => void;
+  setActiveTab: (id: string) => IActiveTabExtension | undefined;
   closeTab: (id: string) => void;
   closeAllTabs: () => void;
   getTabs: () => ITab[];
@@ -149,6 +151,7 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
           if (tabExtension) {
             set({ activeTab: tabExtension });
           }
+          return tabExtension;
         },
 
         closeTab: (id) => {
@@ -161,7 +164,7 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
               ? Array.from(updatedTabs.values())[0] || null
               : state.activeTab;
 
-            state.tabCloseListeners.forEach((callback) => callback(id));
+            state.tabCloseListeners.forEach((callback: any) => callback(id));
 
             return { tabs: updatedTabs, activeTab: nextActiveTab };
           });
@@ -171,16 +174,41 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
           set({ tabs: new Map(), activeTab: null });
         },
 
-        getTabs: () =>
-          Array.from(get().tabs.values()).map((entry) => entry.tab),
+        getTabs: () => {
+          const { tabs } = get();
+          if (!tabs || tabs.size === 0) {
+            return [];
+          }
+          return Array.from(tabs.values()).map((entry) => entry.tab);
+        },
 
         ifTabAvailableSetActive: (extension) => {
-          const tabExtension = Array.from(get().tabs.values()).find(
-            (te) => te.extension.key === extension.key
+          const { activeTab, tabs } = get();
+          if (!tabs || tabs.size === 0) {
+            return false;
+          }
+
+          const tabsArray = Array.from(tabs.values());
+
+          // Check if there is multiple similar tabs
+          const similarTabs = tabsArray.filter(
+            (tab) =>
+              tab.extension.identificationKey === extension.identificationKey
           );
-          if (tabExtension) {
-            set({ activeTab: tabExtension });
+
+          if (similarTabs.length > 1) {
+            set({ activeTab });
             return true;
+          } else {
+            const tabExtension = tabsArray.find(
+              (te) =>
+                te.extension.identificationKey === extension.identificationKey
+            );
+
+            if (tabExtension) {
+              set({ activeTab: tabExtension });
+              return true;
+            }
           }
           return false;
         },
@@ -243,7 +271,16 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
           }));
         },
       }),
-      { name: "session-manager-store" }
-    )
+      {
+        name: "session-manager-store",
+        storage: storage,
+        partialize: (state) => ({
+          groups: state.groups,
+          tabs: state.tabs,
+          activeTab: state.activeTab,
+        }),
+      }
+    ),
+    { name: "SessionManagerStore" }
   )
 );

@@ -42,6 +42,7 @@
     "react-router-dom": "^6.28.0",
     "react-syntax-highlighter": "^15.6.1",
     "rehype-math": "^0.2.0",
+    "superjson": "^2.2.1",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "zustand": "^5.0.1"

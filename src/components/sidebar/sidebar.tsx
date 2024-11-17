@@ -20,8 +20,8 @@ export const Sidebar = () => {
   const renderSidebarContent = (activeExtension: IExtension | null) => {
     if (!activeExtension) return <DefaultSidebar />;
 
-    const key = activeExtension.key;
-    switch (key) {
+    const identificationKey = activeExtension.identificationKey;
+    switch (identificationKey) {
       case EXTENSION_KEY.CONTEXT_SEARCH:
         return <ContextSearchSidebar />;
       case EXTENSION_KEY.IMPORTANT_CHAT:

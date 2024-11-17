@@ -4,6 +4,7 @@ import { devtools, persist } from "zustand/middleware";
 import { IGeneralAiProvider } from "@/core/types/aiProvider";
 import { IApiConfig } from "@/core/types/apiConfig";
 import { EAiProvider } from "@/core/types/enum";
+import { storage } from "..";
 
 // Default max tokens
 const DEFAULT_MAX_TOKENS = "2048";
@@ -136,6 +137,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
           model: state.model,
           variant: state.variant,
         }),
+        storage: storage,
       }
     ),
     { name: "ApiConfigStore" }

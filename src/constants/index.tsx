@@ -18,7 +18,7 @@ export type Subscriber = () => void;
 
 export interface IDefaultExtensionItems {
   id: string;
-  key: string;
+  identificationKey: string;
   icon: React.ReactNode;
   label: string;
   shortCut?: IShortCut[];
@@ -84,7 +84,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     id: generateUUID(),
     icon: <MessageCircle className="w-full h-full" />,
     label: "Chat",
-    key: EXTENSION_KEY.CHAT,
+    identificationKey: EXTENSION_KEY.CHAT,
     shortCut: APPLICATION_SHORTCUTS.CHAT,
     displaySidebar: true,
     hasMore: false,
@@ -93,7 +93,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     id: generateUUID(),
     icon: <Search className="w-full h-full" />,
     label: "Context Search",
-    key: EXTENSION_KEY.CONTEXT_SEARCH,
+    identificationKey: EXTENSION_KEY.CONTEXT_SEARCH,
     shortCut: APPLICATION_SHORTCUTS.CONTEXT_SEARCH,
     displaySidebar: true,
     hasMore: false,
@@ -103,7 +103,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     id: generateUUID(),
     icon: <FileStack className="w-full h-full" />,
     label: "Important Chat",
-    key: EXTENSION_KEY.IMPORTANT_CHAT,
+    identificationKey: EXTENSION_KEY.IMPORTANT_CHAT,
     shortCut: APPLICATION_SHORTCUTS.IMPORTANT_CHAT,
     displaySidebar: true,
     hasMore: false,
@@ -113,7 +113,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     id: generateUUID(),
     icon: <Blocks className="w-full h-full" />,
     label: "Extensions",
-    key: EXTENSION_KEY.EXTENSION,
+    identificationKey: EXTENSION_KEY.EXTENSION,
     shortCut: APPLICATION_SHORTCUTS.EXTENSIONS,
     displaySidebar: true,
     hasMore: false,
@@ -123,7 +123,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     id: generateUUID(),
     icon: <Settings className="w-full h-full" />,
     label: "Settings",
-    key: EXTENSION_KEY.SETTINGS,
+    identificationKey: EXTENSION_KEY.SETTINGS,
     shortCut: APPLICATION_SHORTCUTS.SETTINGS,
     displaySidebar: true,
     hasMore: false,

@@ -13,8 +13,8 @@ export const Workbench = () => {
   const getWorkbenchView = (activeExtension: IActiveTabExtension | null) => {
     if (!activeExtension) return <Chat />;
 
-    const key = activeExtension.extension.key;
-    switch (key) {
+    const identificationKey = activeExtension.extension.identificationKey;
+    switch (identificationKey) {
       case EXTENSION_KEY.IMPORTANT_CHAT:
         return <ImportantChat />;
       case EXTENSION_KEY.SETTINGS:

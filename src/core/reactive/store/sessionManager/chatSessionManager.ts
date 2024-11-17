@@ -36,7 +36,7 @@ interface IChatSessionStore {
   getChatMessages: (chatId: string) => ILlmMessage[] | undefined;
 }
 
-const useChatSessionStore = create<IChatSessionStore>((set, get) => ({
+export const useChatSessionStore = create<IChatSessionStore>((set, get) => ({
   chatSessions: new Map(),
 
   startNewChat: (id, model, variant) => {

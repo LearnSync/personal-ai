@@ -7,6 +7,7 @@ import { generateUUID } from "@/core/base/common/uuid";
 import { EXTENSION_KEY } from "@/core/types/enum";
 import * as React from "react";
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 
 export interface IExtension extends IDefaultExtensionItems {}
 
@@ -17,6 +18,7 @@ interface ActivityExtensionStore {
 
   // Actions
   setActiveExtensionTab: (id: string) => void;
+  setActiveExtensionTabByKey: (key: string) => void;
   addExternalExtension: (
     label: string,
     icon: React.ReactNode,
@@ -29,53 +31,68 @@ interface ActivityExtensionStore {
   getDefaultExtension: () => void;
 }
 
-export const useActivityExtensionStore = create<ActivityExtensionStore>(
-  (set, get) => ({
-    extensions: [...DEFAULT_EXTENSIONS_ITEMS],
-    activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] || null,
+export const useActivityExtensionStore = create<ActivityExtensionStore>()(
+  devtools(
+    (set, get) => ({
+      extensions: [...DEFAULT_EXTENSIONS_ITEMS],
+      activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] || null,
 
-    // Actions
-    setActiveExtensionTab: (id: string) => {
-      const { extensions, activeExtensionTab } = get();
-      const extension = extensions.find((ext) => ext.id === id);
-      if (extension && extension !== activeExtensionTab) {
-        set({ activeExtensionTab: extension });
-      }
-    },
+      // Actions
+      setActiveExtensionTab: (id: string) => {
+        const { extensions, activeExtensionTab } = get();
+        const extension = extensions.find((ext) => ext.id === id);
+        if (extension && extension !== activeExtensionTab) {
+          set({ activeExtensionTab: extension });
+        }
+      },
+      setActiveExtensionTabByKey(key: string): void {
+        const { extensions, activeExtensionTab } = get();
+        const extension = extensions.find(
+          (ext) => ext.identificationKey === key
+        );
+        if (extension && extension !== activeExtensionTab) {
+          set({ activeExtensionTab: extension });
+        }
+      },
+      addExternalExtension: (
+        label: string,
+        icon: React.ReactNode,
+        identificationKey: EXTENSION_KEY,
+        shortCut: IShortCut[],
+        displaySidebar?: boolean,
+        newTab?: boolean
+      ) => {
+        const { extensions } = get();
+        const newExtension: IExtension = {
+          id: generateUUID(),
+          label,
+          icon,
+          identificationKey,
+          shortCut,
+          displaySidebar,
+          newTab,
+        };
+        set({ extensions: [...extensions, newExtension] });
+      },
+      removeExtension: (id: string) => {
+        const { extensions, activeExtensionTab } = get();
+        const filteredExtensions = extensions.filter((ext) => ext.id !== id);
+        const newActiveTab =
+          activeExtensionTab?.id === id
+            ? filteredExtensions[0] || null
+            : activeExtensionTab;
 
-    addExternalExtension: (
-      label: string,
-      icon: React.ReactNode,
-      key: EXTENSION_KEY,
-      shortCut: IShortCut[],
-      displaySidebar?: boolean,
-      newTab?: boolean
-    ) => {
-      const { extensions } = get();
-      const newExtension: IExtension = {
-        id: generateUUID(),
-        label,
-        icon,
-        key,
-        shortCut,
-        displaySidebar,
-        newTab,
-      };
-      set({ extensions: [...extensions, newExtension] });
-    },
-
-    removeExtension: (id: string) => {
-      const { extensions, activeExtensionTab } = get();
-      const filteredExtensions = extensions.filter((ext) => ext.id !== id);
-      const newActiveTab =
-        activeExtensionTab?.id === id
-          ? filteredExtensions[0] || null
-          : activeExtensionTab;
-
-      set({ extensions: filteredExtensions, activeExtensionTab: newActiveTab });
-    },
-    getDefaultExtension: () => {
-      set({ activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] });
-    },
-  })
+        set({
+          extensions: filteredExtensions,
+          activeExtensionTab: newActiveTab,
+        });
+      },
+      getDefaultExtension: () => {
+        set({ activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] });
+      },
+    }),
+    {
+      name: "ActivityExtensionStore",
+    }
+  )
 );
