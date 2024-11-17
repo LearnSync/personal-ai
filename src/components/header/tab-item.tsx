@@ -4,6 +4,7 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
+import { getIconByKey } from "@/constants";
 
 interface TabItemProps {
   id: string;
@@ -59,7 +60,13 @@ export const TabItem: React.FC<TabItemProps> = ({
           return !isLocked && sessionManager.lockTab(id);
         }}
       >
-        {isHovered ? <Lock /> : <MessageCircle />}
+        {isHovered ? (
+          <Lock />
+        ) : sessionManager.activeTab && sessionManager.getTab(id)?.extension ? (
+          getIconByKey(sessionManager.getTab(id)?.extension?.identificationKey)
+        ) : (
+          <MessageCircle />
+        )}
       </button>
 
       {/* Label */}

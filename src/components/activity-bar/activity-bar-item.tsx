@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { IDefaultExtensionItems } from "@/constants";
+import { getIconByKey, IDefaultExtensionItems } from "@/constants";
 import { platform } from "@/core";
 import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 import { useActivityExtensionStore } from "@/core/reactive/store/sessionManager/activityExtensionManager";
@@ -34,11 +34,11 @@ export const ActivityBarItem: React.FC<IActivityBarItemProps> = (props) => {
         onActivityExtensionClick(props.id);
       }}
     >
-      {props.icon && (
+      {props.identificationKey && (
         <Tooltip>
           <TooltipTrigger>
             <div className="flex items-center text-muted-foreground w-7 h-7">
-              {props.icon}
+              {getIconByKey(props.identificationKey)}
             </div>
           </TooltipTrigger>
           <TooltipContent

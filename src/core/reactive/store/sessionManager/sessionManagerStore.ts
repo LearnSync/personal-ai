@@ -63,6 +63,7 @@ interface ISessionManagerStore {
   setActiveTab: (id: string) => IActiveTabExtension | undefined;
   closeTab: (id: string) => void;
   closeAllTabs: () => void;
+  getTab: (id: string) => IActiveTabExtension | undefined;
   getTabs: () => ITab[];
   ifTabAvailableSetActive: (extension: IExtension) => boolean;
 
@@ -173,7 +174,10 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
         closeAllTabs: () => {
           set({ tabs: new Map(), activeTab: null });
         },
-
+        getTab: (id: string) => {
+          const { tabs } = get();
+          return tabs.get(id);
+        },
         getTabs: () => {
           const { tabs } = get();
           if (!tabs || tabs.size === 0) {

@@ -19,7 +19,6 @@ export type Subscriber = () => void;
 export interface IDefaultExtensionItems {
   id: string;
   identificationKey: string;
-  icon: React.ReactNode;
   label: string;
   shortCut?: IShortCut[];
   hasMore?: boolean;
@@ -79,10 +78,28 @@ export const APPLICATION_SHORTCUTS = {
   TOGGLE_SIDEBAR: generateShortCuts({ key: "s", ctrl: true, alt: true }),
 };
 
+export const getIconByKey = (key: string | undefined) => {
+  if (!key) return <MessageCircle className="w-full h-full" />;
+
+  switch (key) {
+    case EXTENSION_KEY.CHAT:
+      return <MessageCircle className="w-full h-full" />;
+    case EXTENSION_KEY.CONTEXT_SEARCH:
+      return <Search className="w-full h-full" />;
+    case EXTENSION_KEY.IMPORTANT_CHAT:
+      return <FileStack className="w-full h-full" />;
+    case EXTENSION_KEY.SETTINGS:
+      return <Settings className="w-full h-full" />;
+    case EXTENSION_KEY.EXTENSION:
+      return <Blocks className="w-full h-full" />;
+    default:
+      return <MessageCircle className="w-full h-full" />;
+  }
+};
+
 export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   {
     id: generateUUID(),
-    icon: <MessageCircle className="w-full h-full" />,
     label: "Chat",
     identificationKey: EXTENSION_KEY.CHAT,
     shortCut: APPLICATION_SHORTCUTS.CHAT,
@@ -91,7 +108,6 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   },
   {
     id: generateUUID(),
-    icon: <Search className="w-full h-full" />,
     label: "Context Search",
     identificationKey: EXTENSION_KEY.CONTEXT_SEARCH,
     shortCut: APPLICATION_SHORTCUTS.CONTEXT_SEARCH,
@@ -101,7 +117,6 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   },
   {
     id: generateUUID(),
-    icon: <FileStack className="w-full h-full" />,
     label: "Important Chat",
     identificationKey: EXTENSION_KEY.IMPORTANT_CHAT,
     shortCut: APPLICATION_SHORTCUTS.IMPORTANT_CHAT,
@@ -111,7 +126,6 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   },
   {
     id: generateUUID(),
-    icon: <Blocks className="w-full h-full" />,
     label: "Extensions",
     identificationKey: EXTENSION_KEY.EXTENSION,
     shortCut: APPLICATION_SHORTCUTS.EXTENSIONS,
@@ -121,7 +135,6 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   },
   {
     id: generateUUID(),
-    icon: <Settings className="w-full h-full" />,
     label: "Settings",
     identificationKey: EXTENSION_KEY.SETTINGS,
     shortCut: APPLICATION_SHORTCUTS.SETTINGS,

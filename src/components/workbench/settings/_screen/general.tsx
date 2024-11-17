@@ -1,14 +1,14 @@
-import { cn } from "@/lib/utils";
-import { H3 } from "../_components/general-components";
-import { ModeToggle } from "../_components/mode-toggle";
+import { Link } from "react-router-dom";
+
+import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { H3 } from "../_components/general-components";
+import { ModeToggle } from "../_components/mode-toggle";
 
 interface IConnect {
   label: string;
@@ -87,7 +87,7 @@ const connects: IConnect[] = [
           fill="transparent"
           fillRule="evenodd"
           points="31.143,41 7.82,7 16.777,7 40.1,41"
-          clip-rule="evenodd"
+          clipRule="evenodd"
         ></polygon>
         <path
           fill="#fff"
