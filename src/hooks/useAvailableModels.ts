@@ -9,6 +9,7 @@ import {
 import { AI_MODEL_VARIANTS } from "@/constants";
 import { generateUUID } from "@/core";
 import { IAiModel } from "@/core/types/aiProvider";
+import { EAiProvider } from "@/core/types/enum";
 
 export const useAvailableModels = () => {
   const models = React.useMemo<IAiModel[]>(() => {
@@ -17,7 +18,7 @@ export const useAvailableModels = () => {
         id: generateUUID(),
         icon: ollamaIcon({ className: "w-4 h-4" }),
         label: "Llama",
-        model: "llama",
+        model: EAiProvider.OLLAMA,
         variants: AI_MODEL_VARIANTS.LLAMA,
         action: () => console.log("Start New Chat"),
         className:
@@ -27,7 +28,7 @@ export const useAvailableModels = () => {
         id: generateUUID(),
         icon: chatGptIcon({ className: "w-5 h-5 fill-white" }),
         label: "OpenAI",
-        model: "openai",
+        model: EAiProvider.OPENAI,
         variants: AI_MODEL_VARIANTS.OPENAI,
         action: () => console.log("Start New Chat"),
         className:
@@ -37,7 +38,7 @@ export const useAvailableModels = () => {
         id: generateUUID(),
         icon: geminiIcon({ className: "w-5 h-5 fill-white" }),
         label: "Gemini",
-        model: "gemini",
+        model: EAiProvider.GEMINI,
         variants: AI_MODEL_VARIANTS.GEMINI,
         action: () => console.log("Start New Chat"),
         className:
@@ -47,7 +48,7 @@ export const useAvailableModels = () => {
         id: generateUUID(),
         icon: claudeAIIcon({ className: "w-5 h-5" }),
         label: "Claude AI",
-        model: "anthropic",
+        model: EAiProvider.ANTHROPIC,
         variants: AI_MODEL_VARIANTS.ANTHROPIC,
         action: () => console.log("Start New Chat"),
         className:
