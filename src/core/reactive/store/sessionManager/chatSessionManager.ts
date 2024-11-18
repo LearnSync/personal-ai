@@ -1,144 +1,133 @@
 import { create } from "zustand";
 import { EAiProvider } from "@/core/types/enum";
 import { ILlmMessage, IRoleLlm } from "@/core/types/llm";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 export interface ChatSessionData {
-  id: string;
   model: EAiProvider;
   variant: string;
   messages: ILlmMessage[];
-  isActive: boolean;
   abortFunction?: () => void;
 }
 
 interface IChatSessionStore {
-  chatSessions: Map<string, ChatSessionData>;
+  chat: ChatSessionData | undefined;
+  errorMessage: string | null;
+  isLoading: boolean;
 
   // Actions
-  startNewChat: (
-    id: string,
-    model: EAiProvider,
-    variant: string
-  ) => ChatSessionData;
-  closeChat: (chatId: string) => void;
-  getChatSession: (chatId: string) => ChatSessionData | undefined;
-  getActiveChatSessions: () => ChatSessionData[];
-  setActiveChatSessions: (isActive: boolean) => void;
-  setChatMessages: (chatId: string, messages: ILlmMessage[]) => void;
-  addOrUpdateChatMessage: (
-    chatId: string,
-    messageId: string,
-    message: string,
-    role?: IRoleLlm
-  ) => void;
-  setAbortFunction: (chatId: string, abortFunction: () => void) => void;
-  abortSession: (sessionId: string) => void;
-  getChatMessages: (chatId: string) => ILlmMessage[] | undefined;
+  startNewChat: ({
+    model,
+    variant,
+  }: {
+    model: EAiProvider;
+    variant: string;
+  }) => void;
+  addMessage: (messageId: string, content: string, role?: IRoleLlm) => void;
+  updateMessage: (messageId: string, content: string) => void;
+  addOrUpdateMessage: ({
+    messageId,
+    content,
+    role,
+  }: {
+    messageId: string;
+    content: string;
+    role?: IRoleLlm;
+  }) => void;
+  setChatMessages: (messages: ILlmMessage[]) => void;
+  setErrorMessage: (errorMessage: string | null) => void;
+  setAbortFunction: (abortFunction: () => void) => void;
+  abort: () => void;
 }
 
-export const useChatSessionStore = create<IChatSessionStore>((set, get) => ({
-  chatSessions: new Map(),
+export const useChatSessionStore = create<IChatSessionStore>()(
+  devtools(
+    immer((set, get) => ({
+      chat: undefined,
+      errorMessage: null,
+      isLoading: false,
 
-  startNewChat: (id, model, variant) => {
-    const newSession: ChatSessionData = {
-      id,
-      model,
-      variant,
-      messages: [],
-      isActive: true,
-    };
-    set((state) => {
-      const updatedSessions = new Map(state.chatSessions);
-      updatedSessions.set(id, newSession);
-      return { chatSessions: updatedSessions };
-    });
-    return newSession;
-  },
+      // Start a new chat session
+      startNewChat: ({ model, variant }) => {
+        const newChat: ChatSessionData = {
+          model,
+          variant,
+          messages: [],
+        };
 
-  closeChat: (chatId) => {
-    set((state) => {
-      const session = state.chatSessions.get(chatId);
-      if (session) {
-        session.isActive = false;
-        session.abortFunction?.();
-        const updatedSessions = new Map(state.chatSessions);
-        updatedSessions.set(chatId, session);
-        return { chatSessions: updatedSessions };
-      }
-      return {};
-    });
-  },
+        set({ chat: newChat });
+      },
 
-  getChatSession: (chatId) => get().chatSessions.get(chatId),
+      // Add a new message to the chat
+      addMessage: (messageId, content, role = "assistant") => {
+        set((state) => {
+          if (state.chat) {
+            state.chat.messages.push({ id: messageId, message: content, role });
+          }
+        });
+      },
 
-  getActiveChatSessions: () => {
-    return Array.from(get().chatSessions.values()).filter(
-      (session) => session.isActive
-    );
-  },
-
-  setActiveChatSessions: (isActive) => {
-    set((state) => {
-      const updatedSessions = new Map(state.chatSessions);
-      updatedSessions.forEach((session) => (session.isActive = isActive));
-      return { chatSessions: updatedSessions };
-    });
-  },
-
-  setChatMessages: (chatId, messages) => {
-    set((state) => {
-      const session = state.chatSessions.get(chatId);
-      if (session) {
-        const updatedSessions = new Map(state.chatSessions);
-        session.messages = messages;
-        updatedSessions.set(chatId, session);
-        return { chatSessions: updatedSessions };
-      }
-      return {};
-    });
-  },
-
-  addOrUpdateChatMessage: (chatId, messageId, message, role = "assistant") => {
-    set((state) => {
-      const session = state.chatSessions.get(chatId);
-      if (session) {
-        const updatedSessions = new Map(state.chatSessions);
-        const messageIndex = session.messages.findIndex(
-          (msg) => msg.id === messageId
-        );
-
-        if (messageIndex !== -1) {
-          session.messages[messageIndex] = { id: messageId, message, role };
-        } else {
-          session.messages.push({ id: messageId, message, role });
+      // Update an existing message in the chat
+      updateMessage: (messageId, content) => {
+        set((state) => {
+          if (state.chat) {
+            const message = state.chat.messages.find(
+              (msg) => msg.id === messageId
+            );
+            if (message) {
+              message.message = content;
+            }
+          }
+        });
+      },
+      addOrUpdateMessage: ({ messageId, content, role = "assistant" }) => {
+        const { chat, addMessage } = get();
+        if (chat && chat.messages) {
+          const messageIndex = chat.messages.findIndex(
+            (msg) => msg.id === messageId
+          );
+          if (messageIndex > -1) {
+            chat.messages[messageIndex].message = content;
+          } else {
+            addMessage(messageId, content, role);
+          }
         }
+      },
+      // Replace all messages in the chat
+      setChatMessages: (messages) => {
+        set((state) => {
+          if (state.chat) {
+            state.chat.messages = messages;
+          }
+        });
+      },
 
-        updatedSessions.set(chatId, session);
-        return { chatSessions: updatedSessions };
-      }
-      return {};
-    });
-  },
+      // Set an error message
+      setErrorMessage: (errorMessage) => {
+        set({ errorMessage });
+      },
 
-  setAbortFunction: (chatId, abortFunction) => {
-    set((state) => {
-      const session = state.chatSessions.get(chatId);
-      if (session) {
-        const updatedSessions = new Map(state.chatSessions);
-        session.abortFunction = abortFunction;
-        updatedSessions.set(chatId, session);
-        return { chatSessions: updatedSessions };
-      }
-      return {};
-    });
-  },
+      // Set an abort function for the chat
+      setAbortFunction: (abortFunction) => {
+        set((state) => {
+          if (state.chat) {
+            state.chat.abortFunction = abortFunction;
+          }
+        });
+      },
 
-  abortSession: (sessionId) => {
-    const session = get().chatSessions.get(sessionId);
-    session?.abortFunction?.();
-  },
-
-  getChatMessages: (chatId) => get().chatSessions.get(chatId)?.messages,
-}));
+      // Abort the current chat session
+      abort: () => {
+        set((state) => {
+          if (state.chat) {
+            state.chat.abortFunction?.();
+          }
+        });
+      },
+    })),
+    { name: "ChatSessionStore", enabled: true }
+  )
+);
 
 export default useChatSessionStore;
