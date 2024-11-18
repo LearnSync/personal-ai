@@ -1,41 +1,29 @@
-/**
- * Hook to manage application sessions including chat, tab, and extensions.
- * It supports features like managing sidebars, reloading sessions with persistence,
- * and handling 3rd-party extensions.
- */
-
-import * as React from "react";
-
-import { ChatService, ISendLLMMessageParams } from "@/core/platform/services";
+import { ChatService } from "@/core/platform/services";
 import { IApiConfig } from "@/core/types/apiConfig";
 import { EAiProvider } from "@/core/types/enum";
+import { useToast } from "@/hooks/use-toast";
+import * as React from "react";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
 import { useActivityExtensionStore } from "../store/sessionManager/activityExtensionManager";
-import useChatSessionStore, {
-  ChatSessionData,
-} from "../store/sessionManager/chatSessionManager";
-import {
-  IActiveTabExtension,
-  useSessionManagerStore,
-} from "../store/sessionManager/sessionManagerStore";
-
-interface INewSessionResponse extends IActiveTabExtension {
-  chat: ChatSessionData;
-}
+import useChatSessionStore from "../store/sessionManager/chatSessionManager";
+import { useSessionManagerStore } from "../store/sessionManager/sessionManagerStore";
 
 interface ISendMessageToLLM {
-  tabId: string;
+  messageId: string;
   message: string;
 }
 
 export const useSessionManager = () => {
-  // ----- Store
+  // ----- Stores
   const apiConfigStore = useApiConfigStore();
   const activityExtensionManager = useActivityExtensionStore();
   const chatSessionManager = useChatSessionStore();
   const sessionManager = useSessionManagerStore();
 
-  // ----- Api Config
+  // ----- Hooks
+  const { toast } = useToast();
+
+  // ----- API Configuration
   const apiConfig: IApiConfig = React.useMemo(
     () => ({
       model: apiConfigStore.model,
@@ -55,160 +43,111 @@ export const useSessionManager = () => {
     [apiConfig]
   );
 
-  // ----- Actions
-  function onActivityExtensionClick(extensionId: string) {
-    const extension = activityExtensionManager.extensions.find(
-      (extension) => extension.id === extensionId
-    );
-
-    if (extension) {
-      // First check whether any extension is already exists in the session
-      const isPresent = sessionManager.ifTabAvailableSetActive(extension);
-
-      // else
-      if (!isPresent) {
-        if (extension.newTab) {
-          const label = extension.label;
-          sessionManager.createTab(label, extension);
-        }
-      }
-
-      activityExtensionManager.setActiveExtensionTab(extensionId);
-    }
-  }
-
-  function onTabClose(tabId: string) {
-    sessionManager.closeTab(tabId);
-
-    if (sessionManager.tabs.size === 1) {
-      activityExtensionManager.getDefaultExtension();
-    }
-  }
-
-  function onTabClick(tabId: string) {
-    const activeTab = sessionManager.setActiveTab(tabId);
-
-    if (activeTab) {
-      activityExtensionManager.setActiveExtensionTabByKey(
-        activeTab.extension.identificationKey
-      );
-    }
-  }
-
-  /**
-   * Start a new chat session tied to a specific tab.
-   * @param params The model and variant for the chat session.
-   */
-  function startChatSession({
-    model,
-    variant,
-  }: {
-    model: EAiProvider;
-    variant: string;
-  }): INewSessionResponse | null {
-    const label = `Chat with ${model}`;
-    const tabExtension = sessionManager.createTab(label);
-
-    if (!tabExtension) return null;
-    const chat = chatSessionManager.startNewChat(
-      tabExtension.tab.id,
-      model,
-      variant
-    );
-
-    return { ...tabExtension, chat };
-  }
-
-  /**
-   * Close all active sessions.
-   */
-  const closeAllTabs = () => {
-    // First Clear all the sessions
-    sessionManager.resetSession();
-
-    // Then Set the active extension to the chat
-    activityExtensionManager.getDefaultExtension();
+  // ----- Helper Functions
+  const handleError = (error: unknown, title = "Error") => {
+    const errorMessage =
+      error instanceof Error ? error.message : "An unexpected error occurred.";
+    toast({ variant: "destructive", title, description: errorMessage });
+    chatSessionManager.setErrorMessage(errorMessage);
   };
 
-  async function sendMessageToLLM(params: ISendMessageToLLM): Promise<void> {
-    const chatSession = chatSessionManager.getChatSession(params.tabId);
+  // ----- Actions
+  const sendMessageToLLM = async ({
+    messageId,
+    message,
+  }: ISendMessageToLLM): Promise<void> => {
+    const chat = chatSessionManager.chat;
 
-    if (!chatSession) throw new Error("Chat session not found.");
+    if (!chat) {
+      handleError(new Error("Chat session not found."));
+      return;
+    }
 
-    // Adding the last message to the chat session
-    chatSessionManager.addOrUpdateChatMessage(
-      params.tabId,
-      params.message,
-      "user"
-    );
+    // Add user message to the chat session
+    chatSessionManager.addOrUpdateMessage({
+      messageId,
+      content: message,
+      role: "user",
+    });
 
-    const messages = chatSessionManager.getChatMessages(params.tabId);
-
-    if (messages && messages.length > 0) {
-      // If First Message then create a new Active Session
-      if (messages.length === 1) {
-        startChatSession({
+    if (chat.messages && chat.messages.length > 0) {
+      // Automatically start a new session if this is the first message
+      if (chat.messages.length === 1) {
+        chatSessionManager.startNewChat({
           model: apiConfig.model,
           variant: apiConfig.variant,
         });
       }
 
       try {
-        const chatServiceParam: ISendLLMMessageParams = {
-          messages,
+        const { abort } = chatService.sendMessage({
+          messages: chat.messages,
           onText: (_, fullText) => {
-            chatSessionManager.addOrUpdateChatMessage(
-              params.tabId,
-              fullText,
-              "assistant"
-            );
+            chatSessionManager.addOrUpdateMessage({
+              messageId,
+              content: fullText,
+            });
           },
-          onFinalMessage: (fullText) => {
-            chatSessionManager.addOrUpdateChatMessage(
-              params.tabId,
-              fullText,
-              "assistant"
-            );
-          },
+          onFinalMessage: () => {},
           onError: (error) => {
-            console.error("Error in chat:", error);
-            chatSessionManager.addOrUpdateChatMessage(
-              params.tabId,
-              "An error occurred.",
-              "assistant"
-            );
+            handleError(error, "Chat Error");
           },
-        };
+        });
 
-        const { abort } = chatService.sendMessage(chatServiceParam);
-        chatSessionManager.setAbortFunction(params.tabId, abort);
+        chatSessionManager.setAbortFunction(abort);
       } catch (error) {
-        console.error("Failed to send message to LLM", error);
+        handleError(error, "Failed to send message");
       }
     }
-  }
+  };
 
-  /**
-   * Abort a chat session.
-   * @param sessionId The session ID to abort.
-   */
-  async function abortFunction(sessionId: string) {
-    chatSessionManager.abortSession(sessionId);
-  }
+  const closeAllTabs = () => {
+    sessionManager.resetSession();
+    activityExtensionManager.getDefaultExtension();
+  };
 
-  // --- Effects
+  const onActivityExtensionClick = (extensionId: string) => {
+    const extension = activityExtensionManager.extensions.find(
+      (ext) => ext.id === extensionId
+    );
+
+    if (extension) {
+      const isPresent = sessionManager.ifTabAvailableSetActive(extension);
+      if (!isPresent && extension.newTab) {
+        sessionManager.createTab(extension.label, extension);
+      }
+      activityExtensionManager.setActiveExtensionTab(extensionId);
+    }
+  };
+
+  const onTabClose = (tabId: string) => {
+    sessionManager.closeTab(tabId);
+    if (sessionManager.tabs.size === 1) {
+      activityExtensionManager.getDefaultExtension();
+    }
+  };
+
+  const onTabClick = (tabId: string) => {
+    const activeTab = sessionManager.setActiveTab(tabId);
+    if (activeTab) {
+      activityExtensionManager.setActiveExtensionTabByKey(
+        activeTab.extension.identificationKey
+      );
+    }
+  };
+
+  // ----- Effects
   React.useEffect(() => {
-    (async function () {
-      apiConfigStore.setModel(EAiProvider.LOCAL);
-      apiConfigStore.setVariant("llama3.2");
-    })();
-  }, []);
+    apiConfigStore.setModel(EAiProvider.LOCAL);
+    apiConfigStore.setVariant("llama3.2");
+  }, [apiConfigStore]);
 
   return {
-    startChatSession,
-    closeAllTabs,
+    // Chat Actions
     sendMessageToLLM,
-    abortFunction,
+
+    // Tab and Extension Management
+    closeAllTabs,
     onActivityExtensionClick,
     onTabClose,
     onTabClick,

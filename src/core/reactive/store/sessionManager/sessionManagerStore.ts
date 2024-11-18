@@ -3,7 +3,7 @@ import { devtools, persist } from "zustand/middleware";
 
 import { DEFAULT_EXTENSIONS_ITEMS } from "@/constants";
 import { generateUUID } from "@/core/base/common/uuid";
-import { storage, storageIndexDb } from "..";
+import { storageIndexDb } from "..";
 import { IExtension } from "./activityExtensionManager";
 
 const TAB_COLORS = [
