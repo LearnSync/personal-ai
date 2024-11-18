@@ -4,6 +4,7 @@ import {
   chatGptIcon,
   claudeAIIcon,
   geminiIcon,
+  localLLMIcon,
   ollamaIcon,
 } from "@/components/sidebar";
 import { AI_MODEL_VARIANTS } from "@/constants";
@@ -14,6 +15,16 @@ import { EAiProvider } from "@/core/types/enum";
 export const useAvailableModels = () => {
   const models = React.useMemo<IAiModel[]>(() => {
     return [
+      {
+        id: generateUUID(),
+        icon: localLLMIcon({ className: "w-4 h-4 text-white" }),
+        label: "Local",
+        model: EAiProvider.LOCAL,
+        variants: AI_MODEL_VARIANTS.LLAMA,
+        action: () => console.log("Start New Chat"),
+        className:
+          "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
+      },
       {
         id: generateUUID(),
         icon: ollamaIcon({ className: "w-4 h-4" }),

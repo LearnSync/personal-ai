@@ -34,7 +34,7 @@ export const Chat = React.memo(() => {
 
   // ----- Store
   const { activeTab, createTab } = useSessionManagerStore();
-  const { chat, isLoading, startNewChat, abort } = useChatSessionStore();
+  const { chat, isLoading, abort } = useChatSessionStore();
   const { model, setModel } = useApiConfigStore();
 
   // ----- Handlers
@@ -71,12 +71,6 @@ export const Chat = React.memo(() => {
     if (!activeTab) {
       // First create a new tab
       const newActiveTab = createTab(`Chat with ${model}`);
-
-      // Creating a new Chat Session
-      startNewChat({
-        model: EAiProvider.LOCAL,
-        variant: "llama3.2",
-      });
 
       // Now Sending the message to the LLM
       sendMessageToLLM({

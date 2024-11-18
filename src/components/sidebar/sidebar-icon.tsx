@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Laptop } from "lucide-react";
 
 export const chatGptIcon = ({ className }: { className?: string }) => {
   return (
@@ -85,4 +86,8 @@ export const ollamaIcon = ({ className }: { className?: string }) => {
       />
     </div>
   );
+};
+
+export const localLLMIcon = ({ className }: { className?: string }) => {
+  return <Laptop className={cn("", className)} />;
 };

@@ -1,6 +1,5 @@
 import { ChatService } from "@/core/platform/services";
 import { IApiConfig } from "@/core/types/apiConfig";
-import { EAiProvider } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
 import * as React from "react";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
@@ -56,11 +55,14 @@ export const useSessionManager = () => {
     messageId,
     message,
   }: ISendMessageToLLM): Promise<void> => {
-    const chat = chatSessionManager.chat;
+    let chat = chatSessionManager.chat;
 
     if (!chat) {
-      handleError(new Error("Chat session not found."));
-      return;
+      // Creating a new Chat Session
+      chat = chatSessionManager.startNewChat({
+        model: apiConfig.model,
+        variant: apiConfig.variant,
+      });
     }
 
     // Add user message to the chat session
@@ -70,21 +72,17 @@ export const useSessionManager = () => {
       role: "user",
     });
 
-    if (chat.messages && chat.messages.length > 0) {
-      // Automatically start a new session if this is the first message
-      if (chat.messages.length === 1) {
-        chatSessionManager.startNewChat({
-          model: apiConfig.model,
-          variant: apiConfig.variant,
-        });
-      }
+    if (chat) {
+      const newMessageIdForActiveChat = `${
+        sessionManager.activeTab?.tab.id
+      }__${Date.now()}`;
 
       try {
         const { abort } = chatService.sendMessage({
           messages: chat.messages,
           onText: (_, fullText) => {
             chatSessionManager.addOrUpdateMessage({
-              messageId,
+              messageId: newMessageIdForActiveChat,
               content: fullText,
             });
           },
@@ -135,12 +133,6 @@ export const useSessionManager = () => {
       );
     }
   };
-
-  // ----- Effects
-  React.useEffect(() => {
-    apiConfigStore.setModel(EAiProvider.LOCAL);
-    apiConfigStore.setVariant("llama3.2");
-  }, [apiConfigStore]);
 
   return {
     // Chat Actions

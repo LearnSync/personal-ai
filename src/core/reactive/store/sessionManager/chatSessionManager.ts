@@ -23,7 +23,7 @@ interface IChatSessionStore {
   }: {
     model: EAiProvider;
     variant: string;
-  }) => void;
+  }) => ChatSessionData;
   addMessage: (messageId: string, content: string, role?: IRoleLlm) => void;
   updateMessage: (messageId: string, content: string) => void;
   addOrUpdateMessage: ({
@@ -57,6 +57,7 @@ export const useChatSessionStore = create<IChatSessionStore>()(
         };
 
         set({ chat: newChat });
+        return newChat;
       },
 
       // Add a new message to the chat
