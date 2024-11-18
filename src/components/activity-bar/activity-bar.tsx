@@ -2,7 +2,7 @@ import { useActivityExtensionStore } from "@/core/reactive/store/sessionManager/
 import React from "react";
 import ActivityBarItem from "./activity-bar-item";
 
-export const ActivityBar: React.FC = () => {
+export const ActivityBar: React.FC = React.memo(() => {
   // ----- Store
   const { extensions } = useActivityExtensionStore();
 
@@ -24,6 +24,7 @@ export const ActivityBar: React.FC = () => {
         ))}
     </aside>
   );
-};
+});
+ActivityBar.displayName = "ActivityBar";
 
 export default ActivityBar;
