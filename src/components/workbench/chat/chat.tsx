@@ -1,4 +1,3 @@
-import localforage from "localforage";
 import { Archive, Pen, Star } from "lucide-react";
 import * as React from "react";
 
@@ -15,99 +14,97 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { usePlatformContext } from "@/context/platform.context";
+import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
+import useChatSessionStore from "@/core/reactive/store/sessionManager/chatSessionManager";
+import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
 import { EAiProvider } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
 import useAvailableModels from "@/hooks/useAvailableModels";
-import useChat from "@/hooks/useChat";
 import { cn } from "@/lib/utils";
 import { AutoResizingInput } from "../_components";
 import { Conversation } from "../_components/conversation";
 import { EmptyWorkspace } from "./empty-workspace";
 
 export const Chat = React.memo(() => {
-  const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
-    undefined
-  );
-
-  // ----- Context
-  const { sessionManager, activityExtensionManager } = usePlatformContext();
-
   // ----- Hooks
   const { toast } = useToast();
   const { models } = useAvailableModels();
-  const chat = useChat();
+  const { sendMessageToLLM } = useSessionManager();
 
-  // ----- Memoisation
-  const activeChatSessionOnCurrentTab = React.useMemo(() => {
-    const activeTab = sessionManager.activeTab;
-    if (!activeTab) return null;
-    return sessionManager.getChatSessionById(activeTab.id);
-  }, [activityExtensionManager]);
+  // ----- Store
+  const { activeTab, createTab } = useSessionManagerStore();
+  const { chat, isLoading, startNewChat, abort } = useChatSessionStore();
+  const { model, setModel } = useApiConfigStore();
+
+  // ----- Handlers
+  const handleModelChange = async (value: string) => {
+    const getModel = () => {
+      switch (value) {
+        case EAiProvider.LOCAL:
+          return EAiProvider.LOCAL;
+        case EAiProvider.OLLAMA:
+          return EAiProvider.OLLAMA;
+        case EAiProvider.ANTHROPIC:
+          return EAiProvider.ANTHROPIC;
+        case EAiProvider.GEMINI:
+          return EAiProvider.GEMINI;
+        case EAiProvider.GREPTILE:
+          return EAiProvider.GREPTILE;
+        case EAiProvider.OPENAI:
+          return EAiProvider.OPENAI;
+        default:
+          return EAiProvider.LOCAL;
+      }
+    };
+    setModel(getModel());
+  };
 
   const handleConverSation = async (value: string) => {
-    if (!selectedValue) {
+    if (!model) {
       toast({
         title: "Info",
         description: "Starting the conversation with the last used model.",
       });
     }
 
-    if (!sessionManager.tabs) {
-      const sessionStatus = sessionManager.startChatSession(
-        EAiProvider.LOCAL,
-        "llama3.2"
-      );
-      if (sessionStatus) {
-        chat.sendMessageToLLM(value, sessionStatus.tab.id);
-      }
+    if (!activeTab) {
+      // First create a new tab
+      const newActiveTab = createTab(`Chat with ${model}`);
+
+      // Creating a new Chat Session
+      startNewChat({
+        model: EAiProvider.LOCAL,
+        variant: "llama3.2",
+      });
+
+      // Now Sending the message to the LLM
+      sendMessageToLLM({
+        messageId: `${newActiveTab.tab.id}__${Date.now()}`,
+        message: value,
+      });
     } else {
-      const sessionId = sessionManager.activeTab?.id;
-      if (sessionId) chat.sendMessageToLLM(value, sessionId);
+      sendMessageToLLM({
+        messageId: `${activeTab.tab.id}__${Date.now()}`,
+        message: value,
+      });
     }
   };
 
-  // ----- Side Effects
-  React.useEffect(() => {
-    (async function () {
-      const lastUsedModel: string | null = await localforage.getItem(
-        "lastUsedModel"
-      );
-
-      if (lastUsedModel) {
-        setSelectedValue(lastUsedModel);
-      }
-    })();
-  }, []);
-
   return (
     <section className="relative h-full">
-      {sessionManager.tabs && activityExtensionManager.activeExtension?.id && (
+      {activeTab && activeTab.tab.id && (
         <div className="sticky top-0 left-0 flex items-center justify-between w-full pr-5 bg-background-1 h-fit">
-          <Select
-            value={selectedValue && selectedValue}
-            onValueChange={async (value) => {
-              setSelectedValue(value);
-
-              /**
-               * Setting the last use model to the indexed db
-               */
-              await localforage.setItem("lastUsedModel", value);
-            }}
-          >
+          <Select value={model} onValueChange={handleModelChange}>
             <SelectTrigger className="h-8 w-[150px] focus:ring-0 bg-background-2 shadow-inner shadow-background-1/40">
               <SelectValue
                 className={cn("")}
-                placeholder={
-                  activeChatSessionOnCurrentTab?.model ?? (
-                    <div>Not Selected</div>
-                  )
-                }
+                placeholder={chat?.model ?? <div>Not Selected</div>}
               />
             </SelectTrigger>
             <SelectContent>
               {models?.map((opt) => (
-                <SelectItem key={opt.id} value={opt.label}>
+                <SelectItem key={opt.id} value={opt.model}>
                   <div
                     className={cn("flex items-center space-x-2", opt.className)}
                   >
@@ -165,12 +162,9 @@ export const Chat = React.memo(() => {
 
       <div className="container h-full mx-auto max-w-7xl">
         <div className="lg:w-[85%] mx-auto ">
-          {chat.messages.length > 0 ? (
+          {activeTab && activeTab.tab && chat && chat.messages?.length > 0 ? (
             <div className="flex flex-col w-full h-full pb-4">
-              <Conversation
-                isLoading={chat.isLoading}
-                messages={chat.messages}
-              />
+              <Conversation isLoading={isLoading} messages={chat.messages} />
             </div>
           ) : (
             <EmptyWorkspace />
@@ -181,10 +175,10 @@ export const Chat = React.memo(() => {
       <div className="sticky bottom-0 z-50 w-full lg:w-[85%] mx-auto bg-background-1">
         <div className="pb-5">
           <AutoResizingInput
-            isGenerating={chat.isGenerating}
-            success={chat.success}
+            isGenerating={isLoading}
+            success={!isLoading}
             onEnter={handleConverSation}
-            onAbort={chat.abort}
+            onAbort={abort}
           />
         </div>
       </div>
