@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import { IGeneralAiProvider } from "@/core/types/aiProvider";
 import { IApiConfig } from "@/core/types/apiConfig";
@@ -20,7 +21,7 @@ interface ApiConfigState extends IApiConfig {
   updateProvider: (
     type: EAiProvider,
     index: number,
-    updatedProvider: Partial<IGeneralAiProvider>
+    updatedProvider: Partial<IGeneralAiProvider>,
   ) => void;
   deleteProvider: (type: EAiProvider, index: number) => void;
   setModel: (model: EAiProvider) => void;
@@ -30,7 +31,7 @@ interface ApiConfigState extends IApiConfig {
 export const useApiConfigStore = create<ApiConfigState>()(
   devtools(
     persist(
-      (set, get) => ({
+      immer((set, get) => ({
         // Initial State
         anthropicConfigs: [],
         geminiConfigs: [],
@@ -100,7 +101,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
 
             if (!providers || !providers[index]) {
               throw new Error(
-                `Invalid provider index: ${index} for type: ${type}`
+                `Invalid provider index: ${index} for type: ${type}`,
               );
             }
             const updatedProviders = [...providers];
@@ -116,7 +117,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
             const providers = state.getConfig(type);
             if (!providers || !providers[index]) {
               throw new Error(
-                `Invalid provider index: ${index} for type: ${type}`
+                `Invalid provider index: ${index} for type: ${type}`,
               );
             }
             const updatedProviders = providers.filter((_, i) => i !== index);
@@ -125,7 +126,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
 
         setModel: (model) => set(() => ({ model })),
         setVariant: (variant) => set(() => ({ variant })),
-      }),
+      })),
       {
         name: "api-config-store",
         partialize: (state) => ({
@@ -138,15 +139,15 @@ export const useApiConfigStore = create<ApiConfigState>()(
           variant: state.variant,
         }),
         storage: storage,
-      }
+      },
     ),
-    { name: "ApiConfigStore" }
-  )
+    { name: "ApiConfigStore" },
+  ),
 );
 
 // Utility function to add default tokens
 function addDefaultTokens(
-  providers?: IGeneralAiProvider[]
+  providers?: IGeneralAiProvider[],
 ): IGeneralAiProvider[] {
   return (
     providers?.map((provider) => ({

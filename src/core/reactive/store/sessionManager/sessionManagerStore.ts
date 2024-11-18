@@ -3,7 +3,7 @@ import { devtools, persist } from "zustand/middleware";
 
 import { DEFAULT_EXTENSIONS_ITEMS } from "@/constants";
 import { generateUUID } from "@/core/base/common/uuid";
-import { storage } from "..";
+import { storage, storageIndexDb } from "..";
 import { IExtension } from "./activityExtensionManager";
 
 const TAB_COLORS = [
@@ -277,7 +277,7 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
       }),
       {
         name: "session-manager-store",
-        storage: storage,
+        storage: storageIndexDb,
         partialize: (state) => ({
           groups: state.groups,
           tabs: state.tabs,
