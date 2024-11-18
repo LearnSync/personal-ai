@@ -24,6 +24,7 @@ import { SidebarItem } from "./sidebar-item";
 import { usePlatformContext } from "@/context/platform.context";
 import { EAiProvider } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
+import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
 
 interface DefaultSidebarProps {
   className?: string;
@@ -35,7 +36,8 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
-  const { sessionManager } = usePlatformContext();
+  // ----- Store
+  const { createTab } = useSessionManagerStore();
 
   const { toast } = useToast();
 
@@ -48,10 +50,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
         label: `Start New Chat with Local (llama3.2)`,
         className: "",
         action: () => {
-          const response = sessionManager.startChatSession({
-            model: EAiProvider.LOCAL,
-            variant: "llama3.2",
-          });
+          const response = createTab(`Chat with Local (llama3.2)`);
           if (response) {
             setOpen((prev) => !prev);
           } else {
@@ -68,10 +67,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
         label: `Start Temporary Chat`,
         className: "",
         action: () => {
-          const response = sessionManager.startChatSession({
-            model: EAiProvider.LOCAL,
-            variant: "llama3.2",
-          });
+          const response = createTab(`Quick Chat`);
           if (response) {
             setOpen((prev) => !prev);
           } else {
@@ -135,7 +131,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
           </PopoverTrigger>
           <PopoverContent
             className={cn(
-              "border select-none border-muted-foreground/40 bg-muted p-2 rounded-2xl w-80",
+              "border select-none border-muted-foreground/40 bg-muted p-2 rounded-2xl w-80"
             )}
           >
             {startNewChatOptions?.map((opt) => (
@@ -143,7 +139,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
                 variant={"ghost"}
                 className={cn(
                   "w-full hover:bg-muted-foreground/20 justify-start items-center overflow-hidden",
-                  opt.className,
+                  opt.className
                 )}
                 key={opt.id}
                 onClick={opt.action}
@@ -160,7 +156,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
                 variant={"ghost"}
                 className={cn(
                   "w-full hover:bg-muted-foreground/20 justify-start items-center overflow-hidden",
-                  opt.className,
+                  opt.className
                 )}
                 key={opt.id}
                 onClick={opt.action}
