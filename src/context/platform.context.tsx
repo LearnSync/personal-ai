@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
+import { useKeyDown } from "@/hooks/useKeyDown";
 
 interface IPlatformContextProps {
   // ----- Sessions Managers
@@ -8,7 +9,7 @@ interface IPlatformContextProps {
 }
 
 const PlatformContext = React.createContext<IPlatformContextProps | undefined>(
-  undefined
+  undefined,
 );
 
 export const PlatformProvider = ({
@@ -17,6 +18,11 @@ export const PlatformProvider = ({
   children: React.ReactNode;
 }) => {
   const sessionManager = useSessionManager();
+
+  // TODO:(@SOUMITRA-SAHA) Listning the KeyDowns at the Root
+  const { pressedKey } = useKeyDown(["a", "b", "c"], (key) => {
+    console.log("Key pressed: ", key);
+  });
 
   return (
     <PlatformContext.Provider
@@ -33,7 +39,7 @@ export const usePlatformContext = () => {
   const context = React.useContext(PlatformContext);
   if (!context) {
     throw new Error(
-      "usePlatformContext must be used within a PlatformProvider"
+      "usePlatformContext must be used within a PlatformProvider",
     );
   }
   return context;
