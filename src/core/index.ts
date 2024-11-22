@@ -1,5 +1,7 @@
+export * from "./base/common/caseConverter";
 export * from "./base/common/charCode";
 export * from "./base/common/date";
+export * from "./base/common/generateText";
 export * from "./base/common/globalMessageRegistry";
 export * from "./base/common/idGenerator";
 export * from "./base/common/keyCodes";
@@ -7,7 +9,7 @@ export * from "./base/common/localize";
 export * from "./base/common/marshallingIds";
 export * from "./base/common/message";
 export * from "./base/common/platform";
+export * from "./base/common/sleep";
+export * from "./base/common/slugify";
 export * from "./base/common/uri";
 export * from "./base/common/uuid";
-export * from "./base/common/generateText";
-export * from "./base/common/sleep";
