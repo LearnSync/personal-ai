@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "localfirst-ai"
+version = "0.1.0"
+description = ""
+authors = ["SOUMITRO-SAHA <soumitrosahaofficial@gmail.com>"]
+license = "GNU"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["standard"], version = "^0.115.5"}
+uvicorn = {extras = ["standard"], version = "^0.32.1"}
+python-dotenv = "^1.0.1"
+pydantic-settings = "^2.6.1"
+pydantic = "^2.10.1"
+langchain = "^0.3.7"
+langchain-community = "^0.3.7"
+langchain-openai = "^0.2.9"
+langchain-core = "^0.3.20"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
