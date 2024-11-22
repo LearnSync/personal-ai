@@ -1,9 +1,9 @@
-version: '3.8'
+version: "3.8"
 
 services:
   chromadb:
     image: chromadb/chroma:latest
-    container_name: lsp-ai_chromadb
+    container_name: localfirst-ai_chromadb
     ports:
-      - "39066:8000"  # Map port 8000 inside the container to port 39066 on the host
+      - "39066:8000" # Map port 8000 inside the container to port 39066 on the host
     restart: unless-stopped

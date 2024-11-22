@@ -74,7 +74,7 @@ export const AutoResizingInput: React.FC<IAutoResizingInputProps> = ({
         text.length > 0
           ? "rounded-3xl overflow-y-auto h-fit"
           : "rounded-full overflow-hidden h-14",
-        className
+        className,
       )}
     >
       <div className={cn("mx-2", text.length > 0 && "mb-2 mt-auto")}>
@@ -103,11 +103,11 @@ export const AutoResizingInput: React.FC<IAutoResizingInputProps> = ({
           ref={textareaRef}
           rows={1}
           value={value ?? text}
-          placeholder={placeholder ?? "Ask LSP AI"}
+          placeholder={placeholder ?? "Ask Local First AI..."}
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           className={cn(
-            "p-0 py-5 overflow-hidden leading-relaxed tracking-wider border-none resize-none text-md h-fit focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground text-primary/80"
+            "p-0 py-5 overflow-hidden leading-relaxed tracking-wider border-none resize-none text-md h-fit focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground text-primary/80",
           )}
         />
       </ScrollArea>
