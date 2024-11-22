@@ -14,9 +14,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
+import { useChat } from "@/core/reactive/hooks/useChat";
 import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
-import useChatSessionStore from "@/core/reactive/store/sessionManager/chatSessionManager";
 import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
 import { EAiProvider } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
@@ -27,15 +26,15 @@ import { Conversation } from "../_components/conversation";
 import { EmptyWorkspace } from "./empty-workspace";
 
 export const Chat = React.memo(() => {
+  // ----- Store
+  const { activeTab, createTab } = useSessionManagerStore();
+  const { model, setModel } = useApiConfigStore();
+
   // ----- Hooks
   const { toast } = useToast();
   const { models } = useAvailableModels();
-  const { sendMessageToLLM } = useSessionManager();
 
-  // ----- Store
-  const { activeTab, createTab } = useSessionManagerStore();
-  const { chat, isLoading, abort } = useChatSessionStore();
-  const { model, setModel } = useApiConfigStore();
+  const chat = useChat({ chatId: activeTab?.tab.id });
 
   // ----- Handlers
   const handleModelChange = async (value: string) => {
@@ -72,16 +71,28 @@ export const Chat = React.memo(() => {
       // First create a new tab
       const newActiveTab = createTab(`Chat with ${model}`);
 
-      // Now Sending the message to the LLM
-      sendMessageToLLM({
-        messageId: `${newActiveTab.tab.id}__${Date.now()}`,
-        message: value,
-      });
+      // Setting the active tab
+      chat.setChatId(newActiveTab.tab.id);
+
+      if (value) {
+        chat.sendMessage({
+          message: value,
+        });
+      }
     } else {
-      sendMessageToLLM({
-        messageId: `${activeTab.tab.id}__${Date.now()}`,
-        message: value,
-      });
+      if (!chat) {
+        toast({
+          title: "Error",
+          description: "Failed to create a new chat. Please try again.",
+        });
+        return;
+      }
+
+      if (chat && value) {
+        chat.sendMessage({
+          message: value,
+        });
+      }
     }
   };
 
@@ -93,7 +104,7 @@ export const Chat = React.memo(() => {
             <SelectTrigger className="h-8 w-[150px] focus:ring-0 bg-background-2 shadow-inner shadow-background-1/40">
               <SelectValue
                 className={cn("")}
-                placeholder={chat?.model ?? <div>Not Selected</div>}
+                placeholder={model ?? <div>Not Selected</div>}
               />
             </SelectTrigger>
             <SelectContent>
@@ -158,7 +169,10 @@ export const Chat = React.memo(() => {
         <div className="lg:w-[85%] mx-auto ">
           {activeTab && activeTab.tab && chat && chat.messages?.length > 0 ? (
             <div className="flex flex-col w-full h-full pb-4">
-              <Conversation isLoading={isLoading} messages={chat.messages} />
+              <Conversation
+                isLoading={chat.isLoading}
+                messages={chat.messages}
+              />
             </div>
           ) : (
             <EmptyWorkspace />
@@ -169,10 +183,10 @@ export const Chat = React.memo(() => {
       <div className="sticky bottom-0 z-50 w-full lg:w-[85%] mx-auto bg-background-1">
         <div className="pb-5">
           <AutoResizingInput
-            isGenerating={isLoading}
-            success={!isLoading}
+            isGenerating={chat.isLoading}
+            success={!chat.isLoading}
             onEnter={handleConverSation}
-            onAbort={abort}
+            onAbort={chat.abort}
           />
         </div>
       </div>
