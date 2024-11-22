@@ -1,9 +1,6 @@
 {
-    "name": "Personal AI PDF Reader",
-    "version": "1.0.0",
-    "entry": "src/index.ts",
-    "permissions": [
-        "file-system",
-        "api-access"
-    ]
+  "name": "localfirst.ai PDF Reader",
+  "version": "1.0.0",
+  "entry": "src/index.ts",
+  "permissions": ["file-system", "api-access"]
 }

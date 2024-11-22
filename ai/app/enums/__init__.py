@@ -1,3 +1,3 @@
 """
-All the Enums for the LS Personal AI | AI Assistant
+All the Enums for the localfirst.ai | AI Assistant
 """

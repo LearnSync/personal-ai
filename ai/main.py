@@ -6,7 +6,7 @@ from app.routes.chat import router as chat_router
 
 # FastAPI app
 app = FastAPI(
-    title="LS Personal AI",
+    title="localfirst.ai",
     version="0.0.1",
     description="LS AI Assistant | Local AI Server",
 )

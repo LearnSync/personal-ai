@@ -1,6 +1,6 @@
-# AI Module - API Handler for Personal AI
+# AI Module - API Handler for Local First AI
 
-This module manages all the API-related services for `ls/Personal AI`. It acts as the AI API handler, implemented as a Tauri Sidecar, using **Node.js**, **TypeScript**, and **Express**. This service facilitates communication between the application and AI models.
+This module manages all the AI-related services for `localfirst.ai`. It acts as the AI API handler, implemented as a Tauri Sidecar, using **Node.js**, **TypeScript**, and **Express**. This service facilitates communication between the application and AI models.
 
 ## Features
 

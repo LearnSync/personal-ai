@@ -1,1 +1,1 @@
-"""LS Personal AI AI Module using FastAPI."""
+"""LS localfirst.ai Module using FastAPI."""

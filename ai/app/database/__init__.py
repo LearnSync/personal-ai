@@ -1,1 +1,1 @@
-"""LS Personal AI Database Module"""
+"""LS localfirst.ai Database Module"""
