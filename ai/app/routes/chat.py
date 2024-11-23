@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 
 from typing import AsyncGenerator
 from app.services.ai import AIService
-from app.models.request import PromptRequest
+from app.models.request import ChatRequest
 # from app.database.chat import ChatSession, ChatMessage
 
 # Initializing Router
@@ -15,7 +15,7 @@ router = APIRouter()
 
 # TODO: Implementation is Pending
 @router.post("/generate")
-async def generate(request: PromptRequest):
+async def generate(request: ChatRequest):
     try:
         messages = request.messages,
         model = request.model,

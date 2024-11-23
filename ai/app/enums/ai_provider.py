@@ -2,10 +2,11 @@ import enum
 
 class AIProvider(enum.Enum):
     """Enum representing different AI providers."""
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"  # aka, Claud
-    LLAMA = "llama"
-    LOCAL = "local"
+    ANTHROPIC = "anthropic",
+    GREPTILE = "greptile",
+    GEMINI = "gemini",
+    OPENAI = "openai",
+    OLLAMA = "llama",
 
     def __str__(self):
         return self.value

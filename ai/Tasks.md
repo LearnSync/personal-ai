@@ -10,3 +10,5 @@ Sprint 1 : (22 Oct, 2024 - 31 Oct, 2024)
 Sprint 2 : Upcomming
 1. [] Implement PDF Querying | embeddings | so on
 2. [] Implement Image Analysis AIPs | (check whether llama) can also do the thing or not
+
+YT: 43:00

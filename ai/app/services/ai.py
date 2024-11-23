@@ -3,6 +3,8 @@ from typing import List, Dict, AsyncGenerator, Optional
 from langchain_ollama import ChatOllama
 from langchain_community.llms import OpenAI, Anthropic
 from langchain_core.output_parsers import StrOutputParser
+
+from app.enums.topic import Topic
 from app.utils.helpers import build_prompt_from_messages
 from app.enums.ai_provider import AIProvider
 
@@ -10,9 +12,9 @@ from app.enums.ai_provider import AIProvider
 class AIService:
     @staticmethod
     def generate_ai_response(messages: List[Dict[str, str]], model: Optional[str], variant: Optional[str],
-                             api_key: Optional[str]) -> [str, None]:
+                             api_key: Optional[str], topic:Optional[Topic] = None) -> [str, None]:
         # Create prompt from messages
-        prompt = build_prompt_from_messages(messages)
+        prompt = build_prompt_from_messages(messages, topic)
         output_parser = StrOutputParser()
 
         # Default to llama(this can be set in the UI) if no model is specified

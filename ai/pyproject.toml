@@ -7,7 +7,7 @@ license = "GNU"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.12,<3.13"
 fastapi = {extras = ["standard"], version = "^0.115.5"}
 uvicorn = {extras = ["standard"], version = "^0.32.1"}
 python-dotenv = "^1.0.1"
@@ -17,6 +17,15 @@ langchain = "^0.3.7"
 langchain-community = "^0.3.7"
 langchain-openai = "^0.2.9"
 langchain-core = "^0.3.20"
+langchain-ollama = "^0.2.0"
+objectbox = "^4.0.0"
+docx2txt = "^0.8"
+pypdf = "^5.1.0"
+langchain-chroma = "^0.1.4"
+sentence-transformers = "^3.3.1"
+unstructured = {extras = ["all-docs"], version = "^0.16.6"}
+nltk = "^3.9.1"
+jq = "^1.8.0"
 
 
 [tool.poetry.group.dev.dependencies]
