@@ -4,6 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.chat import router as chat_router
 
+import app.tests.test
+
 # FastAPI app
 app = FastAPI(
     title="localfirst.ai",

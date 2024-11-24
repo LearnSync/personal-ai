@@ -1,24 +1,25 @@
 from typing import List, Dict, Optional
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.enums.topic import Topic
+from app.enums.topic import ETopic
+from app.models.request import Message
 
 
 def build_prompt_from_messages(
-    messages: List[Dict[str, str]], topic: Optional[Topic] = None
+    messages: List[Message], topic: Optional[ETopic] = None
 ) -> ChatPromptTemplate:
     """
     Build a ChatPromptTemplate from a list of messages, optionally tailored to a specific topic.
 
     Args:
         messages (List[Dict[str, str]]): A list of dictionaries, each containing a role ('role') and content ('content').
-        topic (Optional[Topic]): An optional topic to contextualize the prompt.
+        topic (Optional[ETopic]): An optional topic to contextualize the prompt.
 
     Returns:
         ChatPromptTemplate: A ChatPromptTemplate object created from the messages.
     """
     # Base messages converted into tuples
-    base_messages = [(msg["role"], msg["content"]) for msg in messages]
+    base_messages = [(msg.role, msg.content) for msg in messages]
 
     # Add a topic-specific message if a topic is provided
     if topic:

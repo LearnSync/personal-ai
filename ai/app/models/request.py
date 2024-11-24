@@ -14,8 +14,9 @@ class ChatRequest(BaseModel):
     """
     Represents a request for a chat interaction.
     """
-    chat_id: str = Field(..., description="Unique identifier for the chat session.")
+    session_id: str = Field(..., description="Unique identifier for the chat session.")
     messages: List[Message] = Field(..., description="List of messages exchanged in the chat.")
+    session_name: Optional[str] = Field(..., description="Unique identifier for the chat session.")
     model: Optional[str] = Field(
         None, description="The AI model to be used, e.g., 'openai'."
     )

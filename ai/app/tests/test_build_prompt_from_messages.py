@@ -2,7 +2,7 @@ import unittest
 from typing import List, Dict, Optional
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate, PromptTemplate
 
-from app.enums.topic import Topic
+from app.enums.topic import ETopic
 from app.utils.helpers import build_prompt_from_messages
 
 
@@ -21,13 +21,13 @@ class TestBuildPromptFromMessages(unittest.TestCase):
             {"role": "user", "content": "Can you provide an example?"},
         ]
 
-    def _create_expected_template(self, messages, topic: Optional[Topic]):
+    def _create_expected_template(self, messages, topic: Optional[ETopic]):
         """
         Create message templates with an optional topic.
 
         Args:
             messages (List[Dict[str, str]]): List of dictionaries with 'role' and 'content'.
-            topic (Optional[Topic]): An optional topic to add a system message.
+            topic (Optional[ETopic]): An optional topic to add a system message.
 
         Returns:
             List: A list of message templates formatted as ChatPromptTemplate objects.
@@ -97,7 +97,7 @@ class TestBuildPromptFromMessages(unittest.TestCase):
         """
         Test the function with an optional topic provided.
         """
-        topic = Topic.CODE
+        topic = ETopic.CODE
         prompt_template = build_prompt_from_messages(self.messages, topic)
         self.assertIsInstance(prompt_template, ChatPromptTemplate)
 

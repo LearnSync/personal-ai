@@ -1,6 +1,6 @@
 import enum
 
-class Topic(enum.Enum):
+class ETopic(str, enum.Enum):
     """
     Enum representing a wide range of topics for LLM interaction.
     """

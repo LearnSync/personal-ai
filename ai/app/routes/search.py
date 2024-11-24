@@ -3,7 +3,7 @@ from langchain.embeddings import Embeddings
 from langchain.vectorstores import ObjectBoxVectorStore
 from app.routes.route import router
 from typing import List
-from app.database.chat import ChatMessage
+from app.database.schema import ChatMessage
 
 
 @router.get("/chat/?search={search_string}")
