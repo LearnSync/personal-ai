@@ -4,11 +4,11 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 
 import App from "./App";
+import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/toaster";
 import { PlatformProvider } from "./context/platform.context";
 import "./core/base/common/platform";
 import "./index.css";
-import { ThemeProvider } from "./components/theme-provider";
 
 /**
  * Create a client
@@ -28,5 +28,5 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         </PlatformProvider>
       </ThemeProvider>
     </QueryClientProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

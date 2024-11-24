@@ -39,3 +39,4 @@ resources.md
 
 # Python
 __pycache__/
+.venv/
