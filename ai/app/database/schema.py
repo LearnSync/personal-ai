@@ -10,6 +10,8 @@ from sqlalchemy.orm import (
     mapped_column
 )
 
+from app.enums.chat import ERole
+
 Base = declarative_base()
 
 class AIModel(Base):
@@ -69,7 +71,7 @@ class ChatSession(Base):
     session_id: Mapped[str] = mapped_column(unique=True, nullable=False)
     archived: Mapped[bool] = mapped_column(default=False)
     favorite: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
     # Relationship to ChatMessage
     messages: Mapped[List["ChatMessage"]] = relationship("ChatMessage", back_populates="chat_session")
@@ -87,10 +89,9 @@ class ChatMessage(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     session_id: Mapped[int] = mapped_column(ForeignKey("chat_sessions.id"), nullable=False)
     message_id: Mapped[str] = mapped_column(unique=True, nullable=False)
-    role: Mapped[str] = mapped_column(nullable=False)
+    role: Mapped[ERole] = mapped_column(nullable=ERole.ASSISTANT)
     content: Mapped[str] = mapped_column(nullable=False)
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    embeddings: Mapped[bytes] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 
     # Back-reference to the ChatSession
     chat_session: Mapped["ChatSession"] = relationship("ChatSession", back_populates="messages")
@@ -105,7 +106,7 @@ class Document(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     session_id: Mapped[int] = mapped_column(ForeignKey("chat_sessions.id"), nullable=False)
     file_path: Mapped[str] = mapped_column(nullable=False)
-    uploaded_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    uploaded_at: Mapped[datetime] = mapped_column(default=datetime.now)
     embedding: Mapped[bytes] = mapped_column()
 
     # Relationship to ChatSession
@@ -133,7 +134,7 @@ class Backup(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     configuration_id: Mapped[int] = mapped_column(ForeignKey("backup_configurations.id"), nullable=False)
-    backup_time: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    backup_time: Mapped[datetime] = mapped_column(default=datetime.now)
     storage_service: Mapped[str] = mapped_column(nullable=False)  # E.g., "google_drive"
     file_path: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(nullable=False)  # E.g., "completed"

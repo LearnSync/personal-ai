@@ -7,10 +7,18 @@ import { ILlmMessage } from "@/core/types";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
-import { useSessionManager } from "./useSessionManager";
 import { useSessionManagerStore } from "../store/sessionManager/sessionManagerStore";
 
 type OnText = (messageId: string, fullText: string) => void;
+
+interface IChatResponse {
+  session_id: string;
+  session_name: string;
+  archived: boolean;
+  favorite: boolean;
+  created_at: string;
+  messages: ILlmMessage[];
+}
 
 interface ISendLLMMessageParams {
   sessionId: string;
@@ -24,15 +32,18 @@ interface ISendLLMMessageParams {
 
 interface IUseChatResponse {
   isLoading: boolean;
+  isChatLoading: boolean;
   messages: ILlmMessage[];
+  archived: boolean;
+  favorite: boolean;
 
   abort: () => void;
   setChatId: (chatId: string) => void;
   sendMessage: ({
-    message,
+    content,
     messageId,
   }: {
-    message: string;
+    content: string;
     messageId?: string;
   }) => void;
 }
@@ -51,36 +62,68 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
   const [abortController, setAbortController] =
     React.useState<AbortController | null>(null);
   const [currentChatId, setCurrentChatId] = React.useState<string | undefined>(
-    chatId,
+    chatId
   );
-
-  // ----- React Query
-  const { data: chat, isLoading: existingChatLoading } = useQuery({
-    queryKey: ["chat", chatId],
-    queryFn: async () => {
-      return await fetch(`${endpoint.GET_CHAT}/${chatId}`);
-    },
-    enabled: chatId ? true : false,
-    retry: 5,
-    retryOnMount: true,
-    staleTime: Infinity,
-  });
-
-  console.log("`useChat` | Chat: ", chat, existingChatLoading);
+  const [archived, setArchived] = React.useState<boolean>(false);
+  const [favorite, setFavorite] = React.useState<boolean>(false);
 
   // ----- Hooks
   const { toast } = useToast();
 
   // ----- Store
   const { model, variant } = useApiConfigStore();
-  const { activeTab } = useSessionManagerStore();
+  const { activeTab, updateTabLabel } = useSessionManagerStore();
+
+  // ----- React Query
+  const {
+    data: chat,
+    isLoading: isChatLoading,
+    error,
+  } = useQuery<IChatResponse>({
+    queryKey: ["chat", chatId],
+    queryFn: async () => {
+      const response = await fetch(`${endpoint.GET_CHAT}/${chatId}`);
+      if (response.status === 200) {
+        return await response.json();
+      }
+
+      return response.json();
+    },
+    enabled: chatId ? true : false,
+    retry: 5,
+    staleTime: Infinity,
+  });
+
+  // ----- Effect
+  React.useEffect(() => {
+    if (chat) {
+      // Setting the State and Stores
+      setCurrentChatId(chat.session_id);
+      updateTabLabel(chat.session_id, chat.session_name);
+      setArchived(chat.archived);
+      setFavorite(chat.favorite);
+      setMessages(() => chat.messages);
+    }
+  }, [chat]);
+
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  }, [error]);
 
   // ----- Private Function
   const updateMessageByMessageId = (messageId: string, value: string) => {
     setMessages((prev) =>
       prev.map((message) =>
-        message.id === messageId ? { ...message, content: value } : message,
-      ),
+        message.message_id === messageId
+          ? { ...message, content: value }
+          : message
+      )
     );
   };
 
@@ -112,11 +155,7 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
         body: JSON.stringify({
           session_id: sessionId,
           session_name: sessionName,
-          messages: messages.map((m) => ({
-            message_id: m.id,
-            content: m.message,
-            role: m.role,
-          })),
+          messages,
           model,
           variant,
           attachments: formattedAttachments,
@@ -150,7 +189,7 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
       console.error("Error:", error);
       if (error instanceof Error) {
         onError(
-          error.message || "An error occurred while sending the message.",
+          error.message || "An error occurred while sending the message."
         );
       }
     } finally {
@@ -164,14 +203,13 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
     setCurrentChatId(chatId);
   };
 
-  console.log("Message: ", currentChatId);
   const sendMessage = React.useCallback(
     ({
-      message,
+      content,
       messageId,
       attachments,
     }: {
-      message: string;
+      content: string;
       messageId?: string;
       attachments?: File[];
     }) => {
@@ -182,14 +220,15 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
         }
 
         setIsLoading(true);
-        const existingMessageId = messageId || generateUUID();
+        const existingMessageId =
+          messageId || `msg-${new Date().toISOString()}`;
 
         if (messageId) {
-          updateMessageByMessageId(existingMessageId, message);
+          updateMessageByMessageId(existingMessageId, content);
         } else {
           const newMessage: ILlmMessage = {
-            id: existingMessageId,
-            message,
+            message_id: existingMessageId,
+            content,
             role: "user",
           };
           setMessages((prev) => [...prev, newMessage]);
@@ -201,7 +240,7 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
               attachments.map(async (file) => {
                 const data = await fileToBase64(file);
                 return { name: file.name, type: file.type, data };
-              }),
+              })
             );
           };
 
@@ -230,7 +269,7 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
         }
       }
     },
-    [messages, activeTab],
+    [messages, activeTab]
   );
 
   const abort = React.useCallback(() => {
@@ -241,8 +280,13 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
   }, [abortController]);
 
   return {
+    archived,
+    favorite,
     messages,
     isLoading,
+    isChatLoading,
+
+    // Function
     abort,
     setChatId,
     sendMessage,

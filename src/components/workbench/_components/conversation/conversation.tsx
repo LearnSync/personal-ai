@@ -42,7 +42,10 @@ export const Conversation: React.FC<ConversationProps> = ({
           {message.role === "user" ? (
             <UserMessage message={message.content} />
           ) : message.role === "assistant" ? (
-            <LLMResponse model={lastUsedModel} message={message.content} />
+            <LLMResponse
+              model={message.model ?? ""}
+              message={message.content}
+            />
           ) : (
             ""
           )}

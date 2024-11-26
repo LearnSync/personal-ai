@@ -292,6 +292,7 @@ const Text = ({
   token: {
     type: string;
     text: string;
+    raw: string;
     tokens?: Token[];
   };
 }) => {
@@ -305,7 +306,7 @@ const Text = ({
     );
   }
 
-  return <span>{token.text}</span>;
+  return <span>{token.raw}</span>;
 };
 
 /**

@@ -1,7 +1,7 @@
 import enum
 
 
-class ERole(enum.Enum):
+class ERole(str, enum.Enum):
     USER = "user"
     ASSISTANT = "assistant"
 
@@ -9,7 +9,7 @@ class ERole(enum.Enum):
         return self.value
 
 
-class EChatHistoryTime(enum.Enum):
+class EChatHistoryTime(str, enum.Enum):
     TODAY = "today",
     YESTERDAY = "yesterday",
     PAST_7_DAYS = "week",

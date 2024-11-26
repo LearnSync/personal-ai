@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import { MessageSquareDot } from "lucide-react";
 import { MarkdownRender } from "@/components/general-components/markdown.component";
 import {
   chatGptIcon,
@@ -9,9 +8,10 @@ import {
   ollamaIcon,
 } from "@/components/sidebar";
 import { cn } from "@/lib/utils";
+import { Laptop } from "lucide-react";
 
 interface LLMResponseProps {
-  model?: string;
+  model: string;
   message?: string;
   className?: string;
 }
@@ -34,7 +34,7 @@ export const LLMResponse: React.FC<LLMResponseProps> = ({
     >
       <div
         className={cn(
-          "rounded-full max-w-10 max-h-10 min-w-10 min-h-10 bg-white/20",
+          "rounded-full max-w-10 max-h-10 min-w-10 min-h-10 bg-white/20 flex items-center justify-center",
           message ? "" : "p-4 mt-auto"
         )}
       >
@@ -47,7 +47,7 @@ export const LLMResponse: React.FC<LLMResponseProps> = ({
         ) : model?.toLowerCase() === "anthropic" ? (
           claudeAIIcon({ className: "w-10 h-10" })
         ) : (
-          <MessageSquareDot className="w-6 h-6 text-muted-foreground" />
+          <Laptop className="w-6 h-6 text-muted-foreground" />
         )}
       </div>
 

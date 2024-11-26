@@ -76,7 +76,7 @@ export const Chat = React.memo(() => {
 
       if (value) {
         chat.sendMessage({
-          message: value,
+          content: value,
         });
       }
     } else {
@@ -90,7 +90,7 @@ export const Chat = React.memo(() => {
 
       if (chat && value) {
         chat.sendMessage({
-          message: value,
+          content: value,
         });
       }
     }
