@@ -3,28 +3,10 @@ This module defines structured output models for LLM responses.
 Each model corresponds to a specific type of response, such as coding, general output,
 language improvement, or interactions with PDFs.
 """
-from datetime import datetime
 
-from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 
-from app.enums.chat import ERole
-
-
-class ChatMessageResponse(BaseModel):
-    message_id: str
-    role: ERole
-    content: str
-
-
-class ChatSessionResponse(BaseModel):
-    session_id: str
-    session_name: str
-    archived: bool
-    favorite: bool
-    created_at: datetime
-    messages: List[ChatMessageResponse]
-
+from pydantic import BaseModel, Field
 
 
 class CodeResponse(BaseModel):

@@ -90,6 +90,8 @@ class ChatMessage(Base):
     session_id: Mapped[int] = mapped_column(ForeignKey("chat_sessions.id"), nullable=False)
     message_id: Mapped[str] = mapped_column(unique=True, nullable=False)
     role: Mapped[ERole] = mapped_column(nullable=ERole.ASSISTANT)
+    model: Mapped[str] = mapped_column(nullable=True)
+    variant: Mapped[str] = mapped_column(nullable=True)
     content: Mapped[str] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=datetime.now)
 

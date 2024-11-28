@@ -2,21 +2,17 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import date
 
-class Message(BaseModel):
-    """
-    Represents a single message in the chat.
-    """
-    message_id: str = Field(..., description="Unique identifier for the message.")
-    role: str = Field(..., description="Role of the sender, e.g., 'user', 'assistant', or 'system'.")
-    content: str = Field(..., description="The content of the message.")
+from app.models.chat_model import ChatMessageResponse
+
 
 class ChatRequest(BaseModel):
     """
     Represents a request for a chat interaction.
     """
     session_id: str = Field(..., description="Unique identifier for the chat session.")
-    messages: List[Message] = Field(..., description="List of messages exchanged in the chat.")
+    messages: List[ChatMessageResponse] = Field(..., description="List of messages exchanged in the chat.")
     session_name: Optional[str] = Field(..., description="Unique identifier for the chat session.")
+    response_message_id: str = Field(..., description="Unique identifier for the chat response.")
     model: Optional[str] = Field(
         None, description="The AI model to be used, e.g., 'openai'."
     )

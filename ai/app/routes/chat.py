@@ -4,12 +4,13 @@ from typing import AsyncGenerator, List, Optional, Type
 from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from starlette.responses import JSONResponse
 
 from app.database.db import get_db
 from app.database.schema import ChatSession, ChatMessage
 from app.enums.chat import ERole
+from app.models.chat_model import ChatSessionResponse, ChatMessageResponse
 from app.models.request import ChatRequest
-from app.models.response import ChatSessionResponse, ChatMessageResponse
 from app.services.ai import AIService
 
 # Initializing Router
@@ -25,6 +26,7 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
         session_id = request.session_id
         messages = request.messages
         model = request.model
+        response_message_id = request.response_message_id
         variant = request.variant
         api_key = request.api_key
 
@@ -59,37 +61,38 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
                 new_message = ChatMessage(
                     session_id=session_id,
                     message_id=message.message_id,
-                    role=message.role,
                     content=message.content,
+                    role=message.role,
+                    variant=variant,
+                    model=model,
                     created_at=datetime.now(),
                 )
                 db.add(new_message)
         db.commit()
 
+        # This is to manage the response into the Database
         async def generate_response() -> AsyncGenerator[str, None]:
             full_text = ""
-            try:
-                # Stream AI response parts
-                for part in AIService.generate_ai_response(
-                        messages=messages,
-                        model=model,
-                        variant=variant,
-                        api_key=api_key):
-                    full_text += part
-                    yield part
+            for chunk in AIService.generate_ai_response(
+                    messages=messages,
+                    model=model,
+                    variant=variant,
+                    api_key=api_key):
+                full_text += chunk
+                print(f"Chunk Part: {chunk}")
+                yield chunk
 
-                new_message = ChatMessage(
-                    session_id=chat_session.session_id,
-                    message_id=f"msg_{datetime.now()}",
-                    role=ERole.ASSISTANT,
-                    content=full_text,
-                    created_at=datetime.now(),
-                )
-                db.add(new_message)
-                db.commit()
-
-            except Exception as e:
-                raise HTTPException(status_code=500, detail=f"Error during AI response generation: {str(e)}")
+            new_response_message = ChatMessage(
+                session_id=session_id,
+                message_id=response_message_id,
+                created_at=datetime.now(),
+                role=ERole.ASSISTANT,
+                content=full_text,
+                variant=variant,
+                model=model,
+            )
+            db.add(new_response_message)
+            db.commit()
 
         return StreamingResponse(generate_response(), media_type="application/json")
 
@@ -107,9 +110,9 @@ def get_conversation(session_id: str, db: Session = Depends(get_db)):
         chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
 
         if not chat_session:
-            raise HTTPException(
-                status_code=404, detail=f"Chat session with ID {session_id} not found."
-            )
+            return JSONResponse({
+                "success":False, "message": f"Chat session with ID {session_id} not found.", "data": chat_session
+            })
 
         # Fetch all messages for the session
         messages = (

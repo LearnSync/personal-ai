@@ -6,7 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 from app.enums.ai import EAIModel
 from app.enums.topic import ETopic
-from app.models.request import Message
+from app.models.chat_model import ChatMessageResponse
 from app.utils.helpers import build_prompt_from_messages
 
 
@@ -50,7 +50,7 @@ class AIService:
 
     @staticmethod
     def generate_ai_response(
-        messages: List[Message],
+        messages: List[ChatMessageResponse],
         model: Optional[str],
         variant: Optional[str],
         api_key: Optional[str],
@@ -94,7 +94,7 @@ class AIService:
 
             if response:
                 for chunk in response:
-                    print(f"Streamed Chunk: {chunk}")
+                    print(f"Chunk: {chunk}")
                     yield chunk
 
         except ValueError as ve:

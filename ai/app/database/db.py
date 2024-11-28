@@ -10,7 +10,7 @@ DATABASE_URL = "sqlite:///focal_first_ai.db"
 engine = create_engine(DATABASE_URL, echo=True)  # Set echo=False to disable SQL logging
 
 # Create the session factory
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(autocommit=False, autoflush=False,bind=engine)
 
 # Create tables in the database (if not already created)
 Base.metadata.create_all(engine)

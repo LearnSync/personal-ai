@@ -1,12 +1,13 @@
 from typing import List, Dict, Optional
+
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.enums.topic import ETopic
-from app.models.request import Message
+from app.models.chat_model import ChatMessageResponse
 
 
 def build_prompt_from_messages(
-    messages: List[Message], topic: Optional[ETopic] = None
+    messages: List[ChatMessageResponse], topic: Optional[ETopic] = None
 ) -> ChatPromptTemplate:
     """
     Build a ChatPromptTemplate from a list of messages, optionally tailored to a specific topic.

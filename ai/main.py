@@ -10,7 +10,7 @@ import app.tests.test
 app = FastAPI(
     title="localfirst.ai",
     version="0.0.1",
-    description="LS AI Assistant | Local AI Server",
+    description="Local First AI | Local First AI Server | Langchain Server",
 )
 
 # CORS Middleware
