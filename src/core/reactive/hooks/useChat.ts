@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
 import { useSessionManagerStore } from "../store/sessionManager/sessionManagerStore";
+import { sleep } from "@/core/base/common/sleep";
 
 type OnText = (messageId: string, fullText: string) => void;
 
@@ -38,13 +39,14 @@ interface IUseChatResponse {
   favorite: boolean;
 
   abort: () => void;
-  setChatId: (chatId: string) => void;
   sendMessage: ({
     content,
     messageId,
+    attachments,
   }: {
     content: string;
     messageId?: string;
+    attachments?: File[];
   }) => void;
 }
 
@@ -56,14 +58,11 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
+export const useChat = (): IUseChatResponse => {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [messages, setMessages] = React.useState<ILlmMessage[]>([]);
   const [abortController, setAbortController] =
     React.useState<AbortController | null>(null);
-  const [currentChatId, setCurrentChatId] = React.useState<string | undefined>(
-    chatId
-  );
   const [archived, setArchived] = React.useState<boolean>(false);
   const [favorite, setFavorite] = React.useState<boolean>(false);
 
@@ -80,29 +79,26 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
     isLoading: isChatLoading,
     error,
   } = useQuery<IChatResponse>({
-    queryKey: ["chat", chatId],
+    queryKey: ["chat", activeTab?.tab.id],
     queryFn: async () => {
-      const response = await fetch(`${endpoint.GET_CHAT}/${chatId}`);
+      const response = await fetch(`${endpoint.GET_CHAT}/${activeTab?.tab.id}`);
       if (response.status === 200) {
         return await response.json();
       }
 
       return response.json();
     },
-    enabled: chatId ? true : false,
+    enabled: activeTab?.tab.id ? true : false,
     retry: 5,
-    staleTime: Infinity,
   });
 
   // ----- Effect
   React.useEffect(() => {
     if (chat) {
-      // Setting the State and Stores
-      setCurrentChatId(chat.session_id);
       updateTabLabel(chat.session_id, chat.session_name);
       setArchived(chat.archived);
       setFavorite(chat.favorite);
-      setMessages(() => chat.messages);
+      setMessages(() => (chat.messages ? chat.messages : []));
     }
   }, [chat]);
 
@@ -117,13 +113,23 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
   }, [error]);
 
   // ----- Private Function
-  const updateMessageByMessageId = (messageId: string, value: string) => {
+  const updateMessageByMessageId = ({
+    messageId,
+    message,
+  }: {
+    messageId: string;
+    message: ILlmMessage;
+  }) => {
     setMessages((prev) =>
-      prev.map((message) =>
-        message.message_id === messageId
-          ? { ...message, content: value }
-          : message
-      )
+      prev.some((msg) => msg.message_id === messageId)
+        ? // Update the message if it exists
+          prev.map((msg) =>
+            msg.message_id === messageId
+              ? { ...msg, content: message.content }
+              : msg
+          )
+        : // Add the new message if it doesn't exist
+          [...prev, message]
     );
   };
 
@@ -139,8 +145,7 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
     let fullText = "";
     const controller = new AbortController();
     setAbortController(controller);
-
-    const messageIdForAssistant = generateUUID();
+    const responseMessageId = `msg-${generateUUID()}`;
 
     try {
       const formattedAttachments = attachments?.map((file) => ({
@@ -155,10 +160,11 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
         body: JSON.stringify({
           session_id: sessionId,
           session_name: sessionName,
+          response_message_id: responseMessageId,
+          attachments: formattedAttachments,
           messages,
           model,
           variant,
-          attachments: formattedAttachments,
         }),
         signal: controller.signal,
       });
@@ -176,15 +182,19 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
 
       // Stream the response
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        try {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        fullText += chunk;
-        onText(messageIdForAssistant, fullText);
+          const chunk = decoder.decode(value, { stream: true });
+          fullText += chunk;
+          onText(responseMessageId, fullText);
+        } catch (error) {
+          console.error("Error decoding: ", error);
+        }
       }
 
-      onFinalMessage(messageIdForAssistant, fullText);
+      onFinalMessage(responseMessageId, fullText);
     } catch (error) {
       console.error("Error:", error);
       if (error instanceof Error) {
@@ -199,10 +209,6 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
   };
 
   // ----- Public Function
-  const setChatId = (chatId: string) => {
-    setCurrentChatId(chatId);
-  };
-
   const sendMessage = React.useCallback(
     ({
       content,
@@ -214,24 +220,32 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
       attachments?: File[];
     }) => {
       if (activeTab) {
-        // If there is not current session initiated then initiate the current session
-        if (activeTab && activeTab.tab.id && !currentChatId) {
-          setCurrentChatId(activeTab.tab.id);
-        }
-
         setIsLoading(true);
-        const existingMessageId =
-          messageId || `msg-${new Date().toISOString()}`;
+        const existingMessageId = messageId || `msg-${generateUUID()}`;
 
         if (messageId) {
-          updateMessageByMessageId(existingMessageId, content);
+          updateMessageByMessageId({
+            messageId: existingMessageId,
+            message: {
+              message_id: existingMessageId,
+              role: "user",
+              content,
+            },
+          });
         } else {
           const newMessage: ILlmMessage = {
             message_id: existingMessageId,
             content,
             role: "user",
           };
-          setMessages((prev) => [...prev, newMessage]);
+
+          updateMessageByMessageId({
+            messageId: existingMessageId,
+            message: newMessage,
+          });
+
+          // Sleeping for 100 ms to properly added the message to the State, so the last message must be there in the messages array
+          sleep(100);
 
           // Convert file attachments to Base64
           const processAttachments = async () => {
@@ -252,10 +266,24 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
               messages,
               attachments,
               onText: (messageId, fullText) => {
-                updateMessageByMessageId(messageId, fullText);
+                updateMessageByMessageId({
+                  messageId,
+                  message: {
+                    message_id: messageId,
+                    content: fullText,
+                    role: "assistant",
+                  },
+                });
               },
               onFinalMessage: (messageId, fullText) => {
-                updateMessageByMessageId(messageId, fullText);
+                updateMessageByMessageId({
+                  messageId,
+                  message: {
+                    message_id: messageId,
+                    content: fullText,
+                    role: "assistant",
+                  },
+                });
               },
               onError: (error: string) => {
                 toast({
@@ -288,7 +316,6 @@ export const useChat = ({ chatId }: { chatId?: string }): IUseChatResponse => {
 
     // Function
     abort,
-    setChatId,
     sendMessage,
   };
 };

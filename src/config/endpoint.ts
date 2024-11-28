@@ -3,6 +3,7 @@ import { env } from "./env";
 export const endpoint = {
   // --- Base
   BASE_URL: `${env.AI_SERVER_URL}`,
+  TESTING_BASE_URL: `${env.TESTING_BASE_URL}`,
 
   // --- Chat
   CHAT: `${env.AI_SERVER_URL}/generate`,

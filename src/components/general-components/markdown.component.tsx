@@ -21,7 +21,6 @@ type TLevel = 1 | 2 | 3 | 4 | 5 | 6;
  */
 const Render = ({ token }: { token: Token }) => {
   const t = token as MarkedToken;
-  console.log("Token: ", t);
 
   switch (t.type) {
     case "space":
