@@ -29,7 +29,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
       variant={"ghost"}
       className={cn(
         "w-full justify-start h-8 overflow-hidden flex items-center",
-        className
+        className,
       )}
       key={id}
       onClick={onClick}
@@ -39,7 +39,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
       <div
         className={cn(
           "flex items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap",
-          displayOption ? "w-full" : "w-[80%]"
+          displayOption ? "w-full" : "w-[80%]",
         )}
       >
         {label}
@@ -55,7 +55,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
                 </TooltipTrigger>
                 <TooltipContent
                   className={cn(
-                    "border select-none border-muted-foreground/40"
+                    "border select-none border-muted-foreground/40",
                   )}
                 >
                   Options
@@ -64,7 +64,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
             </PopoverTrigger>
             <PopoverContent
               className={cn(
-                "border select-none border-muted-foreground/40 bg-muted max-w-36 p-2 rounded-2xl"
+                "border select-none border-muted-foreground/40 bg-muted max-w-36 p-2 rounded-2xl",
               )}
             >
               {options?.map((opt) => (
@@ -72,13 +72,16 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
                   variant={"ghost"}
                   className={cn(
                     "w-full hover:bg-muted-foreground/20 justify-start items-center",
-                    opt.className
+                    opt.className,
                   )}
                   key={opt.id}
                   onClick={opt.action}
+                  asChild
                 >
-                  <span>{opt.icon}</span>
-                  <span>{opt.label}</span>
+                  <div>
+                    <span>{opt.icon}</span>
+                    <span>{opt.label}</span>
+                  </div>
                 </Button>
               ))}
             </PopoverContent>
