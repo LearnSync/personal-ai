@@ -288,6 +288,6 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
         }),
       },
     ),
-    { name: "SessionManagerStore" },
+    { name: "SessionManagerStore", anonymousActionType: "SessionManagerStore" },
   ),
 );

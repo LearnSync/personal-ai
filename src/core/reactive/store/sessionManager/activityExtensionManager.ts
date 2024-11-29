@@ -33,10 +33,11 @@ interface ActivityExtensionStore {
 export const useActivityExtensionStore = create<ActivityExtensionStore>()(
   devtools(
     (set, get) => ({
+      /// ====== States ====== ///
       extensions: [...DEFAULT_EXTENSIONS_ITEMS],
       activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] || null,
 
-      // Actions
+      /// ====== Actions ====== ///
       setActiveExtensionTab: (id: string) => {
         const { extensions, activeExtensionTab } = get();
         const extension = extensions.find((ext) => ext.id === id);
@@ -44,6 +45,7 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
           set({ activeExtensionTab: extension });
         }
       },
+
       setActiveExtensionTabByKey(key: string): void {
         const { extensions, activeExtensionTab } = get();
         const extension = extensions.find(
@@ -53,6 +55,7 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
           set({ activeExtensionTab: extension });
         }
       },
+
       addExternalExtension: (
         label: string,
         identificationKey: EXTENSION_KEY,
@@ -71,6 +74,7 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
         };
         set({ extensions: [...extensions, newExtension] });
       },
+
       removeExtension: (id: string) => {
         const { extensions, activeExtensionTab } = get();
         const filteredExtensions = extensions.filter((ext) => ext.id !== id);
@@ -84,12 +88,14 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
           activeExtensionTab: newActiveTab,
         });
       },
+
       getDefaultExtension: () => {
         set({ activeExtensionTab: DEFAULT_EXTENSIONS_ITEMS[0] });
       },
     }),
     {
       name: "ActivityExtensionStore",
+      anonymousActionType: "ActivityExtensionStore",
     },
   ),
 );
