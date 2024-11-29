@@ -12,6 +12,7 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLocalFirstStore } from "@/store";
 import { Section } from "./_components/general-components";
 import {
   AccountSettingScreen,
@@ -24,7 +25,7 @@ import {
   PrivacySecuritySettingScreen,
 } from "./_screen";
 
-enum ESetting {
+export enum ESetting {
   GENERAL = "general",
   API_KEY = "api_key",
   LOCAL_LLM_SETUP = "local_llm_setup",
@@ -85,7 +86,8 @@ const SETTING_TABS: ISettings[] = [
 ];
 
 export const Settings = () => {
-  const [selectedItem, setSelectedItem] = React.useState(ESetting.API_KEY);
+  // Store
+  const { settings, setSettingsSelectedItem } = useLocalFirstStore();
 
   const selectedSettingsItem = (item: ESetting) => {
     switch (item) {
@@ -111,7 +113,7 @@ export const Settings = () => {
   };
 
   const handleSettingItemClick = (item: ISettings) => {
-    setSelectedItem(item.key);
+    setSettingsSelectedItem(item.key);
   };
 
   return (
@@ -137,7 +139,7 @@ export const Settings = () => {
           </ul>
 
           <div className="col-span-full lg:col-span-9 xl:col-span-10">
-            {selectedSettingsItem(selectedItem)}
+            {selectedSettingsItem(settings.selectedItem)}
           </div>
         </Section>
       </main>

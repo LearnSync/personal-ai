@@ -1,12 +1,14 @@
+import { Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AI_MODEL_VARIANTS } from "@/constants";
 import { generateUUID } from "@/core";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
 import { EAiProvider } from "@/core/types/enum";
-import { Plus } from "lucide-react";
+
 import { H3, INotice, NoticeBoard } from "../_components";
 import { ApiKeyInputBox } from "../_components/api-key-input-box";
-import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
 
 const notice: INotice[] = [
   {
@@ -48,6 +50,7 @@ export const ApiKeySettingScreen = () => {
       </p>
 
       <div className="flex flex-col gap-2 mt-5">
+        {/* Openai API Key */}
         <div className="px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -60,10 +63,10 @@ export const ApiKeySettingScreen = () => {
             </div>
             <Button
               onClick={() =>
-                addConfig("openaiConfigs", {
-                  apikey: "",
+                addConfig(EAiProvider.OPENAI, {
                   model: EAiProvider.OPENAI,
-                  variant: null,
+                  variant: "",
+                  apikey: "",
                 })
               }
               variant={"ghost"}
@@ -78,7 +81,7 @@ export const ApiKeySettingScreen = () => {
               <ApiKeyInputBox
                 key={idx}
                 apiKey={openAiConfig.apikey}
-                keyFor={EAiProvider.OPENAI}
+                keyForElement={EAiProvider.OPENAI}
                 variants={AI_MODEL_VARIANTS.OPENAI}
                 idx={idx}
               />
@@ -88,6 +91,7 @@ export const ApiKeySettingScreen = () => {
 
         <Separator className="my-2 bg-muted-foreground" />
 
+        {/* Gemini API Key */}
         <div className="px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -100,10 +104,10 @@ export const ApiKeySettingScreen = () => {
             </div>
             <Button
               onClick={() =>
-                addConfig("geminiConfigs", {
+                addConfig(EAiProvider.GEMINI, {
+                  model: EAiProvider.GEMINI,
+                  variant: "",
                   apikey: "",
-                  model: EAiProvider.OLLAMA,
-                  variant: null,
                 })
               }
               variant={"ghost"}
@@ -118,8 +122,8 @@ export const ApiKeySettingScreen = () => {
               <ApiKeyInputBox
                 key={idx}
                 apiKey={geminiConfig.apikey}
-                keyFor={EAiProvider.OPENAI}
-                variants={AI_MODEL_VARIANTS.OPENAI}
+                keyForElement={EAiProvider.GEMINI}
+                variants={AI_MODEL_VARIANTS.GEMINI}
                 idx={idx}
               />
             ))}
@@ -128,6 +132,7 @@ export const ApiKeySettingScreen = () => {
 
         <Separator className="my-2 bg-muted-foreground" />
 
+        {/* Anthropic API Key */}
         <div className="px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -143,10 +148,10 @@ export const ApiKeySettingScreen = () => {
             </div>
             <Button
               onClick={() =>
-                addConfig("anthropicConfigs", {
+                addConfig(EAiProvider.ANTHROPIC, {
+                  model: EAiProvider.ANTHROPIC,
+                  variant: "",
                   apikey: "",
-                  model: EAiProvider.OLLAMA,
-                  variant: null,
                 })
               }
               variant={"ghost"}
@@ -161,8 +166,8 @@ export const ApiKeySettingScreen = () => {
               <ApiKeyInputBox
                 key={idx}
                 apiKey={anthropicConfig.apikey}
-                keyFor={EAiProvider.OPENAI}
-                variants={AI_MODEL_VARIANTS.OPENAI}
+                keyForElement={EAiProvider.ANTHROPIC}
+                variants={AI_MODEL_VARIANTS.ANTHROPIC}
                 idx={idx}
               />
             ))}
@@ -171,6 +176,7 @@ export const ApiKeySettingScreen = () => {
 
         <Separator className="my-2 bg-muted-foreground" />
 
+        {/* Ollama API Key */}
         <div className="px-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -186,10 +192,10 @@ export const ApiKeySettingScreen = () => {
             </div>
             <Button
               onClick={() =>
-                addConfig("ollamaConfigs", {
+                addConfig(EAiProvider.OLLAMA, {
                   apikey: "",
                   model: EAiProvider.OLLAMA,
-                  variant: null,
+                  variant: "",
                 })
               }
               variant={"ghost"}
@@ -200,12 +206,12 @@ export const ApiKeySettingScreen = () => {
           </div>
 
           <div className="mt-2">
-            {ollamaConfigs.map((ollamaConfig, idx) => (
+            {ollamaConfigs?.map((ollamaConfig, idx) => (
               <ApiKeyInputBox
                 key={idx}
                 apiKey={ollamaConfig.apikey}
-                keyFor={EAiProvider.OPENAI}
-                variants={AI_MODEL_VARIANTS.OPENAI}
+                keyForElement={EAiProvider.OLLAMA}
+                variants={AI_MODEL_VARIANTS.OLLAMA}
                 idx={idx}
               />
             ))}

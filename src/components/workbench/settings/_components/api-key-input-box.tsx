@@ -7,13 +7,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
 import { EAiProvider } from "@/core/types/enum";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Check, Eye, EyeOff, Trash2, Zap } from "lucide-react";
 import * as React from "react";
 
 interface ApiKeyInputBoxProps {
-  keyFor: EAiProvider;
+  keyForElement: EAiProvider;
   idx: number;
 
   className?: string;
@@ -22,36 +24,59 @@ interface ApiKeyInputBoxProps {
 }
 
 export const ApiKeyInputBox: React.FC<ApiKeyInputBoxProps> = ({
+  idx,
   className,
+  keyForElement,
+  variants,
+  apiKey,
   ...props
 }) => {
-  const [apiKey, setApiKey] = React.useState(props.apiKey ?? "");
+  const [currentApiKey, setCurrentApiKey] = React.useState(apiKey ?? "");
+  const [variant, setVariant] = React.useState(variants?.[0] ?? "");
   const [showKey, setShowKey] = React.useState(false);
+  const [isSaved, setIsSaved] = React.useState(apiKey ? true : false);
 
-  const handleSave = () => {};
-  const handleDelete = () => {};
-  const handleUpdate = () => {};
+  // Store
+  const { updateConfig, deleteConfig, getConfig } = useApiConfigStore();
+
+  // Hooks
+  const { toast } = useToast();
+
+  // Effects
+  React.useEffect(() => {
+    if (currentApiKey && variant) {
+      const currentConfig = getConfig(keyForElement);
+      if (currentConfig[idx].apikey !== currentApiKey) {
+        setIsSaved(false);
+      }
+    }
+  }, [currentApiKey]);
 
   return (
     <div className="" {...props}>
       <div className="flex items-center space-x-5">
         <Input
-          type={apiKey && showKey ? "text" : "password"}
+          type={currentApiKey && showKey ? "text" : "password"}
           className={cn("border border-primary", className)}
-          value={apiKey}
+          value={currentApiKey}
           onChange={(e) => {
             const value = e.target.value;
-            setApiKey(value);
+            setCurrentApiKey(value);
           }}
         />
 
         {/* Model Variant */}
-        <Select>
+        <Select
+          defaultValue={variant}
+          onValueChange={(value) => {
+            setVariant(value);
+          }}
+        >
           <SelectTrigger className="w-40 bg-background-2">
             <SelectValue placeholder="Variant" />
           </SelectTrigger>
           <SelectContent className="bg-background-2">
-            {props.variants.map((v) => (
+            {variants?.map((v) => (
               <SelectItem key={v} value={v}>
                 {v}
               </SelectItem>
@@ -59,8 +84,8 @@ export const ApiKeyInputBox: React.FC<ApiKeyInputBoxProps> = ({
           </SelectContent>
         </Select>
 
-        {apiKey && (
-          <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3">
+          {currentApiKey && (
             <Button
               size={"icon"}
               variant={"secondary"}
@@ -68,20 +93,60 @@ export const ApiKeyInputBox: React.FC<ApiKeyInputBoxProps> = ({
             >
               {showKey ? <EyeOff /> : <Eye />}
             </Button>
+          )}
 
-            <Button variant={"destructive"} size={"icon"}>
-              <Trash2 />
+          <Button
+            variant={"destructive"}
+            size={"icon"}
+            onClick={(e) => {
+              e.stopPropagation();
+              deleteConfig(keyForElement, idx);
+            }}
+          >
+            <Trash2 />
+          </Button>
+
+          {currentApiKey && (
+            <Button
+              size={"sm"}
+              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                e.stopPropagation();
+                if (!variant) {
+                  toast({
+                    variant: "destructive",
+                    title: "Missing Variant",
+                    description: "Please select a variant for the API key",
+                  });
+                }
+
+                if (keyForElement) {
+                  updateConfig(keyForElement, idx, currentApiKey, variant);
+                }
+              }}
+            >
+              Save
             </Button>
+          )}
+        </div>
+      </div>
 
-            <Button size={"sm"}>Save</Button>
-          </div>
+      <div className="flex items-center gap-x-2">
+        {keyForElement && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            (Your {keyForElement} API Key)
+          </p>
+        )}
+        {isSaved ? (
+          <p className="flex items-center gap-1 mt-2 text-xs text-success">
+            <Check className="w-4 h-4" />
+            <span>Saved</span>
+          </p>
+        ) : (
+          <p className="flex items-center gap-1 mt-2 text-xs">
+            <Zap className="w-5 h-5 text-destructive fill-destructive" />
+          </p>
         )}
       </div>
-      {props.keyFor && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          (Your {props.keyFor} API Key)
-        </p>
-      )}
     </div>
   );
 };
