@@ -5,7 +5,7 @@ import { immer } from "zustand/middleware/immer";
 import { IGeneralAiProvider } from "@/core/types/aiProvider";
 import { IApiConfig } from "@/core/types/apiConfig";
 import { EAiProvider } from "@/core/types/enum";
-import { storage } from "..";
+import { idbStorage } from "..";
 
 // Default max tokens
 const DEFAULT_MAX_TOKENS = "2048";
@@ -21,7 +21,7 @@ interface ApiConfigState extends IApiConfig {
   updateProvider: (
     type: EAiProvider,
     index: number,
-    updatedProvider: Partial<IGeneralAiProvider>
+    updatedProvider: Partial<IGeneralAiProvider>,
   ) => void;
   deleteProvider: (type: EAiProvider, index: number) => void;
   setModel: (model: EAiProvider) => void;
@@ -101,7 +101,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
 
             if (!providers || !providers[index]) {
               throw new Error(
-                `Invalid provider index: ${index} for type: ${type}`
+                `Invalid provider index: ${index} for type: ${type}`,
               );
             }
             const updatedProviders = [...providers];
@@ -117,7 +117,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
             const providers = state.getConfig(type);
             if (!providers || !providers[index]) {
               throw new Error(
-                `Invalid provider index: ${index} for type: ${type}`
+                `Invalid provider index: ${index} for type: ${type}`,
               );
             }
             const updatedProviders = providers.filter((_, i) => i !== index);
@@ -129,6 +129,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
       })),
       {
         name: "api-config-store",
+        storage: idbStorage(),
         partialize: (state) => ({
           anthropicConfigs: state.anthropicConfigs,
           geminiConfigs: state.geminiConfigs,
@@ -138,16 +139,15 @@ export const useApiConfigStore = create<ApiConfigState>()(
           model: state.model,
           variant: state.variant,
         }),
-        storage: storage,
-      }
+      },
     ),
-    { name: "ApiConfigStore" }
-  )
+    { name: "ApiConfigStore" },
+  ),
 );
 
 // Utility function to add default tokens
 function addDefaultTokens(
-  providers?: IGeneralAiProvider[]
+  providers?: IGeneralAiProvider[],
 ): IGeneralAiProvider[] {
   return (
     providers?.map((provider) => ({

@@ -1,3 +1,6 @@
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+
 import {
   DEFAULT_EXTENSIONS_ITEMS,
   IDefaultExtensionItems,
@@ -5,9 +8,6 @@ import {
 } from "@/constants";
 import { generateUUID } from "@/core/base/common/uuid";
 import { EXTENSION_KEY } from "@/core/types/enum";
-import * as React from "react";
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 
 export interface IExtension extends IDefaultExtensionItems {}
 
@@ -21,11 +21,10 @@ interface ActivityExtensionStore {
   setActiveExtensionTabByKey: (key: string) => void;
   addExternalExtension: (
     label: string,
-    icon: React.ReactNode,
     key: EXTENSION_KEY,
     shortCut: IShortCut[],
     displaySidebar?: boolean,
-    newTab?: boolean
+    newTab?: boolean,
   ) => void;
   removeExtension: (id: string) => void;
   getDefaultExtension: () => void;
@@ -48,7 +47,7 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
       setActiveExtensionTabByKey(key: string): void {
         const { extensions, activeExtensionTab } = get();
         const extension = extensions.find(
-          (ext) => ext.identificationKey === key
+          (ext) => ext.identificationKey === key,
         );
         if (extension && extension !== activeExtensionTab) {
           set({ activeExtensionTab: extension });
@@ -56,17 +55,15 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
       },
       addExternalExtension: (
         label: string,
-        icon: React.ReactNode,
         identificationKey: EXTENSION_KEY,
         shortCut: IShortCut[],
         displaySidebar?: boolean,
-        newTab?: boolean
+        newTab?: boolean,
       ) => {
         const { extensions } = get();
         const newExtension: IExtension = {
           id: generateUUID(),
           label,
-          icon,
           identificationKey,
           shortCut,
           displaySidebar,
@@ -93,6 +90,6 @@ export const useActivityExtensionStore = create<ActivityExtensionStore>()(
     }),
     {
       name: "ActivityExtensionStore",
-    }
-  )
+    },
+  ),
 );

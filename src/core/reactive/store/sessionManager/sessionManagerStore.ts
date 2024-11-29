@@ -3,8 +3,8 @@ import { devtools, persist } from "zustand/middleware";
 
 import { DEFAULT_EXTENSIONS_ITEMS } from "@/constants";
 import { generateUUID } from "@/core/base/common/uuid";
-import { storageIndexDb } from "..";
 import { IExtension } from "./activityExtensionManager";
+import { idbStorage } from "..";
 
 const TAB_COLORS = [
   "#ef4444",
@@ -85,13 +85,14 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
   devtools(
     persist(
       (set, get) => ({
-        // State
+        // ====== State ====== //
         groups: new Map<string, ITabGroup>(),
         tabs: new Map<string, IActiveTabExtension>(),
-        tabCloseListeners: [],
         activeTab: null,
+        tabCloseListeners: [],
 
-        // Tab Actions
+        // ====== Actions ====== //
+        // ----- Tab Actions
         createTab: (label, extension = DEFAULT_EXTENSIONS_ITEMS[0]) => {
           const newTab: ITab = {
             id: generateUUID(),
@@ -174,10 +175,12 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
         closeAllTabs: () => {
           set({ tabs: new Map(), activeTab: null });
         },
+
         getTab: (id: string) => {
           const { tabs } = get();
           return tabs.get(id);
         },
+
         getTabs: () => {
           const { tabs } = get();
           if (!tabs || tabs.size === 0) {
@@ -197,7 +200,7 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
           // Check if there is multiple similar tabs
           const similarTabs = tabsArray.filter(
             (tab) =>
-              tab.extension.identificationKey === extension.identificationKey
+              tab.extension.identificationKey === extension.identificationKey,
           );
 
           if (similarTabs.length > 1) {
@@ -206,7 +209,7 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
           } else {
             const tabExtension = tabsArray.find(
               (te) =>
-                te.extension.identificationKey === extension.identificationKey
+                te.extension.identificationKey === extension.identificationKey,
             );
 
             if (tabExtension) {
@@ -217,7 +220,7 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
           return false;
         },
 
-        // Group Actions
+        // ----- Group Actions
         createGroup: (name) => {
           const newGroup: ITabGroup = {
             id: generateUUID(),
@@ -261,14 +264,14 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
 
         getGroups: () => Array.from(get().groups.values()),
 
-        // Extension Actions
+        // ----- Extension Actions
         getSession: (tabId) => get().tabs.get(tabId) || null,
 
         resetSession: () => {
           set({ tabs: new Map(), activeTab: null });
         },
 
-        // Tab Close Listener
+        // ----- Tab Close Listener
         onTabClose: (callback) => {
           set((state) => ({
             tabCloseListeners: [...state.tabCloseListeners, callback],
@@ -277,14 +280,14 @@ export const useSessionManagerStore = create<ISessionManagerStore>()(
       }),
       {
         name: "session-manager-store",
-        storage: storageIndexDb,
+        storage: idbStorage(),
         partialize: (state) => ({
           groups: state.groups,
           tabs: state.tabs,
           activeTab: state.activeTab,
         }),
-      }
+      },
     ),
-    { name: "SessionManagerStore" }
-  )
+    { name: "SessionManagerStore" },
+  ),
 );
