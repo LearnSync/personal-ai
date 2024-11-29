@@ -4,16 +4,16 @@ import {
   IExtension,
   useActivityExtensionStore,
 } from "@/core/reactive/store/sessionManager/activityExtensionManager";
+import { EXTENSION_KEY } from "@/core/types/enum";
 import { cn } from "@/lib/utils";
-import { useStore } from "@/store";
+import { useLocalFirstStore } from "@/store";
 import ContextSearchSidebar from "./context-search-sidebar";
 import DefaultSidebar from "./default-sidebar";
 import ExtensionsSidebar from "./extensions-sidebar";
 import { ImportantChatSidebar } from "./important-chat-sidebar";
-import { EXTENSION_KEY } from "@/core/types/enum";
 
 export const Sidebar = () => {
-  const { showSideBar, setShowSideBar } = useStore();
+  const { showSideBar, setShowSideBar } = useLocalFirstStore();
 
   // Context
   const { activeExtensionTab } = useActivityExtensionStore();
