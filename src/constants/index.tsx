@@ -146,7 +146,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
 ];
 
 export const AI_MODEL_VARIANTS = {
-  LLAMA: [
+  OLLAMA: [
     "llama3.2",
     "llama3.1",
     "gemma2",
