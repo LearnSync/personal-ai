@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -19,3 +19,9 @@ class ChatSessionResponse(BaseModel):
     favorite: bool
     created_at: datetime
     messages: List[ChatMessageResponse]
+
+
+class UpdateChatSessionRequest(BaseModel):
+    rename: Optional[str] = None
+    archived: Optional[bool] = None
+    favorite: Optional[bool] = None

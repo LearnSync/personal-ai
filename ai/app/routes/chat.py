@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import AsyncGenerator, List, Optional, Type
+from typing import List, Optional, Type, Generator
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
@@ -8,8 +8,9 @@ from starlette.responses import JSONResponse
 
 from app.database.db import get_db
 from app.database.schema import ChatSession, ChatMessage
+from app.enums.ai import EAIModel
 from app.enums.chat import ERole
-from app.models.chat_model import ChatSessionResponse, ChatMessageResponse
+from app.models.chat_model import ChatSessionResponse, ChatMessageResponse, UpdateChatSessionRequest
 from app.models.request import ChatRequest
 from app.services.ai import AIService
 
@@ -29,6 +30,9 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
         response_message_id = request.response_message_id
         variant = request.variant
         api_key = request.api_key
+
+        if model != EAIModel.LOCAL and not api_key:
+            raise HTTPException(status_code=403, detail=f"API Key is required for")
 
         # Check if session exists or create a new one
         chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
@@ -52,11 +56,7 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
             # Find if the current message already exists in the database
             existing_message = next((m for m in existing_messages if m.message_id == message.message_id), None)
 
-            if existing_message:
-                # Update existing message
-                existing_message.content = message.content
-                existing_message.role = message.role
-            else:
+            if not existing_message:
                 # Add new message
                 new_message = ChatMessage(
                     session_id=session_id,
@@ -71,30 +71,35 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
         db.commit()
 
         # This is to manage the response into the Database
-        async def generate_response() -> AsyncGenerator[str, None]:
+        async def generate_response() -> Generator[str, None, None]:
             full_text = ""
-            for chunk in AIService.generate_ai_response(
-                    messages=messages,
+            try:
+                for chunk in AIService.generate_ai_response(
+                        messages=messages,
+                        model=model,
+                        variant=variant,
+                        api_key=api_key
+                ):
+                    full_text += chunk
+                    yield chunk
+
+                # Save the full response to the database after streaming is complete
+                new_response_message = ChatMessage(
+                    session_id=session_id,
+                    message_id=response_message_id,
+                    role=ERole.ASSISTANT,
+                    content=full_text,
                     model=model,
                     variant=variant,
-                    api_key=api_key):
-                full_text += chunk
-                print(f"Chunk Part: {chunk}")
-                yield chunk
+                    created_at=datetime.now(),
+                )
+                db.add(new_response_message)
+                db.commit()
+            except Exception as e:
+                print(f"Error during response streaming: {e}")
+                raise
 
-            new_response_message = ChatMessage(
-                session_id=session_id,
-                message_id=response_message_id,
-                created_at=datetime.now(),
-                role=ERole.ASSISTANT,
-                content=full_text,
-                variant=variant,
-                model=model,
-            )
-            db.add(new_response_message)
-            db.commit()
-
-        return StreamingResponse(generate_response(), media_type="application/json")
+        return StreamingResponse(generate_response(), media_type="text/plain")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
@@ -143,18 +148,29 @@ def get_conversation(session_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching conversation: {str(e)}")
 
-@router.get("/chat/all")
+
+@router.get("/chat/all/")
 def get_chat_sessions(
-        archived: bool = False,
-        favorite: bool = False,
-        start_date: Optional[datetime] = Query(None, description="Filter by start date"),
-        end_date: Optional[datetime] = Query(None, description="Filter by end date"),
-        db: Session = Depends(get_db)
-) -> List[Type[ChatSession]]:
+    archived: bool = False,
+    favorite: bool = False,
+    start_date: Optional[datetime] = Query(None, description="Filter by start date"),
+    end_date: Optional[datetime] = Query(None, description="Filter by end date"),
+    page: int = Query(1, description="Page number, starts from 1"),
+    limit: int = Query(10, description="Number of records to return"),
+    db: Session = Depends(get_db)
+):
     """
     Fetch all chat sessions, optionally filtered by archived or favourite status, and within a date range.
     """
     try:
+        if page < 1:
+            raise HTTPException(status_code=400, detail="Page number must be 1 or greater.")
+        if limit < 1:
+            raise HTTPException(status_code=400, detail="Limit must be 1 or greater.")
+
+        offset = (page - 1) * limit
+
+        # Base query
         query = db.query(ChatSession)
         if archived:
             query = query.filter(ChatSession.archived == True)
@@ -165,20 +181,79 @@ def get_chat_sessions(
         if end_date:
             query = query.filter(ChatSession.created_at <= end_date)
 
-        return query.order_by(ChatSession.created_at).all()
+        # Calculate total records for pagination
+        total_records = query.count()
+
+        # Fetch paginated results
+        sessions = query.order_by(ChatSession.created_at)\
+                        .offset(offset)\
+                        .limit(limit)\
+                        .all()
+
+        # Calculate total pages
+        total_pages = (total_records + limit - 1) // limit  # Ceiling division for total pages
+
+        return {
+            "success": True,
+            "data": sessions,
+            "message": "Successfully fetched chat sessions",
+            "nextPage": page + 1 if page < total_pages else None,
+            "totalPage": total_pages,
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching chat sessions: {str(e)}")
 
 
-@router.post("/chat/{session_id}/update")
-def bookmark_and_archive_chat(
+@router.patch("/chat/{session_id}")
+def update_chat_session(
     session_id: str,
-    archived: bool = False,
-    favorite: bool = False,
+    request: UpdateChatSessionRequest,
     db: Session = Depends(get_db)
 ):
     """
-    Bookmark or archive a chat session by its ID.
+    Update properties of a chat session (rename, archive, favorite).
+    """
+    try:
+        chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+        rename = request.rename
+        archived = request.archived
+        favorite = request.favorite
+
+        if not chat_session:
+            raise HTTPException(status_code=404, detail=f"Chat session with ID {session_id} not found.")
+
+        # Apply updates if provided
+        if rename is not None:
+            chat_session.session_name = rename
+        if archived is not None:
+            chat_session.archived = archived
+        if favorite is not None:
+            chat_session.favorite = favorite
+
+        db.commit()
+        db.refresh(chat_session)
+
+        return {
+            "detail": "Chat session updated successfully.",
+            "success": True,
+            "session_id": session_id,
+            "updated_fields": {
+                "session_name": chat_session.session_name,
+                "archived": chat_session.archived,
+                "favorite": chat_session.favorite
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating chat session: {str(e)}")
+
+
+@router.delete("/chat/{session_id}")
+def delete_chat_session(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a chat session by its ID.
     """
     try:
         chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
@@ -186,12 +261,9 @@ def bookmark_and_archive_chat(
         if not chat_session:
             raise HTTPException(status_code=404, detail=f"Chat session with ID {session_id} not found.")
 
-        # Update session properties
-        chat_session.archived = archived
-        chat_session.favorite = favorite
+        db.delete(chat_session)
         db.commit()
-        db.refresh(chat_session)
 
-        return {"detail": "Chat session updated successfully.", "session_id": session_id}
+        return {"detail": "Chat session deleted successfully.", "session_id": session_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error updating chat session: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error deleting chat session: {str(e)}")

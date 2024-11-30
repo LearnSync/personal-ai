@@ -27,6 +27,7 @@ jq = "^1.8.0"
 update = "^0.0.1"
 sqlite-vss = "^0.1.2"
 websockets = "^14.1"
+langchain-google-genai = "^2.0.6"
 
 
 [tool.poetry.group.dev.dependencies]

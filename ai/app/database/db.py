@@ -7,7 +7,13 @@ from .schema import Base
 DATABASE_URL = "sqlite:///focal_first_ai.db"
 
 # Create the database engine
-engine = create_engine(DATABASE_URL, echo=True)  # Set echo=False to disable SQL logging
+engine = create_engine(
+    DATABASE_URL,
+    echo=True,
+    pool_size=10,
+    max_overflow=20,
+    pool_timeout=30
+)
 
 # Create the session factory
 Session = sessionmaker(autocommit=False, autoflush=False,bind=engine)

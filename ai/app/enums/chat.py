@@ -1,6 +1,7 @@
 import enum
 
 
+
 class ERole(str, enum.Enum):
     USER = "user"
     ASSISTANT = "assistant"

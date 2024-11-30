@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional, Generator
 
 from langchain_community.llms import OpenAI, Anthropic, Ollama
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 
@@ -45,6 +46,13 @@ class AIService:
             if not api_key:
                 raise ValueError("API key must be provided for Anthropic.")
             return Anthropic(model=model, api_key=api_key)  # TODO: Pending Testing
+        elif model and model.lower().startswith(str(EAIModel.GEMINI)):
+            if not api_key:
+                raise ValueError("API key must be provided for Gemini")
+            return ChatGoogleGenerativeAI(
+                model = variant,
+                api_key = api_key
+            )
         else:
             return Ollama(model=variant)  # Default Model
 
@@ -72,31 +80,39 @@ class AIService:
         Raises:
             ValueError: For invalid configurations or response structure issues.
         """
+        if not messages or not isinstance(messages, list):
+            raise ValueError("`messages` must be a non-empty list of ChatMessageResponse objects.")
+
         try:
+            formatted_messages = messages
+            if model and model.startswith(EAIModel.GEMINI):  # Adjust if `EAIModel.GEMINI` is used
+                formatted_messages = [
+                    {"role": msg.role, "parts": msg.content} for msg in messages
+                ]
+
             # Build the prompt
             prompt = build_prompt_from_messages(messages, topic)
-            print(f"Generated Prompt: {prompt}")
 
             # Initialise output parser
             output_parser = StrOutputParser()
 
             # Select appropriate LLM
             llm = AIService.select_llm(model, variant, api_key)
-            print(f"Selected LLM: {llm}")
+            if llm is None:
+                raise ValueError(f"Invalid model configuration: {model}, {variant}")
 
             # Chain the prompt, LLM, and output parser
             chain = prompt | llm | output_parser
-            print(f"Constructed Chain: {chain}")
 
             # Stream and yield response chunks
             print("Starting response streaming...")
-            response = chain.stream({"messages": messages, "topic": topic})
+            response = chain.stream({"messages": formatted_messages, "topic": topic})
 
             if response:
                 for chunk in response:
-                    print(f"Chunk: {chunk}")
                     yield chunk
-
+            else:
+                raise ValueError("Empty response received from the LLM chain.")
         except ValueError as ve:
             print(f"Configuration Error: {ve}")
             raise ve
