@@ -1,3 +1,4 @@
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
   Bookmark,
@@ -6,28 +7,34 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import * as React from "react";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { endpoint } from "@/config/endpoint";
+import { createOption } from "@/constants";
 import { generateUUID } from "@/core";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
+import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
+import { EAiProvider, SIDEBAR_ITEM_OPTION } from "@/core/types/enum";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import {
-  chatGptIcon,
-  claudeAIIcon,
-  geminiIcon,
-  ollamaIcon,
-} from "./sidebar-icon";
 import { SidebarItem } from "./sidebar-item";
-import { usePlatformContext } from "@/context/platform.context";
-import { EAiProvider } from "@/core/types/enum";
-import { useToast } from "@/hooks/use-toast";
-import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
+import { useChatData } from "@/hooks/useChatData";
+import { ISidebarOption } from "@/core/types";
 
 interface DefaultSidebarProps {
   className?: string;
+}
+
+interface ChatResponse {
+  success: boolean;
+  data: any[];
+  message: string;
+  nextPage: number;
+  totalPage: number;
 }
 
 const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
@@ -38,107 +45,140 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
 
   // ----- Store
   const { createTab } = useSessionManagerStore();
+  const { geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs } =
+    useApiConfigStore();
+  const { activeTab } = useSessionManagerStore();
 
+  // ----- Hooks
   const { toast } = useToast();
+  const { queries, results } = useChatData();
 
+  // ----- Memoization
   const startNewChatOptions = React.useMemo(() => {
-    // The Default AI Model
     return [
       {
         id: generateUUID(),
-        icon: <Plus className="w-5 h-5" />,
-        label: `Start New Chat with Local (llama3.2)`,
+        label: `Start New Chat with Local`,
         className: "",
-        action: () => {
-          const response = createTab(`Chat with Local (llama3.2)`);
-          if (response) {
-            setOpen((prev) => !prev);
-          } else {
-            toast({
-              title: "Uh oh! Something went wrong.",
-              description: "There was a problem with your request.",
-            });
-          }
-        },
+        icon: <Plus className="w-5 h-5" />,
+        action: () => handleCreateTab("Chat with Local"),
       },
       {
         id: generateUUID(),
-        icon: <MessageCircleDashed className="w-5 h-5" />,
-        label: `Start Temporary Chat`,
         className: "",
-        action: () => {
-          const response = createTab(`Quick Chat`);
-          if (response) {
-            setOpen((prev) => !prev);
-          } else {
-            toast({
-              title: "Uh oh! Something went wrong.",
-              description: "There was a problem with your request.",
-            });
-          }
-        },
+        label: `Start Temporary Chat`,
+        icon: <MessageCircleDashed className="w-5 h-5" />,
+        action: () => handleCreateTab("Quick Chat"),
       },
     ];
   }, []);
 
   const startNewChatWithAvailableModels = React.useMemo(() => {
-    // Except Default Options
-    return [
+    const options = [];
+
+    if (openaiConfigs.length > 0) {
+      options.push(
+        createOption({
+          label: `Start New Chat with Open AI`,
+          iconKey: EAiProvider.OPENAI,
+          iconClassName: "",
+          className: "bg-gradient-to-r from-[#10a37f] to-white",
+        })
+      );
+    }
+    if (geminiConfigs.length > 0) {
+      options.push(
+        createOption({
+          label: "Start New Chat with Gemini",
+          iconKey: EAiProvider.GEMINI,
+          iconClassName: "",
+          className: "bg-gradient-to-r from-[#8b6ac2] to-[#2f96dc]",
+        })
+      );
+    }
+    if (anthropicConfigs.length > 0) {
+      options.push(
+        createOption({
+          label: "Start New Chat with Claude AI",
+          iconKey: EAiProvider.ANTHROPIC,
+          iconClassName: "",
+          className: "bg-gradient-to-r from-white to-[#cc9b7a]",
+        })
+      );
+    }
+    if (ollamaConfigs.length > 0) {
+      options.push(
+        createOption({
+          label: "Start New Chat with Llama",
+          iconKey: EAiProvider.OLLAMA,
+          iconClassName: "",
+          className: "bg-gradient-to-r from-[#2f96dc] to-white",
+        })
+      );
+    }
+
+    return options;
+  }, [geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs]);
+
+  const chatOptions = React.useMemo<ISidebarOption[]>(
+    () => [
       {
         id: generateUUID(),
-        icon: ollamaIcon({ className: "w-4 h-4" }),
-        label: "Start New Chat with  Llama",
-        action: () => console.log("Start New Chat"),
-        className:
-          "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
+        label: "Rename",
+        actionIdentifier: SIDEBAR_ITEM_OPTION.RENAME,
+        icon: <Pencil className="w-5 h-5" />,
       },
       {
         id: generateUUID(),
-        icon: chatGptIcon({ className: "w-5 h-5 fill-white" }),
-        label: "Start New Chat with OpenAI",
-        action: () => console.log("Start New Chat"),
-        className:
-          "bg-gradient-to-r from-[#10a37f] to-white text-transparent bg-clip-text",
+        label: "Bookmark",
+        actionIdentifier: SIDEBAR_ITEM_OPTION.BOOKMARK,
+        icon: <Bookmark className="w-5 h-5" />,
       },
       {
         id: generateUUID(),
-        icon: geminiIcon({ className: "w-5 h-5 fill-white" }),
-        label: "Start New Chat with Gemini",
-        action: () => console.log("Start New Chat"),
-        className:
-          "bg-gradient-to-r from-[#8b6ac2] to-[#2f96dc] text-transparent bg-clip-text",
+        label: "Archive",
+        actionIdentifier: SIDEBAR_ITEM_OPTION.ARCHIVED,
+        icon: <Archive className="w-5 h-5" />,
       },
       {
         id: generateUUID(),
-        icon: claudeAIIcon({ className: "w-5 h-5" }),
-        label: "Start New Chat with Claude AI",
-        action: () => console.log("Start New Chat"),
-        className:
-          "bg-gradient-to-r from-white to-[#cc9b7a] text-transparent bg-clip-text",
+        label: "Delete",
+        actionIdentifier: SIDEBAR_ITEM_OPTION.DELETE,
+        icon: <Trash2 className="w-5 h-5" />,
+        className: "text-red-500 hover:text-red-500",
       },
-    ];
-  }, []);
+    ],
+    []
+  );
+
+  // ---- Functions
+  const handleCreateTab = (label: string) => {
+    const response = createTab(label);
+    if (response) setOpen(false);
+    else {
+      toast({
+        title: "Uh oh! Something went wrong.",
+        description: "There was a problem with your request.",
+      });
+    }
+  };
 
   return (
     <div className={cn("w-full h-screen", className)} {...props}>
       <div className="flex items-center justify-center w-full h-[4rem] py-4">
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild className="flex items-center justify-center">
-            <Button onClick={() => setOpen((prev) => !prev)}>
+          <PopoverTrigger asChild>
+            <Button onClick={() => setOpen(!open)}>
               <Plus className="w-6 h-6" />
               <span>Start New Chat</span>
             </Button>
           </PopoverTrigger>
-          <PopoverContent
-            className={cn(
-              "border select-none border-muted-foreground/40 bg-muted p-2 rounded-2xl w-80"
-            )}
-          >
-            {startNewChatOptions?.map((opt) => (
+          <PopoverContent className="p-2 border border-muted-foreground/40 bg-muted rounded-2xl w-80">
+            {startNewChatOptions.map((opt) => (
               <Button
-                variant={"ghost"}
+                variant="ghost"
                 className={cn(
-                  "w-full hover:bg-muted-foreground/20 justify-start items-center overflow-hidden",
+                  "w-full hover:bg-muted-foreground/20 justify-start items-center",
                   opt.className
                 )}
                 key={opt.id}
@@ -148,14 +188,12 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
                 <span>{opt.label}</span>
               </Button>
             ))}
-
             <Separator className="my-2 bg-muted-foreground/40" />
-
-            {startNewChatWithAvailableModels?.map((opt) => (
+            {startNewChatWithAvailableModels.map((opt) => (
               <Button
-                variant={"ghost"}
+                variant="ghost"
                 className={cn(
-                  "w-full hover:bg-muted-foreground/20 justify-start items-center overflow-hidden",
+                  "w-full hover:bg-muted-foreground/20 justify-start items-center",
                   opt.className
                 )}
                 key={opt.id}
@@ -168,57 +206,44 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
           </PopoverContent>
         </Popover>
       </div>
-
       <Separator />
-
-      {/* Chat History */}
       <ScrollArea className="flex-1 h-[calc(100vh-4rem)]">
         <div className="w-full">
-          {new Array(1).fill(Math.random()).map((_, idx) => (
-            <div className="px-4 pb-4 border-b" key={idx}>
-              <p className="capitalize font-[600] text-sm text-muted-foreground py-3 pb-2">
-                today
-              </p>
-              <SidebarItem
-                id={generateUUID()}
-                label="Chat 1"
-                onClick={() => {
-                  console.log("Clicked Chat 1!");
-                }}
-                options={[
-                  {
-                    id: generateUUID(),
-                    label: "Rename",
-                    icon: <Pencil className="w-5 h-5" />,
-                    action: () => console.log("Rename"),
-                  },
-                  {
-                    id: generateUUID(),
-                    label: "Bookmark",
-                    icon: <Bookmark className="w-5 h-5" />,
-                    action: () => console.log("Start"),
-                  },
-                  {
-                    id: generateUUID(),
-                    label: "Archive",
-                    icon: <Archive className="w-5 h-5" />,
-                    action: () => console.log("Archive"),
-                  },
-                  {
-                    id: generateUUID(),
-                    label: "Delete",
-                    icon: <Trash2 className="w-5 h-5" />,
-                    action: () => console.log("Delete"),
-                    className: "text-red-500 hover:text-red-500",
-                  },
-                ]}
-              />
-            </div>
-          ))}
+          {results?.map((result, idx) => {
+            const data = result?.data?.data;
+            if (!data || (Array.isArray(data) && data.length === 0))
+              return null;
+
+            console.log(data);
+
+            return (
+              <div className="px-4 pb-4 border-b" key={queries[idx].key}>
+                <p className="capitalize font-[600] text-sm text-muted-foreground py-3 pb-2">
+                  {queries[idx].key.replace(/-/g, " ")}
+                </p>
+                {result.isSuccess &&
+                  result?.data?.data?.map((chat: any, i: number) => (
+                    <SidebarItem
+                      id={chat?.session_id ?? generateUUID()}
+                      key={i}
+                      chat={chat}
+                      label={chat?.session_name}
+                      onClick={() => console.log(`Clicked Chat ${i + 1}`)}
+                      options={chatOptions}
+                    />
+                  ))}
+                {result.isError && (
+                  <p className="text-red-500">
+                    Failed to load {queries[idx].key} chats.
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>
   );
 };
 
-export default DefaultSidebar;
+export default React.memo(DefaultSidebar);

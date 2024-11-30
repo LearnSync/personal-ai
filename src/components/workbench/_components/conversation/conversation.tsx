@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Ellipsis } from "lucide-react";
 import LLMResponse from "./llm-response";
 import UserMessage from "./user-message";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
 
 interface ConversationProps {
   isLoading: boolean;
@@ -15,10 +16,12 @@ export const Conversation: React.FC<ConversationProps> = ({
   isLoading = false,
   messages = [],
 }) => {
+  const { model } = useApiConfigStore();
+
   return (
     <main
       className={cn(
-        "flex flex-col w-full h-full gap-5 p-6 overflow-y-auto justify-end",
+        "flex flex-col w-full h-full gap-5 p-6 overflow-y-auto justify-end"
       )}
     >
       {messages.map((message, index) => (
@@ -27,7 +30,7 @@ export const Conversation: React.FC<ConversationProps> = ({
             <UserMessage message={message.content} />
           ) : message.role === "assistant" ? (
             <LLMResponse
-              model={message.model ?? ""}
+              model={message.model ?? model}
               message={message.content}
             />
           ) : (

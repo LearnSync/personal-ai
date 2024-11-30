@@ -1,10 +1,13 @@
+import { Ellipsis } from "lucide-react";
+import * as React from "react";
+
 import { ISidebarItem } from "@/core/types/sidebar";
 import { cn } from "@/lib/utils";
-import { Ellipsis } from "lucide-react";
-import React from "react";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
+import { useChatData } from "@/hooks/useChatData";
 
 interface ISidebarItemProps extends ISidebarItem {
   icon?: React.ReactNode;
@@ -16,6 +19,7 @@ interface ISidebarItemProps extends ISidebarItem {
 export const SidebarItem: React.FC<ISidebarItemProps> = ({
   id,
   label,
+  chat,
   icon,
   options,
   className,
@@ -24,22 +28,29 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
   displayOption = true,
   ...rest
 }) => {
+  const [isOpenPopover, setIsOpenPopover] = React.useState(false);
+
+  // ----- Store
+  const { activeTab } = useSessionManagerStore();
+
+  // ----- Hooks
+  const { updateMutation } = useChatData();
+
   return (
     <Button
       variant={"ghost"}
       className={cn(
         "w-full justify-start h-8 overflow-hidden flex items-center",
-        className,
+        className
       )}
       key={id}
       onClick={onClick}
       {...rest}
     >
-      {icon ?? icon}
       <div
         className={cn(
           "flex items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap",
-          displayOption ? "w-full" : "w-[80%]",
+          displayOption ? "w-full" : "w-[80%]"
         )}
       >
         {label}
@@ -47,7 +58,11 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
 
       {displayOption && (
         <div className="w-[20%] flex justify-end text-muted-foreground">
-          <Popover>
+          <Popover
+            defaultOpen={isOpenPopover}
+            open={isOpenPopover}
+            onOpenChange={() => setIsOpenPopover((prev) => !prev)}
+          >
             <PopoverTrigger className="flex items-center justify-center">
               <Tooltip>
                 <TooltipTrigger>
@@ -55,7 +70,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
                 </TooltipTrigger>
                 <TooltipContent
                   className={cn(
-                    "border select-none border-muted-foreground/40",
+                    "border select-none border-muted-foreground/40"
                   )}
                 >
                   Options
@@ -64,18 +79,29 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
             </PopoverTrigger>
             <PopoverContent
               className={cn(
-                "border select-none border-muted-foreground/40 bg-muted max-w-36 p-2 rounded-2xl",
+                "border select-none border-muted-foreground/40 bg-muted max-w-36 p-2 rounded-2xl"
               )}
             >
               {options?.map((opt) => (
                 <Button
                   variant={"ghost"}
                   className={cn(
-                    "w-full hover:bg-muted-foreground/20 justify-start items-center",
-                    opt.className,
+                    "w-full hover:bg-muted-foreground/20 justify-start items-center cursor-pointer",
+                    opt.className
                   )}
                   key={opt.id}
-                  onClick={opt.action}
+                  onClick={() => {
+                    if (chat) {
+                      if (activeTab && activeTab.tab && activeTab.tab.id)
+                        updateMutation.mutateAsync({
+                          session_id: activeTab.tab.id,
+                          payload: {
+                            favorite: !chat.favorite,
+                          },
+                        });
+                    }
+                    setIsOpenPopover((prev) => !prev);
+                  }}
                   asChild
                 >
                   <div>

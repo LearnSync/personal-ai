@@ -2,13 +2,15 @@ import * as React from "react";
 
 import { MarkdownRender } from "@/components/general-components/markdown.component";
 import {
-  chatGptIcon,
-  claudeAIIcon,
-  geminiIcon,
-  ollamaIcon,
-} from "@/components/sidebar";
+  ChatGptIcon,
+  ClaudeAIIcon,
+  GeminiIcon,
+  getIconByIconKey,
+  OllamaIcon,
+} from "@/constants";
 import { cn } from "@/lib/utils";
 import { Laptop } from "lucide-react";
+import { EAiProvider } from "@/core/types/enum";
 
 interface LLMResponseProps {
   model: string;
@@ -38,17 +40,10 @@ export const LLMResponse: React.FC<LLMResponseProps> = ({
           message ? "" : "p-4 mt-auto"
         )}
       >
-        {model?.toLowerCase() === "llama" ? (
-          ollamaIcon({ className: "w-10 h-10" })
-        ) : model?.toLowerCase() === "openai" ? (
-          chatGptIcon({ className: "w-10 h-10" })
-        ) : model?.toLowerCase() === "gemini" ? (
-          geminiIcon({ className: "w-10 h-10" })
-        ) : model?.toLowerCase() === "anthropic" ? (
-          claudeAIIcon({ className: "w-10 h-10" })
-        ) : (
-          <Laptop className="w-6 h-6 text-muted-foreground" />
-        )}
+        {getIconByIconKey({
+          key: model as EAiProvider,
+          className: cn("w-8 h-8"),
+        })}
       </div>
 
       <div className="overflow-hidden ">

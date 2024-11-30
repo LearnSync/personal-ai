@@ -21,3 +21,11 @@ export enum EXTENSION_KEY {
   EXTENSION = "extension",
   SETTINGS = "settings",
 }
+
+export enum SIDEBAR_ITEM_OPTION {
+  RENAME = "rename",
+  BOOKMARK = "bookmark",
+  ARCHIVED = "archived",
+  IMPORTANT = "important",
+  DELETE = "delete",
+}

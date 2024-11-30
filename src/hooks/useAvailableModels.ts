@@ -1,12 +1,5 @@
 import * as React from "react";
 
-import {
-  chatGptIcon,
-  claudeAIIcon,
-  geminiIcon,
-  localLLMIcon,
-  ollamaIcon,
-} from "@/components/sidebar";
 import { AI_MODEL_VARIANTS } from "@/constants";
 import { generateUUID } from "@/core";
 import { IAiModel } from "@/core/types/aiProvider";
@@ -17,27 +10,24 @@ export const useAvailableModels = () => {
     return [
       {
         id: generateUUID(),
-        icon: localLLMIcon({ className: "w-4 h-4 text-white" }),
         label: "Local",
         model: EAiProvider.LOCAL,
-        variants: AI_MODEL_VARIANTS.LLAMA,
+        variants: AI_MODEL_VARIANTS.OLLAMA,
         action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
       },
       {
         id: generateUUID(),
-        icon: ollamaIcon({ className: "w-4 h-4" }),
         label: "Llama",
         model: EAiProvider.OLLAMA,
-        variants: AI_MODEL_VARIANTS.LLAMA,
+        variants: AI_MODEL_VARIANTS.OLLAMA,
         action: () => console.log("Start New Chat"),
         className:
           "bg-gradient-to-r from-[#2f96dc] to-white text-transparent bg-clip-text",
       },
       {
         id: generateUUID(),
-        icon: chatGptIcon({ className: "w-5 h-5 fill-white" }),
         label: "OpenAI",
         model: EAiProvider.OPENAI,
         variants: AI_MODEL_VARIANTS.OPENAI,
@@ -47,7 +37,6 @@ export const useAvailableModels = () => {
       },
       {
         id: generateUUID(),
-        icon: geminiIcon({ className: "w-5 h-5 fill-white" }),
         label: "Gemini",
         model: EAiProvider.GEMINI,
         variants: AI_MODEL_VARIANTS.GEMINI,
@@ -57,7 +46,6 @@ export const useAvailableModels = () => {
       },
       {
         id: generateUUID(),
-        icon: claudeAIIcon({ className: "w-5 h-5" }),
         label: "Claude AI",
         model: EAiProvider.ANTHROPIC,
         variants: AI_MODEL_VARIANTS.ANTHROPIC,
@@ -67,6 +55,10 @@ export const useAvailableModels = () => {
       },
     ];
   }, []);
+
+  // Effects
+  // TODO: Update @SOUMITRO-SAHA
+  React.useEffect(() => {}, []);
 
   return {
     models,

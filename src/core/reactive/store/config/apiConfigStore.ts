@@ -10,10 +10,16 @@ const DEFAULT_MAX_TOKENS = "2048";
 
 // Store interface
 interface ApiConfigState extends IApiConfig {
+  // States
+  activeApiIndex: number;
+
   // Getters
   getConfig: (type: EAiProvider) => IGeneralAiProvider[];
+  getActiveApiConfig: () => IGeneralAiProvider[];
+  getApiConfigOfActiveVariant: () => IGeneralAiProvider | null;
 
   // Actions
+  setActiveApiIndex: (index: number) => void;
   setConfig: (config: IApiConfig) => void;
   addConfig: (type: EAiProvider, provider: IGeneralAiProvider) => void;
   updateConfig: (
@@ -42,9 +48,16 @@ export const useApiConfigStore = create<ApiConfigState>()(
         geminiConfigs: [],
         openaiConfigs: [],
         ollamaConfigs: [],
-        localConfigs: [],
+        localConfigs: [
+          {
+            model: EAiProvider.LOCAL,
+            variant: "llama3.2",
+            apikey: "",
+          },
+        ],
         model: EAiProvider.LOCAL,
         variant: "",
+        activeApiIndex: 0,
 
         // ===== Getters ===== //
         getConfig: (type) => {
@@ -63,7 +76,29 @@ export const useApiConfigStore = create<ApiConfigState>()(
           return configMap[type];
         },
 
+        getActiveApiConfig: () => {
+          const model = get().model;
+          return get().getConfig(model);
+        },
+
+        getApiConfigOfActiveVariant: () => {
+          const activeApiConfig = get().getActiveApiConfig();
+          const activeIndex = get().activeApiIndex;
+
+          if (activeIndex < 0 || activeIndex >= activeApiConfig.length) {
+            console.warn(`Invalid activeApiIndex: ${activeIndex}`);
+            return null;
+          }
+
+          return activeApiConfig[activeIndex] || null;
+        },
+
         // ===== Actions ===== //
+        setActiveApiIndex: (index) =>
+          set(() => ({
+            activeApiIndex: index,
+          })),
+
         setConfig: (config) =>
           set(() => ({
             anthropicConfigs: addDefaultTokens(config.anthropicConfigs),
@@ -142,6 +177,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
           localConfigs: state.localConfigs,
           model: state.model,
           variant: state.variant,
+          activeApiIndex: state.activeApiIndex,
         }),
       }
     ),

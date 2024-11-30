@@ -1,3 +1,5 @@
+import { type IGeneralAiProvider } from "./aiProvider";
+
 export interface IApiConfigAiProvider {
   anthropicConfigs: IGeneralAiProvider[];
   geminiConfigs: IGeneralAiProvider[];

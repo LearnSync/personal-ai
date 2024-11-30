@@ -1,11 +1,11 @@
 // import { fetch } from "@tauri-apps/plugin-http";
 import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { endpoint } from "@/config/endpoint";
 import { generateUUID } from "@/core/base/common/uuid";
 import { ILlmMessage } from "@/core/types";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
 import { useSessionManagerStore } from "../store/sessionManager/sessionManagerStore";
 import { sleep } from "@/core/base/common/sleep";
@@ -28,7 +28,7 @@ interface ISendLLMMessageParams {
   attachments?: { name: string; type: string; data: string }[];
   onText: OnText;
   onFinalMessage: (messageId: string, fullText: string) => void;
-  onError: (error: string) => void;
+  onError: (messageId: string, errorMsg: string) => void;
 }
 
 interface IUseChatResponse {
@@ -70,7 +70,7 @@ export const useChat = (): IUseChatResponse => {
   const { toast } = useToast();
 
   // ----- Store
-  const { model, variant } = useApiConfigStore();
+  const { model, variant, getApiConfigOfActiveVariant } = useApiConfigStore();
   const { activeTab, updateTabLabel } = useSessionManagerStore();
 
   // ----- React Query
@@ -113,7 +113,7 @@ export const useChat = (): IUseChatResponse => {
   }, [error]);
 
   // ----- Private Function
-  const updateMessageByMessageId = ({
+  const _updateMessageByMessageId = ({
     messageId,
     message,
   }: {
@@ -133,7 +133,7 @@ export const useChat = (): IUseChatResponse => {
     );
   };
 
-  const sendMessageToLLM = async ({
+  const _sendMessageToLLM = async ({
     sessionId,
     sessionName,
     messages,
@@ -146,6 +146,8 @@ export const useChat = (): IUseChatResponse => {
     const controller = new AbortController();
     setAbortController(controller);
     const responseMessageId = `msg-${generateUUID()}`;
+
+    const apiConfig = getApiConfigOfActiveVariant();
 
     try {
       const formattedAttachments = attachments?.map((file) => ({
@@ -163,8 +165,9 @@ export const useChat = (): IUseChatResponse => {
           response_message_id: responseMessageId,
           attachments: formattedAttachments,
           messages,
-          model,
-          variant,
+          model: apiConfig ? apiConfig.model : model,
+          variant: apiConfig ? apiConfig.variant : variant,
+          api_key: apiConfig && apiConfig.apikey,
         }),
         signal: controller.signal,
       });
@@ -191,6 +194,7 @@ export const useChat = (): IUseChatResponse => {
           onText(responseMessageId, fullText);
         } catch (error) {
           console.error("Error decoding: ", error);
+          break;
         }
       }
 
@@ -199,6 +203,7 @@ export const useChat = (): IUseChatResponse => {
       console.error("Error:", error);
       if (error instanceof Error) {
         onError(
+          responseMessageId,
           error.message || "An error occurred while sending the message."
         );
       }
@@ -219,83 +224,81 @@ export const useChat = (): IUseChatResponse => {
       messageId?: string;
       attachments?: File[];
     }) => {
-      if (activeTab) {
-        setIsLoading(true);
-        const existingMessageId = messageId || `msg-${generateUUID()}`;
+      if (!activeTab) return;
 
-        if (messageId) {
-          updateMessageByMessageId({
-            messageId: existingMessageId,
-            message: {
-              message_id: existingMessageId,
-              role: "user",
-              content,
+      setIsLoading(true);
+      const existingMessageId = messageId || `msg-${generateUUID()}`;
+
+      const newMessage: ILlmMessage = {
+        message_id: existingMessageId,
+        content,
+        role: "user",
+      };
+
+      _updateMessageByMessageId({
+        messageId: existingMessageId,
+        message: newMessage,
+      });
+
+      const updatedMessages = messageId ? messages : [...messages, newMessage];
+
+      // Convert file attachments to Base64
+      const processAttachments = async () => {
+        if (!attachments) return [];
+        return Promise.all(
+          attachments.map(async (file) => {
+            const data = await fileToBase64(file);
+            return { name: file.name, type: file.type, data };
+          })
+        );
+      };
+
+      processAttachments()
+        .then((attachments) => {
+          // Callback function
+          _sendMessageToLLM({
+            attachments,
+            sessionId: activeTab.tab.id,
+            sessionName: activeTab.tab.label,
+            messages: updatedMessages,
+            onText: (messageId, fullText) => {
+              _updateMessageByMessageId({
+                messageId,
+                message: {
+                  message_id: messageId,
+                  content: fullText,
+                  role: "assistant",
+                },
+              });
+            },
+            onFinalMessage: (messageId, fullText) => {
+              _updateMessageByMessageId({
+                messageId,
+                message: {
+                  message_id: messageId,
+                  content: fullText,
+                  role: "assistant",
+                },
+              });
+            },
+            onError: (messageId, errorMessage: string) => {
+              _updateMessageByMessageId({
+                messageId,
+                message: {
+                  message_id: messageId,
+                  content: errorMessage,
+                  role: "assistant",
+                },
+              });
             },
           });
-        } else {
-          const newMessage: ILlmMessage = {
-            message_id: existingMessageId,
-            content,
-            role: "user",
-          };
-
-          updateMessageByMessageId({
-            messageId: existingMessageId,
-            message: newMessage,
-          });
-
-          // Sleeping for 100 ms to properly added the message to the State, so the last message must be there in the messages array
-          sleep(100);
-
-          // Convert file attachments to Base64
-          const processAttachments = async () => {
-            if (!attachments) return [];
-            return Promise.all(
-              attachments.map(async (file) => {
-                const data = await fileToBase64(file);
-                return { name: file.name, type: file.type, data };
-              })
-            );
-          };
-
-          processAttachments().then((attachments) => {
-            // Callback function
-            sendMessageToLLM({
-              sessionId: activeTab.tab.id,
-              sessionName: activeTab.tab.label,
-              messages,
-              attachments,
-              onText: (messageId, fullText) => {
-                updateMessageByMessageId({
-                  messageId,
-                  message: {
-                    message_id: messageId,
-                    content: fullText,
-                    role: "assistant",
-                  },
-                });
-              },
-              onFinalMessage: (messageId, fullText) => {
-                updateMessageByMessageId({
-                  messageId,
-                  message: {
-                    message_id: messageId,
-                    content: fullText,
-                    role: "assistant",
-                  },
-                });
-              },
-              onError: (error: string) => {
-                toast({
-                  variant: "destructive",
-                  title: "Error",
-                  description: error,
-                });
-              },
-            });
-          });
-        }
-      }
+        })
+        .catch((error) => {
+          console.error(
+            "Error processing attachments or sending the message:",
+            error
+          );
+        });
     },
     [messages, activeTab]
   );

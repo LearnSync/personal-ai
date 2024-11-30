@@ -1,10 +1,10 @@
 import * as React from "react";
+import { EAiProvider } from "./enum";
 
 export interface IAiModel {
   id: string;
-  icon: React.ReactNode;
   label: string;
-  model: string;
+  model: EAiProvider;
   variants: string[];
   action: () => void;
   className?: string;

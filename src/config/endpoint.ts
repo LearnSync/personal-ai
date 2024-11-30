@@ -1,3 +1,4 @@
+import { TIME } from "@/constants";
 import { env } from "./env";
 
 export const endpoint = {
@@ -7,7 +8,21 @@ export const endpoint = {
 
   // --- Chat
   CHAT: `${env.AI_SERVER_URL}/generate`,
-  GET_CHAT: `${env.AI_SERVER_URL}/chat`,
+  GET_CHAT: {
+    TODAY: `${env.AI_SERVER_URL}/chat/all/?start_date=${TIME.TODAY.START}&end_date=${TIME.TODAY.END}`,
+    YESTERDAY: `${env.AI_SERVER_URL}/chat/all/?start_date=${TIME.YESTERDAY.START}&end_date=${TIME.YESTERDAY.END}`,
+    THIS_WEEK: `${env.AI_SERVER_URL}/chat/all/?start_date=${TIME.PAST_7_DAYS.START}&end_date=${TIME.PAST_7_DAYS.END}`,
+    THIS_MONTH: `${env.AI_SERVER_URL}/chat/all/?start_date=${TIME.PAST_30_DAYS.START}&end_date=${TIME.PAST_30_DAYS.END}`,
+    ARCHIVED: `${env.AI_SERVER_URL}/chat/all/?archived=true`,
+    FAVORITE: `${env.AI_SERVER_URL}/chat/all/?favorite=true`,
+    HISTORY: `${env.AI_SERVER_URL}/chat/all`,
+  },
+  UPDATE_CHAT: `${env.AI_SERVER_URL}/chat`, // i.e. /chat/{session_id}, PUT
+  DELETE_CHAT: `${env.AI_SERVER_URL}/chat`, // i.e. /chat/{session}, DELETE
+
+  // --- Context Search
+
+  // --- Important Chat
   HISTORY: `${env.AI_SERVER_URL}/chat/history`,
   BOOKMARKS: `${env.AI_SERVER_URL}/chat/bookmarks`,
   ARCHIVE: `${env.AI_SERVER_URL}/chat/archive`,

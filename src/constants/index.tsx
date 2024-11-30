@@ -1,11 +1,3 @@
-import {
-  Blocks,
-  FileStack,
-  MessageCircle,
-  Search,
-  Settings,
-} from "lucide-react";
-
 import { generateUUID, Platform } from "@/core";
 import { EXTENSION_KEY } from "@/core/types/enum";
 
@@ -76,25 +68,6 @@ export const APPLICATION_SHORTCUTS = {
   NEW_TAB: generateShortCuts({ key: "t", ctrl: true }),
   CLOSE_TAB: generateShortCuts({ key: "w", ctrl: true }),
   TOGGLE_SIDEBAR: generateShortCuts({ key: "s", ctrl: true, alt: true }),
-};
-
-export const getIconByKey = (key: string | undefined) => {
-  if (!key) return <MessageCircle className="w-full h-full" />;
-
-  switch (key) {
-    case EXTENSION_KEY.CHAT:
-      return <MessageCircle className="w-full h-full" />;
-    case EXTENSION_KEY.CONTEXT_SEARCH:
-      return <Search className="w-full h-full" />;
-    case EXTENSION_KEY.IMPORTANT_CHAT:
-      return <FileStack className="w-full h-full" />;
-    case EXTENSION_KEY.SETTINGS:
-      return <Settings className="w-full h-full" />;
-    case EXTENSION_KEY.EXTENSION:
-      return <Blocks className="w-full h-full" />;
-    default:
-      return <MessageCircle className="w-full h-full" />;
-  }
 };
 
 export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
@@ -224,3 +197,37 @@ export const TAB_COLORS = [
   "#db2777",
   "#f8fafc",
 ];
+
+const getStartOfDay = (date: Date): string => {
+  const start = new Date(date);
+  start.setUTCHours(0, 0, 0, 0);
+  return start.toISOString();
+};
+
+const getEndOfDay = (date: Date): string => {
+  const end = new Date(date);
+  end.setUTCHours(23, 59, 59, 999);
+  return end.toISOString();
+};
+
+export const TIME = {
+  TODAY: {
+    START: getStartOfDay(new Date()), // Start of today (00:00:00.000)
+    END: getEndOfDay(new Date()), // End of today (23:59:59.999)
+  },
+  YESTERDAY: {
+    START: getStartOfDay(new Date(Date.now() - 86400000)), // Start of yesterday
+    END: getEndOfDay(new Date(Date.now() - 86400000)), // End of yesterday
+  },
+  PAST_7_DAYS: {
+    START: getStartOfDay(new Date(Date.now() - 604800000)), // Start of 7 days ago
+    END: getEndOfDay(new Date(Date.now() - 86400000)), // Start of Yesterday
+  },
+  PAST_30_DAYS: {
+    START: getStartOfDay(new Date(Date.now() - 2592000000)), // Start of 30 days ago
+    END: getEndOfDay(new Date(Date.now() - 604800000)), // Start of Past 7 days
+  },
+};
+
+// ----- Exports ----- //
+export * from "./icon";

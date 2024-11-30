@@ -1,7 +1,22 @@
-import { cn } from "@/lib/utils";
-import { Laptop } from "lucide-react";
+import {
+  Blocks,
+  FileStack,
+  Laptop,
+  MessageCircle,
+  Search,
+  Settings,
+} from "lucide-react";
+import * as React from "react";
 
-export const chatGptIcon = ({ className }: { className?: string }) => {
+import { generateUUID } from "@/core";
+import { EAiProvider, EXTENSION_KEY } from "@/core/types/enum";
+import { cn } from "@/lib/utils";
+
+interface IIconProps {
+  className?: string;
+}
+
+export const ChatGptIcon: React.FC<IIconProps> = ({ className }) => {
   return (
     <svg
       className={cn("", className)}
@@ -23,7 +38,7 @@ export const chatGptIcon = ({ className }: { className?: string }) => {
   );
 };
 
-export const geminiIcon = ({ className }: { className?: string }) => {
+export const GeminiIcon: React.FC<IIconProps> = ({ className }) => {
   return (
     <svg
       fill="none"
@@ -53,7 +68,7 @@ export const geminiIcon = ({ className }: { className?: string }) => {
   );
 };
 
-export const claudeAIIcon = ({ className }: { className?: string }) => {
+export const ClaudeAIIcon: React.FC<IIconProps> = ({ className }) => {
   return (
     <svg
       className={cn(className)}
@@ -75,7 +90,7 @@ export const claudeAIIcon = ({ className }: { className?: string }) => {
   );
 };
 
-export const ollamaIcon = ({ className }: { className?: string }) => {
+export const OllamaIcon: React.FC<IIconProps> = ({ className }) => {
   return (
     <div className="flex items-center justify-center">
       <img
@@ -88,6 +103,94 @@ export const ollamaIcon = ({ className }: { className?: string }) => {
   );
 };
 
-export const localLLMIcon = ({ className }: { className?: string }) => {
+export const LocalLLMIcon: React.FC<IIconProps> = ({ className }) => {
   return <Laptop className={cn("", className)} />;
 };
+
+export function getIconByIconKey({
+  key,
+  className,
+}: {
+  key: EAiProvider;
+  className?: string;
+}): React.ReactNode {
+  switch (key) {
+    case EAiProvider.ANTHROPIC:
+      return <ClaudeAIIcon className={cn("", className)} />;
+    case EAiProvider.GEMINI:
+      return <GeminiIcon className={cn("", className)} />;
+    case EAiProvider.GREPTILE:
+      return <div>Greptile</div>;
+    case EAiProvider.OLLAMA:
+      return <OllamaIcon className={cn("", className)} />;
+    case EAiProvider.OPENAI:
+      return <ChatGptIcon className={cn("", className)} />;
+    default:
+      return (
+        <LocalLLMIcon className={cn("text-muted-foreground", className)} />
+      );
+  }
+}
+
+export function createOption({
+  label,
+  iconKey,
+  iconClassName,
+  className,
+}: {
+  label: string;
+  iconKey: EAiProvider;
+  iconClassName: string;
+  className: string;
+}) {
+  return {
+    id: generateUUID(),
+    icon: getIconByIconKey({ key: iconKey, className: iconClassName }),
+    label: label,
+    action: () => console.log(`Start New Chat with ${label}`),
+    className: `${className} text-transparent bg-clip-text`,
+  };
+}
+
+export function getIconByKey(key: string | undefined): React.ReactNode {
+  if (!key) return <MessageCircle className="w-full h-full" />;
+
+  switch (key) {
+    case EXTENSION_KEY.CHAT:
+      return <MessageCircle className="w-full h-full" />;
+    case EXTENSION_KEY.CONTEXT_SEARCH:
+      return <Search className="w-full h-full" />;
+    case EXTENSION_KEY.IMPORTANT_CHAT:
+      return <FileStack className="w-full h-full" />;
+    case EXTENSION_KEY.SETTINGS:
+      return <Settings className="w-full h-full" />;
+    case EXTENSION_KEY.EXTENSION:
+      return <Blocks className="w-full h-full" />;
+    default:
+      return <MessageCircle className="w-full h-full" />;
+  }
+}
+
+export function getTextColorByItemKey(key: EAiProvider): string {
+  let classes = "text-transparent bg-clip-text";
+  switch (key) {
+    case EAiProvider.ANTHROPIC:
+      classes += "bg-gradient-to-r from-white to-[#cc9b7a]";
+      return classes;
+    case EAiProvider.OLLAMA:
+      classes += "bg-gradient-to-r from-[#2f96dc] to-white";
+      return classes;
+    case EAiProvider.GEMINI:
+      classes += "bg-gradient-to-r from-[#8b6ac2] to-[#2f96dc]";
+      return classes;
+    case EAiProvider.OPENAI:
+      classes += "bg-gradient-to-r from-[#10a37f] to-white";
+      return classes;
+    case EAiProvider.LOCAL:
+      classes += "bg-muted-foreground";
+      return classes;
+    default:
+      classes += "bg-muted-foreground";
+      return classes;
+  }
+}
