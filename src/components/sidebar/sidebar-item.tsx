@@ -3,7 +3,7 @@ import * as React from "react";
 
 import { ISidebarItem } from "@/core/types/sidebar";
 import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
@@ -11,6 +11,7 @@ import { useChatData } from "@/hooks/useChatData";
 
 interface ISidebarItemProps extends ISidebarItem {
   icon?: React.ReactNode;
+  suffixComponent?: React.ReactNode;
   className?: string;
   onClick?: () => void;
   displayOption?: boolean;
@@ -22,6 +23,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
   chat,
   icon,
   options,
+  suffixComponent,
   className,
   isActive = false,
   onClick = () => {},
@@ -37,11 +39,15 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
   const { updateMutation } = useChatData();
 
   return (
-    <Button
-      variant={"ghost"}
+    <div
       className={cn(
-        "w-full justify-start h-8 overflow-hidden flex items-center",
-        className
+        buttonVariants({
+          variant: id === activeTab?.tab.id ? "secondary" : "ghost",
+          className: cn(
+            "w-full justify-start h-8 overflow-hidden flex items-center cursor-pointer hover:bg-transparent",
+            className
+          ),
+        })
       )}
       key={id}
       onClick={onClick}
@@ -49,15 +55,18 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
     >
       <div
         className={cn(
-          "flex items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap",
-          displayOption ? "w-full" : "w-[80%]"
+          "flex w-full items-center justify-start overflow-hidden text-ellipsis whitespace-nowrap"
         )}
       >
-        {label}
+        {icon && <span className="mr-2">{icon}</span>}
+        <span>{label}</span>
+        {suffixComponent && (
+          <span className="ml-auto mr-2">{suffixComponent}</span>
+        )}
       </div>
 
       {displayOption && (
-        <div className="w-[20%] flex justify-end text-muted-foreground">
+        <div className="max-w-[20%] flex-1 min-w-6 w-6 flex justify-center items-center text-muted-foreground">
           <Popover
             defaultOpen={isOpenPopover}
             open={isOpenPopover}
@@ -65,7 +74,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
           >
             <PopoverTrigger className="flex items-center justify-center">
               <Tooltip>
-                <TooltipTrigger>
+                <TooltipTrigger className="hover:text-white">
                   <Ellipsis className="w-6 h-6" />
                 </TooltipTrigger>
                 <TooltipContent
@@ -114,7 +123,7 @@ export const SidebarItem: React.FC<ISidebarItemProps> = ({
           </Popover>
         </div>
       )}
-    </Button>
+    </div>
   );
 };
 

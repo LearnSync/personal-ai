@@ -39,7 +39,7 @@ export const Sidebar = () => {
         <div className="text-sm uppercase font-[500]">
           {activeExtensionTab?.label}
         </div>
-        <button className="p-2 rounded-md cursor-pointer m ax-w-10 max-h-10 hover:bg-white/10">
+        <button className="p-2 rounded-md cursor-pointer max-w-10 max-h-10 hover:bg-white/10">
           <PanelLeftClose
             className="w-6 h-6 text-muted-foreground"
             onClick={() => setShowSideBar(!showSideBar)}

@@ -5,6 +5,7 @@ import {
   MessageCircleDashed,
   Pencil,
   Plus,
+  Star,
   Trash2,
 } from "lucide-react";
 import React from "react";
@@ -24,6 +25,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { SidebarItem } from "./sidebar-item";
 import { useChatData } from "@/hooks/useChatData";
 import { ISidebarOption } from "@/core/types";
+import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 
 interface DefaultSidebarProps {
   className?: string;
@@ -52,6 +54,7 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
   // ----- Hooks
   const { toast } = useToast();
   const { queries, results } = useChatData();
+  const { onTabClick } = useSessionManager();
 
   // ----- Memoization
   const startNewChatOptions = React.useMemo(() => {
@@ -207,31 +210,56 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
         </Popover>
       </div>
       <Separator />
-      <ScrollArea className="flex-1 h-[calc(100vh-4rem)]">
-        <div className="w-full">
+      <ScrollArea className="flex-1 h-[calc(100vh-4rem)] w-full">
+        <div className="flex flex-col items-center w-full mx-auto">
           {results?.map((result, idx) => {
             const data = result?.data?.data;
             if (!data || (Array.isArray(data) && data.length === 0))
               return null;
 
-            console.log(data);
-
             return (
-              <div className="px-4 pb-4 border-b" key={queries[idx].key}>
-                <p className="capitalize font-[600] text-sm text-muted-foreground py-3 pb-2">
+              <div className="w-full pb-4" key={queries[idx].key}>
+                <p className="capitalize font-[600] text-xs text-muted-foreground py-3 px-4 pb-2">
                   {queries[idx].key.replace(/-/g, " ")}
                 </p>
-                {result.isSuccess &&
-                  result?.data?.data?.map((chat: any, i: number) => (
-                    <SidebarItem
-                      id={chat?.session_id ?? generateUUID()}
-                      key={i}
-                      chat={chat}
-                      label={chat?.session_name}
-                      onClick={() => console.log(`Clicked Chat ${i + 1}`)}
-                      options={chatOptions}
-                    />
-                  ))}
+
+                <div className="flex flex-col items-center w-full mx-auto">
+                  {result.isSuccess &&
+                    result?.data?.data?.map((chat: any, i: number) => (
+                      <SidebarItem
+                        id={chat?.session_id ?? generateUUID()}
+                        key={i}
+                        chat={chat}
+                        label={chat?.session_name}
+                        onClick={() => onTabClick(chat?.session_id)}
+                        options={chatOptions}
+                        className={cn("w-[95%]")}
+                        suffixComponent={
+                          <div className="flex items-center gap-1">
+                            <span>
+                              <Archive
+                                className={cn(
+                                  chat?.archived
+                                    ? "fill-secondary-foreground text-secondary"
+                                    : "hidden"
+                                )}
+                              />
+                            </span>
+                            <span>
+                              <Star
+                                className={cn(
+                                  chat?.favorite
+                                    ? "fill-primary text-primary"
+                                    : "hidden"
+                                )}
+                              />
+                            </span>
+                          </div>
+                        }
+                      />
+                    ))}
+                </div>
+
                 {result.isError && (
                   <p className="text-red-500">
                     Failed to load {queries[idx].key} chats.
