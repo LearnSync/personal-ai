@@ -45,7 +45,7 @@ function App() {
             {/* Top Header */}
             <TopHeader
               className={cn(
-                "w-full h-10 min-h-10 max-h-10 bg-background-2 flex items-center border border-background-1",
+                "w-full h-10 min-h-10 max-h-10 bg-background-2 flex items-center border border-background-1"
               )}
             >
               {/* Display Show SideBar toggle button */}
@@ -82,7 +82,7 @@ function App() {
           <div
             className={cn(
               "relative h-screen bg-background-2",
-              hideSecondarySideBar ? "w-0" : "min-w-52",
+              hideSecondarySideBar ? "w-0" : "min-w-52"
             )}
           >
             {hideSecondarySideBar && <SecondarySidebar />}
@@ -91,7 +91,7 @@ function App() {
             >
               <button
                 className={cn(
-                  "p-1 py-3 cursor-pointer hover:bg-white/10 rounded-md",
+                  "p-1 py-3 cursor-pointer hover:bg-white/10 rounded-md"
                 )}
               >
                 {hideSecondarySideBar ? (
