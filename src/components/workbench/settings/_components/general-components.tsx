@@ -17,6 +17,36 @@ export const H3 = ({
   );
 };
 
+export const H4 = ({
+  children,
+  className,
+  ...props
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <h4 className={cn("text-base font-[500] mb-2", className)} {...props}>
+      {children}
+    </h4>
+  );
+};
+
+export const P = ({
+  children,
+  className,
+  ...props
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <p className={cn("text-base font-[400] my-2", className)} {...props}>
+      {children}
+    </p>
+  );
+};
+
 export const AsteriskIcon = ({ className }: { className?: string }) => {
   return <Asterisk className={cn("w-3 h-3", className)} />;
 };

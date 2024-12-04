@@ -117,7 +117,7 @@ export const Settings = () => {
   };
 
   return (
-    <ScrollArea className="w-full h-full">
+    <ScrollArea className="w-full h-full mx-2">
       <main className="container w-full h-full mx-auto max-w-7xl">
         <h1 className="text-2xl font-[700] mt-3">Settings</h1>
 
@@ -126,7 +126,9 @@ export const Settings = () => {
             {SETTING_TABS.map((st) => (
               <li key={`${st.key}__${st.label}`} className="">
                 <Button
-                  variant={"ghost"}
+                  variant={
+                    settings.selectedItem === st.key ? "default" : "ghost"
+                  }
                   className="justify-start w-full my-1 space-x-2"
                   onClick={() => handleSettingItemClick(st)}
                   key={st.key}
