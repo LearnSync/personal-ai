@@ -47,8 +47,10 @@ export const Chat = React.memo(() => {
       ...anthropicConfigs,
       ...openaiConfigs,
     ],
-    [geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs],
+    [geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs]
   );
+
+  console.log("Chat: ", chat);
 
   // ----- Handlers
   const handleModelChange = async (value: string) => {
@@ -132,7 +134,7 @@ export const Chat = React.memo(() => {
                 {availableModels
                   ?.reduce((unique: IGeneralAiProvider[], model) => {
                     const exists = unique.some(
-                      (item) => item.variant === model.variant,
+                      (item) => item.variant === model.variant
                     );
                     if (!exists) unique.push(model);
                     return unique;
@@ -182,8 +184,19 @@ export const Chat = React.memo(() => {
               </Tooltip>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant={"ghost"} size={"icon"}>
-                    <Star className="w-5 h-5" />
+                  <Button
+                    variant={"ghost"}
+                    size={"icon"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    <Star
+                      className={cn(
+                        "w-5 h-5",
+                        chat.favorite ? "fill-primary" : "fill-transparent"
+                      )}
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent

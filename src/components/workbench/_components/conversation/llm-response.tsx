@@ -1,16 +1,9 @@
 import * as React from "react";
 
 import { MarkdownRender } from "@/components/general-components/markdown.component";
-import {
-  ChatGptIcon,
-  ClaudeAIIcon,
-  GeminiIcon,
-  getIconByIconKey,
-  OllamaIcon,
-} from "@/constants";
-import { cn } from "@/lib/utils";
-import { Laptop } from "lucide-react";
+import { getIconByIconKey } from "@/constants";
 import { EAiProvider } from "@/core/types/enum";
+import { cn } from "@/lib/utils";
 
 interface LLMResponseProps {
   model: string;
