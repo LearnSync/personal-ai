@@ -1,6 +1,6 @@
 // import { fetch } from "@tauri-apps/plugin-http";
-import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
+import * as React from "react";
 
 import { endpoint } from "@/config/endpoint";
 import { generateUUID } from "@/core/base/common/uuid";
@@ -8,7 +8,7 @@ import { ILlmMessage } from "@/core/types";
 import { useToast } from "@/hooks/use-toast";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
 import { useSessionManagerStore } from "../store/sessionManager/sessionManagerStore";
-import { sleep } from "@/core/base/common/sleep";
+import { useChatData } from "@/hooks/useChatData";
 
 type OnText = (messageId: string, fullText: string) => void;
 
@@ -34,9 +34,11 @@ interface ISendLLMMessageParams {
 interface IUseChatResponse {
   isLoading: boolean;
   isChatLoading: boolean;
+
   messages: ILlmMessage[];
   archived: boolean;
   favorite: boolean;
+  chatSessionId: string | undefined;
 
   abort: () => void;
   sendMessage: ({
@@ -48,6 +50,8 @@ interface IUseChatResponse {
     messageId?: string;
     attachments?: File[];
   }) => void;
+  toggleBookmark: () => void;
+  toggleArchive: () => void;
 }
 
 const fileToBase64 = (file: File): Promise<string> =>
@@ -68,6 +72,7 @@ export const useChat = (): IUseChatResponse => {
 
   // ----- Hooks
   const { toast } = useToast();
+  const { updateMutation } = useChatData();
 
   // ----- Store
   const { model, variant, getApiConfigOfActiveVariant } = useApiConfigStore();
@@ -310,16 +315,57 @@ export const useChat = (): IUseChatResponse => {
     }
   }, [abortController]);
 
+  const toggleBookmark = () => {
+    if (chat && activeTab && activeTab.tab.id) {
+      const session_id = chat
+        ? chat.session_id
+        : activeTab
+        ? activeTab.tab.id
+        : undefined;
+
+      if (session_id) {
+        updateMutation.mutateAsync({
+          session_id,
+          payload: {
+            favorite: !chat.favorite,
+          },
+        });
+      }
+    }
+  };
+
+  const toggleArchive = () => {
+    if (chat && activeTab && activeTab.tab.id) {
+      const session_id = chat
+        ? chat.session_id
+        : activeTab
+        ? activeTab.tab.id
+        : undefined;
+
+      if (session_id) {
+        updateMutation.mutateAsync({
+          session_id,
+          payload: {
+            archived: !chat.archived,
+          },
+        });
+      }
+    }
+  };
+
   return {
     archived,
     favorite,
     messages,
     isLoading,
     isChatLoading,
+    chatSessionId: chat?.session_id,
 
     // Function
     abort,
     sendMessage,
+    toggleBookmark,
+    toggleArchive,
   };
 };
 
