@@ -7,14 +7,29 @@
   ],
   "permissions": [
     "core:default",
-    "shell:allow-open",
     {
       "identifier": "http:default",
       "allow": [
         {
           "url": "http://localhost:25696/*"
+        },
+        {
+          "url": "https://ollama.com/*"
         }
       ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "ollama",
+          "cmd": "ollama",
+          "args": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-open"
     }
   ]
 }

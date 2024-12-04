@@ -4,6 +4,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
+        .plugin(tauri_plugin_shell::init())
         .setup(|app| {
             let splashscreen_window = app.get_webview_window("splashscreen").unwrap();
             let main_window = app.get_webview_window("main").unwrap();
@@ -18,7 +19,6 @@ pub fn run() {
             });
             Ok(())
         })
-        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
