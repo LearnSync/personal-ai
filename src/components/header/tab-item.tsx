@@ -1,10 +1,11 @@
 import { Lock, MessageCircle, X } from "lucide-react";
 import * as React from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
 import { getIconByKey } from "@/constants";
+import { cn } from "@/lib/utils";
 
 interface TabItemProps {
   id: string;
@@ -37,15 +38,19 @@ export const TabItem: React.FC<TabItemProps> = ({
   );
 
   return (
-    <Button
-      size={"sm"}
-      variant={
-        sessionManager.activeTab &&
-        sessionManager.activeTab.tab &&
-        sessionManager.activeTab.tab.id === id
-          ? "secondary"
-          : "ghost"
-      }
+    <div
+      className={cn(
+        buttonVariants({
+          variant:
+            sessionManager.activeTab &&
+            sessionManager.activeTab.tab &&
+            sessionManager.activeTab.tab.id === id
+              ? "secondary"
+              : "ghost",
+          size: "sm",
+        }),
+        "cursor-pointer"
+      )}
       onClick={() => onTabClick(id)}
       {...props}
     >
@@ -80,7 +85,7 @@ export const TabItem: React.FC<TabItemProps> = ({
       >
         {isLocked ? <Lock className="w-3 h-3" /> : <X className="w-3 h-3" />}
       </button>
-    </Button>
+    </div>
   );
 };
 TabItem.displayName = "TabItem";
