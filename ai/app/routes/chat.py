@@ -1,5 +1,6 @@
+import re
 from datetime import datetime
-from typing import List, Optional, Type, Generator
+from typing import Optional, AsyncGenerator
 
 from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import StreamingResponse
@@ -9,9 +10,8 @@ from starlette.responses import JSONResponse
 from app.database.db import get_db
 from app.database.schema import ChatSession, ChatMessage
 from app.enums.ai import EAIModel
-from app.enums.chat import ERole
 from app.models.chat_model import ChatSessionResponse, ChatMessageResponse, UpdateChatSessionRequest
-from app.models.request import ChatRequest
+from app.models.request import ChatRequest, ChatRegister
 from app.services.ai import AIService
 
 # Initializing Router
@@ -19,27 +19,55 @@ router = APIRouter()
 
 
 @router.post("/generate")
-async def generate(request: ChatRequest, db: Session = Depends(get_db)):
+async def generate(request: ChatRequest):
     """
     Generate an AI response for a chat session, save the full response, and stream it back to the client.
     """
     try:
-        session_id = request.session_id
         messages = request.messages
         model = request.model
-        response_message_id = request.response_message_id
         variant = request.variant
         api_key = request.api_key
 
         if model != EAIModel.LOCAL and not api_key:
             raise HTTPException(status_code=403, detail=f"API Key is required for")
 
-        # Check if session exists or create a new one
-        chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
+        # This is to manage the response into the Database
+        async def generate_response() -> AsyncGenerator[str, None]:
+            for chunk in AIService.generate_ai_response(
+                    model=model,
+                    variant=variant,
+                    messages=messages,
+                    api_key=api_key
+            ):
+                yield chunk
 
+        return StreamingResponse(generate_response(), media_type="application/json")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
+
+
+@router.post("/register")
+async def register_chat(request: ChatRegister, db: Session = Depends(get_db)):
+    try:
+        # Extract request fields
+        session_id = request.session_id
+        session_name = request.session_name
+        messages = request.messages
+        model = request.model
+        variant = request.variant
+        api_key = request.api_key
+
+        # Check for API key if not using local model
+        if model != EAIModel.LOCAL and not api_key:
+            raise HTTPException(status_code=403, detail="API Key is required for non-local models.")
+
+        # Retrieve or create a new ChatSession
+        chat_session = db.query(ChatSession).filter(ChatSession.session_id == session_id).first()
         if not chat_session:
             chat_session = ChatSession(
-                session_name=request.session_name or "Unknown",
+                session_name=session_name or "Unknown",
                 session_id=session_id,
                 archived=False,
                 favorite=False,
@@ -49,15 +77,37 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
             db.commit()
             db.refresh(chat_session)
 
-        # Add or Update User Messages in the Database
-        for message in messages:
-            existing_messages = db.query(ChatMessage).filter(ChatMessage.session_id == session_id).all()
+        # Title generation logic for messages < 3
+        if len(messages) < 3:
+            for idx, message in messages:  # Check only the first two messages
+                if message.role == "user":
+                    # Extract text within quotes as title
+                    match = re.search(r'"(.*?)"', message.content)
+                    if match:
+                        chat_session.session_name = match.group(1)
+                        db.commit()
+                        break
 
-            # Find if the current message already exists in the database
-            existing_message = next((m for m in existing_messages if m.message_id == message.message_id), None)
+        # Title generation logic for messages >= 3
+        if len(messages) >= 3:
+            chat_title = await AIService.generate_title(
+                model=model,
+                variant=variant,
+                messages=messages,
+                api_key=api_key
+            )
+            if chat_title:
+                chat_session.session_name = chat_title
+                db.commit()
+
+        # Add or update user messages in the database
+        for message in messages:
+            existing_message = db.query(ChatMessage).filter(
+                ChatMessage.session_id == session_id,
+                ChatMessage.message_id == message.message_id
+            ).first()
 
             if not existing_message:
-                # Add new message
                 new_message = ChatMessage(
                     session_id=session_id,
                     message_id=message.message_id,
@@ -70,40 +120,10 @@ async def generate(request: ChatRequest, db: Session = Depends(get_db)):
                 db.add(new_message)
         db.commit()
 
-        # This is to manage the response into the Database
-        async def generate_response() -> Generator[str, None, None]:
-            full_text = ""
-            try:
-                for chunk in AIService.generate_ai_response(
-                        messages=messages,
-                        model=model,
-                        variant=variant,
-                        api_key=api_key
-                ):
-                    full_text += chunk
-                    yield chunk
-
-                # Save the full response to the database after streaming is complete
-                new_response_message = ChatMessage(
-                    session_id=session_id,
-                    message_id=response_message_id,
-                    role=ERole.ASSISTANT,
-                    content=full_text,
-                    model=model,
-                    variant=variant,
-                    created_at=datetime.now(),
-                )
-                db.add(new_response_message)
-                db.commit()
-            except Exception as e:
-                print(f"Error during response streaming: {e}")
-                raise
-
-        return StreamingResponse(generate_response(), media_type="text/plain")
-
+        # Return success response
+        return {"success": True, "message": "Chat successfully registered or updated.", "session_id": session_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
 
 @router.get("/chat/{session_id}", response_model=ChatSessionResponse)
 def get_conversation(session_id: str, db: Session = Depends(get_db)):

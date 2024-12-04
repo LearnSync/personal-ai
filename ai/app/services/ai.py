@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Generator
+from typing import List, Dict, Optional, Generator, AsyncGenerator
 
 from langchain_community.llms import OpenAI, Anthropic, Ollama
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -53,17 +53,16 @@ class AIService:
                 model = variant,
                 api_key = api_key
             )
-        else:
-            return Ollama(model=variant)  # Default Model
+        return Ollama(model=variant)
 
     @staticmethod
     def generate_ai_response(
-        messages: List[ChatMessageResponse],
         model: Optional[str],
         variant: Optional[str],
         api_key: Optional[str],
+        messages: List[ChatMessageResponse],
         topic: Optional[ETopic] = ETopic.GENERAL
-    ) -> Generator[str, None, None]:
+    ) -> Generator[str,None, None]:
         """
         Generate AI responses from a series of input messages using a specified LLM model.
 
@@ -90,29 +89,23 @@ class AIService:
                     {"role": msg.role, "parts": msg.content} for msg in messages
                 ]
 
-            # Build the prompt
             prompt = build_prompt_from_messages(messages, topic)
-
-            # Initialise output parser
             output_parser = StrOutputParser()
-
-            # Select appropriate LLM
             llm = AIService.select_llm(model, variant, api_key)
-            if llm is None:
+
+            if not llm:
                 raise ValueError(f"Invalid model configuration: {model}, {variant}")
 
             # Chain the prompt, LLM, and output parser
             chain = prompt | llm | output_parser
 
-            # Stream and yield response chunks
-            print("Starting response streaming...")
             response = chain.stream({"messages": formatted_messages, "topic": topic})
 
-            if response:
-                for chunk in response:
-                    yield chunk
-            else:
+            if not response:
                 raise ValueError("Empty response received from the LLM chain.")
+        
+            for chunk in response:
+                yield chunk
         except ValueError as ve:
             print(f"Configuration Error: {ve}")
             raise ve
@@ -122,3 +115,71 @@ class AIService:
         except Exception as e:
             print(f"Unexpected Error: {e}")
             raise RuntimeError("An unexpected error occurred while generating the response.") from e
+
+    @staticmethod
+    async def generate_title(
+            model: str,
+            variant: Optional[str],
+            api_key: Optional[str],
+            messages: List[ChatMessageResponse]
+    ) -> str:
+        """
+        Generate a title based on the conversation messages.
+
+        Args:
+            model (str): Model name or identifier.
+            variant (Optional[str]): Specific variant of the model.
+            api_key (Optional[str]): API key for external models.
+            messages (List[ChatMessageResponse]): List of chat messages.
+
+        Returns:
+            str: A generated title for the conversation.
+        """
+        prompt = build_prompt_from_messages(messages, ETopic.TITLE)
+        output_parser = StrOutputParser()
+        llm = AIService.select_llm(model, variant, api_key)
+        if not llm:
+            raise ValueError(f"Invalid model configuration: {model}, {variant}")
+
+        # Chain the prompt, LLM, and output parser
+        chain = prompt | llm | output_parser
+
+        response = chain.invoke({"messages": messages, "topic": ETopic.TITLE})
+
+        if not response:
+            raise ValueError("Empty response received from the LLM chain.")
+        return response.strip()
+
+    @staticmethod
+    def summarise_messages(
+            model: str,
+            variant: Optional[str],
+            api_key: Optional[str],
+            messages: List[ChatMessageResponse]
+    ) -> str:
+        """
+        Summarise a list of messages into one concise response.
+
+        Args:
+            model (str): Model name or identifier.
+            variant (Optional[str]): Specific variant of the model.
+            api_key (Optional[str]): API key for external models.
+            messages (List[ChatMessageResponse]): List of chat messages.
+
+        Returns:
+            str: A summarised version of the messages.
+        """
+        prompt = build_prompt_from_messages(messages, ETopic.SUMMARIZE)
+        output_parser = StrOutputParser()
+        llm = AIService.select_llm(model, variant, api_key)
+        if not llm:
+            raise ValueError(f"Invalid model configuration: {model}, {variant}")
+
+        # Chain the prompt, LLM, and output parser
+        chain = prompt | llm | output_parser
+
+        response = chain.invoke({"messages": messages, "topic": ETopic.SUMMARIZE})
+
+        if not response:
+            raise ValueError("Empty response received from the LLM chain.")
+        return response.strip()

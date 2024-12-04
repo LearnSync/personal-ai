@@ -9,10 +9,21 @@ class ChatRequest(BaseModel):
     """
     Represents a request for a chat interaction.
     """
-    session_id: str = Field(..., description="Unique identifier for the chat session.")
     messages: List[ChatMessageResponse] = Field(..., description="List of messages exchanged in the chat.")
+    model: Optional[str] = Field(
+        None, description="The AI model to be used, e.g., 'openai'."
+    )
+    variant: Optional[str] = Field(
+        None, description="Specific variant of the model, e.g., 'openai:gpt-3.5-turbo'."
+    )
+    api_key: Optional[str] = Field(
+        None, description="API key for accessing the model (not required for local models)."
+    )
+
+class ChatRegister(BaseModel):
+    session_id: str = Field(..., description="Unique identifier for the chat session.")
     session_name: Optional[str] = Field(..., description="Unique identifier for the chat session.")
-    response_message_id: str = Field(..., description="Unique identifier for the chat response.")
+    messages: List[ChatMessageResponse] = Field(..., description="List of messages exchanged in the chat.")
     model: Optional[str] = Field(
         None, description="The AI model to be used, e.g., 'openai'."
     )

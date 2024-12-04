@@ -4,6 +4,9 @@ class ETopic(str, enum.Enum):
     """
     Enum representing a wide range of topics for LLM interaction.
     """
+    # GENERAL UTILITIES
+    TITLE = "title"
+    SUMMARIZE = "summarise"
 
     # Programming & Technology
     CODE = "code"  # Code generation, debugging, and reviews
