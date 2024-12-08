@@ -5,6 +5,7 @@ export enum EAiProvider {
   OPENAI = "openai",
   OLLAMA = "ollama",
   LOCAL = "local",
+  EMBEDDING = "embedding",
 }
 
 export enum EChatHistoryTime {

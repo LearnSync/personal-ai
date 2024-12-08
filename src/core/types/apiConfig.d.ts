@@ -6,6 +6,7 @@ export interface IApiConfigAiProvider {
   openaiConfigs: IGeneralAiProvider[];
   ollamaConfigs: IGeneralAiProvider[];
   localConfigs: IGeneralAiProvider[];
+  embeddingConfigs: IGeneralAiProvider[];
 }
 
 export interface IApiConfig extends IApiConfigAiProvider {

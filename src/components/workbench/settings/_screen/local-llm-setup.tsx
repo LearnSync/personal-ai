@@ -1,5 +1,6 @@
 import { open } from "@tauri-apps/plugin-shell";
-import { X } from "lucide-react";
+import { Check, Info, Loader2, Trash2, X } from "lucide-react";
+import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +9,12 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -15,13 +22,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { TickIcon } from "@/constants";
+import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
+import { useToast } from "@/hooks/use-toast";
 import { useLocalLLM } from "@/hooks/useLocalLLM";
 import { cn } from "@/lib/utils";
-import { H3, H4, P, Section } from "../_components";
-import { Input } from "@/components/ui/input";
-import * as React from "react";
+import { H3, H4, H5, P, Section } from "../_components";
+
+import { EAiProvider } from "@/core/types/enum";
 
 enum EModelType {
   EMBED = "embed",
@@ -32,6 +40,11 @@ export const LocalLlmSetupSettingScreen = () => {
 
   // --- Hooks
   const ollamaInfo = useLocalLLM({});
+  const { toast } = useToast();
+
+  // --- Store
+  const { localConfigs, embeddingConfigs, addLocalConfig } =
+    useApiConfigStore();
 
   return (
     <section className="pr-5 overflow-y-auto">
@@ -70,10 +83,17 @@ export const LocalLlmSetupSettingScreen = () => {
                 onClick={() => {
                   open("https://ollama.com/download")
                     .then(() => {
-                      console.log("External link opened successfully");
+                      toast({
+                        title:
+                          "Opening the external link. Wait for a minute...",
+                      });
                     })
                     .catch((error) => {
                       console.error("Error opening link:", error);
+                      toast({
+                        title: "Error opening link",
+                        description: error.message,
+                      });
                     });
                 }}
               >
@@ -84,12 +104,107 @@ export const LocalLlmSetupSettingScreen = () => {
         </CardContent>
       </Card>
 
-      <Section>
-        <>
-          <H4 className={cn("col-span-full")}>Set Conversation Models</H4>
+      <Section className="gap-1 mb-6">
+        <div className={cn("col-span-full")}>
+          <H4>Install New Models</H4>
+          <P className="text-sm">
+            <span>Visit :</span>
+            <Button
+              variant={"link"}
+              className="pl-2"
+              onClick={() => {
+                open("https://ollama.com/library")
+                  .then(() => {
+                    toast({
+                      title: "Opening the external link. Wait for a minute...",
+                    });
+                  })
+                  .catch((error) => {
+                    console.error("Error opening link:", error);
+                    toast({
+                      title: "Error opening link",
+                      description: error.message,
+                    });
+                  });
+              }}
+            >
+              https://ollama.com/library
+            </Button>
+          </P>
+
+          <P className="text-sm text-muted-foreground">
+            <div>
+              If the actual command is{" "}
+              <span className="p-1 font-mono text-red-500 rounded bg-background-2">
+                ollama run llama3.2:1b
+              </span>
+            </div>
+            <div>
+              simply enter{" "}
+              <span className="p-1 font-mono text-red-500 rounded bg-background-2">
+                llama3.2:1b
+              </span>
+            </div>
+          </P>
+        </div>
+
+        <div className="flex items-center gap-5 p-1 col-span-full">
+          <Input
+            placeholder="i.e. llama3.2:1b"
+            className="h-10 bg-background w-80"
+            onChange={(e) => {
+              const { value } = e.target;
+
+              if (value) {
+                setNewModel(value);
+              }
+            }}
+          />
+
+          <Button
+            disabled={
+              ollamaInfo.modelInstalling ? true : newModel ? false : true
+            }
+            onClick={async () => {
+              await ollamaInfo.installNewModel(newModel);
+            }}
+          >
+            {ollamaInfo.modelInstalling && (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            )}
+            Install
+          </Button>
+        </div>
+
+        {ollamaInfo.modelInstallUninstall &&
+          ollamaInfo.modelInstallUninstall.action === "install" && (
+            <pre className="px-3 mt-2 text-xs rounded-xl bg-background-2 col-span-full text-muted-foreground">
+              {ollamaInfo.modelInstallUninstall.message ? (
+                <P>{ollamaInfo.modelInstallUninstall.message}</P>
+              ) : ollamaInfo.modelInstallUninstall.error ? (
+                <P>{ollamaInfo.modelInstallUninstall.error}</P>
+              ) : null}
+            </pre>
+          )}
+      </Section>
+
+      <Section className="gap-2 mt-10">
+        <H4 className="col-span-full">Set Models</H4>
+
+        <div className="col-span-6">
+          <H5 className="mb-2">Conversation Models</H5>
 
           <div className="pl-1">
-            <Select>
+            <Select
+              value={localConfigs?.[0].variant}
+              onValueChange={(value) => {
+                addLocalConfig(EAiProvider.LOCAL, {
+                  model: EAiProvider.LOCAL,
+                  variant: value,
+                  apikey: "",
+                });
+              }}
+            >
               <SelectTrigger className="w-64 bg-background">
                 <SelectValue placeholder="No Model Selected" />
               </SelectTrigger>
@@ -106,75 +221,131 @@ export const LocalLlmSetupSettingScreen = () => {
               </SelectContent>
             </Select>
           </div>
-        </>
-      </Section>
-
-      <Separator className="my-5 bg-muted-foreground rounded-xl" />
-
-      <Section>
-        <H4 className={cn("col-span-full")}>Set Embedding Models</H4>
-
-        <div className="pb-1 pl-1">
-          <Select>
-            <SelectTrigger className="w-64 bg-background">
-              <SelectValue placeholder="No Model Selected" />
-            </SelectTrigger>
-            <SelectContent>
-              {ollamaInfo.availableModels
-                ?.filter((m) =>
-                  m.title?.includes(EModelType.EMBED) ? true : false
-                )
-                ?.map((m) => (
-                  <SelectItem key={m.id} value={m.title}>
-                    {m.title}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
         </div>
-      </Section>
 
-      <Separator className="my-5 bg-muted-foreground rounded-xl" />
+        <div className="col-span-6">
+          <H5 className="mb-2">Embedding Models</H5>
 
-      <Section className="gap-1">
-        <div className={cn("col-span-full")}>
-          <H4>Install New Models</H4>
-          <P className="text-sm">
-            <span>Visit :</span>
-            <Button
-              variant={"link"}
-              className="pl-2"
-              onClick={() => {
-                open("https://ollama.com/library")
-                  .then(() => {
-                    console.log("External link opened successfully");
-                  })
-                  .catch((error) => {
-                    console.error("Error opening link:", error);
-                  });
+          <div className="pb-1 pl-1">
+            <Select
+              value={embeddingConfigs?.[0]?.variant}
+              onValueChange={(value) => {
+                addLocalConfig(EAiProvider.EMBEDDING, {
+                  model: EAiProvider.EMBEDDING,
+                  variant: value,
+                  apikey: "",
+                });
               }}
             >
-              https://ollama.com/library
-            </Button>
-          </P>
+              <SelectTrigger className="w-64 bg-background">
+                <SelectValue placeholder="No Model Selected" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {ollamaInfo.availableModels
+                  ?.filter((m) =>
+                    m.title?.includes(EModelType.EMBED) ? true : false
+                  )
+                  ?.map((m) => (
+                    <SelectItem key={m.id} value={m.title}>
+                      {m.title}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Section>
+
+      <Section className="gap-2 pb-32 mt-10">
+        <div className="col-span-full">
+          <H4>Uninstall Models</H4>
+
+          {ollamaInfo.modelInstallUninstall &&
+            ollamaInfo.modelInstallUninstall.action === "uninstall" && (
+              <div
+                className={cn(
+                  "p-1 px-5 rounded-lg bg-background-2 text-success"
+                )}
+              >
+                {ollamaInfo.modelInstallUninstall?.message ? (
+                  <P className="flex items-center gap-2">
+                    <Check className="w-4 h-4" />
+                    {ollamaInfo.modelInstallUninstall?.message}
+                  </P>
+                ) : ollamaInfo.modelInstallUninstall?.error ? (
+                  <P>{ollamaInfo.modelInstallUninstall.error}</P>
+                ) : null}
+              </div>
+            )}
         </div>
 
-        <div className="flex items-center gap-5 p-1 col-span-full">
-          <Input
-            placeholder="i.e. llama3.2"
-            className="bg-background w-80"
-            onChange={(e) => {
-              const { value } = e.target;
+        <Card className="col-span-full">
+          <CardHeader>
+            <CardDescription>
+              <div className="flex flex-col gap-3">
+                {ollamaInfo.availableModels?.map((model) => (
+                  <div
+                    key={model.id}
+                    className="flex items-center justify-between p-3 px-5 text-base bg-background-1 rounded-xl"
+                  >
+                    <div className="flex items-center">
+                      <div className="mr-2">{model.title}</div>
+                      <div>[{model.size}]</div>
+                      <div className="ml-1 text-xs">
+                        (installed {model.modifier})
+                      </div>
 
-              if (value) {
-                setNewModel(value);
-              }
-            }}
-          />
-          <Button className="ml-2" disabled={!newModel}>
-            Install
-          </Button>
-        </div>
+                      <Popover>
+                        <PopoverTrigger>
+                          <div
+                            className="cursor-pointer"
+                            onClick={() => {
+                              ollamaInfo.fetchModelDetails(model.title);
+                            }}
+                          >
+                            <Info className="w-4 h-4 ml-2" />
+                          </div>
+                        </PopoverTrigger>
+                        <PopoverContent className="min-w-fit">
+                          {model.details ? (
+                            <pre
+                              style={{
+                                whiteSpace: "pre",
+                                fontFamily: "monospace",
+                              }}
+                            >
+                              {model.details}
+                            </pre>
+                          ) : ollamaInfo.error ? (
+                            ollamaInfo.error
+                          ) : (
+                            "Model Information not available!"
+                          )}
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <Button
+                      variant={"destructive"}
+                      size={"icon"}
+                      disabled={ollamaInfo.modelUninstalling ? true : false}
+                      onClick={() => {
+                        ollamaInfo.uninstallModel(model.title);
+                      }}
+                    >
+                      {ollamaInfo.modelUninstalling ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-6 h-6" />
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </Section>
     </section>
   );

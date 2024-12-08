@@ -32,6 +32,21 @@ export const H4 = ({
   );
 };
 
+export const H5 = ({
+  children,
+  className,
+  ...props
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <h5 className={cn("text-sm font-[400]", className)} {...props}>
+      {children}
+    </h5>
+  );
+};
+
 export const P = ({
   children,
   className,

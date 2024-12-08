@@ -30,6 +30,21 @@
     },
     {
       "identifier": "shell:allow-open"
+    },
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "ollama",
+          "cmd": "ollama",
+          "args": true
+        },
+        {
+          "name": "ping",
+          "cmd": "ping",
+          "args": true
+        }
+      ]
     }
   ]
 }

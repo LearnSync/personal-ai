@@ -22,12 +22,18 @@ interface ApiConfigState extends IApiConfig {
   setActiveApiIndex: (index: number) => void;
   setConfig: (config: IApiConfig) => void;
   addConfig: (type: EAiProvider, provider: IGeneralAiProvider) => void;
-  updateConfig: (
-    type: EAiProvider,
-    index: number,
-    apikey: string,
-    variant: string
-  ) => void;
+  updateConfig: ({
+    type,
+    index,
+    apikey,
+    variant,
+  }: {
+    type: EAiProvider;
+    index: number;
+    apikey: string;
+    variant: string;
+  }) => void;
+  addLocalConfig: (type: EAiProvider, provider: IGeneralAiProvider) => void;
   deleteConfig: (type: EAiProvider, index: number) => void;
   updateProvider: (
     type: EAiProvider,
@@ -48,13 +54,8 @@ export const useApiConfigStore = create<ApiConfigState>()(
         geminiConfigs: [],
         openaiConfigs: [],
         ollamaConfigs: [],
-        localConfigs: [
-          {
-            model: EAiProvider.LOCAL,
-            variant: "llama3.2",
-            apikey: "",
-          },
-        ],
+        localConfigs: [],
+        embeddingConfigs: [],
         model: EAiProvider.LOCAL,
         variant: "",
         activeApiIndex: 0,
@@ -67,6 +68,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
             [EAiProvider.OPENAI]: get().openaiConfigs,
             [EAiProvider.OLLAMA]: get().ollamaConfigs,
             [EAiProvider.LOCAL]: get().localConfigs,
+            [EAiProvider.EMBEDDING]: get().embeddingConfigs,
             [EAiProvider.GREPTILE]: [],
           };
 
@@ -106,6 +108,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
             openaiConfigs: addDefaultTokens(config.openaiConfigs),
             ollamaConfigs: addDefaultTokens(config.ollamaConfigs),
             localConfigs: addDefaultTokens(config.localConfigs),
+            embeddingConfigs: addDefaultTokens(config.embeddingConfigs),
             model: config.model ?? EAiProvider.LOCAL,
             variant: config.variant ?? "",
           })),
@@ -115,7 +118,13 @@ export const useApiConfigStore = create<ApiConfigState>()(
             [`${type}Configs`]: [...state.getConfig(type), provider],
           })),
 
-        updateConfig: (type, index, apikey, variant) =>
+        addLocalConfig: (type, provider) => {
+          set(() => ({
+            [`${type}Configs`]: [provider],
+          }));
+        },
+
+        updateConfig: ({ type, index, apikey, variant }) =>
           set((state) => {
             const configs = [...state.getConfig(type)];
             if (!configs[index]) {
@@ -175,6 +184,7 @@ export const useApiConfigStore = create<ApiConfigState>()(
           openaiConfigs: state.openaiConfigs,
           ollamaConfigs: state.ollamaConfigs,
           localConfigs: state.localConfigs,
+          embeddingConfigs: state.embeddingConfigs,
           model: state.model,
           variant: state.variant,
           activeApiIndex: state.activeApiIndex,

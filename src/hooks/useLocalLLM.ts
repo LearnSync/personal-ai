@@ -1,12 +1,13 @@
-import { Command } from "@tauri-apps/plugin-shell";
 import * as React from "react";
 
-// Model and Interface Definitions
+import { Command } from "@tauri-apps/plugin-shell";
+
 interface IModel {
   id: string;
   title: string;
   size: string;
   modifier: string;
+  details?: string;
 }
 
 interface IOllamaInfo {
@@ -20,8 +21,23 @@ interface UseLocalLLMProps {
   dependencies?: string[];
 }
 
-interface UseLocalLLMResponse extends IOllamaInfo {
+interface ILoading {
   isLoading: boolean;
+  modelInstalling?: boolean;
+  modelUninstalling?: boolean;
+  modelInfoLoading?: boolean;
+}
+
+interface IModelInstallUninstall {
+  action: "uninstall" | "install";
+  message?: string;
+  error?: string;
+}
+
+interface UseLocalLLMResponse extends IOllamaInfo, ILoading {
+  error: string | null;
+  modelInstallUninstall: IModelInstallUninstall | null;
+  fetchModelDetails: (model: string) => Promise<void>;
   installNewModel: (model: string) => Promise<void>;
   uninstallModel: (model: string) => Promise<void>;
 }
@@ -34,9 +50,14 @@ const initialOllamaInfo: Readonly<IOllamaInfo> = {
   availableModels: [],
 };
 
+const initialLoading: Readonly<ILoading> = {
+  isLoading: false,
+  modelInfoLoading: false,
+};
+
 // --- Utility Function
 const parseModelsList = (modelsList: string): IModel[] => {
-  const rows = modelsList.trim().split("\n").slice(1); // Remove header row
+  const rows = modelsList.trim().split("\n").slice(1);
   const regex = /^(\S+)\s+(\S+)\s+([\d.]+\s\S+)\s+(.+)$/;
 
   return rows
@@ -46,20 +67,34 @@ const parseModelsList = (modelsList: string): IModel[] => {
       const [, title, id, size, modifier] = match;
       return { title, id, size, modifier };
     })
-    .filter((model): model is IModel => model !== null); // Filter out invalid rows
+    .filter((model): model is IModel => model !== null);
+};
+
+const decodeString = (str: string): string => {
+  if (!str) return str;
+
+  return str.replace(/\u001b\[[0-9;?]*[A-Za-z]/g, " ").trim();
 };
 
 export const useLocalLLM = ({
   dependencies = [],
 }: UseLocalLLMProps): UseLocalLLMResponse => {
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<ILoading>({
+    ...initialLoading,
+  });
+  const [modelInstallUninstall, setModelInstallUninstall] =
+    React.useState<IModelInstallUninstall | null>(null);
   const [ollamaInfo, setOllamaInfo] = React.useState<IOllamaInfo>({
     ...initialOllamaInfo,
   });
+  const [error, setError] = React.useState<string | null>(null);
 
-  // --- Fetch
+  // --- Fetch Ollama Info
   const fetchOllamaInfo = React.useCallback(async () => {
-    setIsLoading(true);
+    setLoading((prev) => ({
+      ...prev,
+      isLoading: true,
+    }));
     try {
       // ----- Fetch Version
       const versionCommand = await Command.create("ollama", [
@@ -67,7 +102,9 @@ export const useLocalLLM = ({
       ]).execute();
 
       if (versionCommand.code !== 0) {
-        console.error("Failed to fetch Ollama version:", versionCommand.stderr);
+        const error = "Failed to fetch Ollama version:" + versionCommand.stderr;
+        console.error(error);
+        setError(error);
         return;
       }
 
@@ -78,10 +115,10 @@ export const useLocalLLM = ({
       const modelsCommand = await Command.create("ollama", ["list"]).execute();
 
       if (modelsCommand.code !== 0) {
-        console.error(
-          "Failed to fetch available models:",
-          modelsCommand.stderr
-        );
+        const error =
+          "Failed to fetch available models:" + modelsCommand.stderr;
+        console.error(error);
+        setError(error);
         return;
       }
 
@@ -96,61 +133,167 @@ export const useLocalLLM = ({
         availableModels: models,
       });
     } catch (error) {
-      console.error("Error fetching Ollama information:", error);
+      if (error instanceof Error) {
+        const errorMessage =
+          "Error fetching Ollama information:" + error.message;
+        console.error(errorMessage);
+        setError(errorMessage);
+      }
     } finally {
-      setIsLoading(false);
+      setLoading((prev) => ({
+        ...prev,
+        isLoading: false,
+      }));
     }
-  }, []);
+  }, [setOllamaInfo, setLoading]);
 
-  // Install New Model
-  const installNewModel = React.useCallback(
+  // --- Fetch Model Details
+  const fetchModelDetails = React.useCallback(
     async (model: string) => {
-      setIsLoading(true);
+      if (!model) return;
+
       try {
-        const installCommand = await Command.create("ollama", [
-          "pull",
+        const modelInfo = await Command.create("ollama", [
+          "show",
           model,
         ]).execute();
 
-        if (installCommand.code !== 0) {
-          console.error("Failed to install model:", installCommand.stderr);
-          return;
+        if (modelInfo.code === 0) {
+          const info = modelInfo.stdout;
+          setOllamaInfo((prev) => ({
+            ...prev,
+            availableModels: prev.availableModels.map((m) =>
+              m.title === model ? { ...m, details: info } : m
+            ),
+          }));
+        } else {
+          const errorMessage = modelInfo.stderr;
+          console.error("Error fetching model details: ", errorMessage);
+          setError(errorMessage);
         }
-
-        console.log(`Model "${model}" installed successfully!`);
-        await fetchOllamaInfo();
       } catch (error) {
-        console.error("Error installing model:", error);
-      } finally {
-        setIsLoading(false);
+        if (error instanceof Error) {
+          const errorMessage = "Error fetching model details: " + error.message;
+          console.error(errorMessage);
+          setError(errorMessage);
+        }
       }
     },
-    [fetchOllamaInfo]
+    [setOllamaInfo]
   );
 
+  /**
+   * Install New Model
+   */
+  const installNewModel = React.useCallback(
+    async (model: string) => {
+      setLoading((prev) => ({
+        ...prev,
+        modelInstalling: true,
+      }));
+      try {
+        const command = Command.create("ollama", ["pull", model]);
+
+        command.stdout.on("data", (data) => {
+          const filteredString = decodeString(data);
+
+          setModelInstallUninstall((prev) => ({
+            ...prev,
+            action: "install",
+            message: filteredString,
+          }));
+        });
+
+        command.stderr.on("data", (data) => {
+          const filteredString = decodeString(data);
+
+          setModelInstallUninstall((prev) => ({
+            ...prev,
+            action: "install",
+            message: filteredString,
+          }));
+        });
+
+        command.on("error", (error) => {
+          console.error(`Error: ${error}`);
+          setModelInstallUninstall((prev) => ({
+            ...prev,
+            action: "install",
+            error: error,
+          }));
+        });
+
+        command.on("close", (code) => {
+          console.info(`Command close with code: ${JSON.stringify(code)}`);
+        });
+
+        // --- Execute the command
+        await command.spawn();
+      } catch (error) {
+        const errorMessage = "Error installing model:";
+        console.error(errorMessage, error);
+        if (error instanceof Error) {
+          setError(`${errorMessage}: ${error.message}`);
+        }
+      } finally {
+        await fetchOllamaInfo();
+
+        setLoading((prev) => ({
+          ...prev,
+          modelInstalling: false,
+        }));
+      }
+    },
+    [fetchOllamaInfo, setLoading]
+  );
+
+  /**
+   * Uninstall Model
+   */
   const uninstallModel = React.useCallback(
     async (model: string) => {
-      setIsLoading(true);
+      setLoading((prev) => ({
+        ...prev,
+        modelUninstalling: true,
+      }));
       try {
-        const uninstallCommand = await Command.create("ollama", [
-          "rm",
-          model,
-        ]).execute();
+        const command = Command.create("ollama", ["rm", model]);
 
-        if (uninstallCommand.code !== 0) {
-          console.error("Failed to uninstall model:", uninstallCommand.stderr);
-          return;
-        }
+        command.stdout.on("data", (data) => {
+          setModelInstallUninstall((prev) => ({
+            ...prev,
+            action: "uninstall",
+            message: data,
+          }));
+        });
 
-        console.log(`Model "${model}" uninstalled successfully!`);
-        await fetchOllamaInfo();
+        command.on("error", (error) => {
+          console.error(`Error: ${error}`);
+          setModelInstallUninstall((prev) => ({
+            ...prev,
+            action: "uninstall",
+            error: error,
+          }));
+        });
+
+        command.on("close", (code) => {
+          console.info(`Command close with code: ${JSON.stringify(code)}`);
+        });
+
+        // --- Execute the command
+        await command.spawn();
       } catch (error) {
         console.error("Error uninstalling model:", error);
       } finally {
-        setIsLoading(false);
+        await fetchOllamaInfo();
+
+        setLoading((prev) => ({
+          ...prev,
+          modelUninstalling: false,
+        }));
       }
     },
-    [fetchOllamaInfo]
+    [fetchOllamaInfo, setLoading]
   );
 
   // --- Effect
@@ -158,5 +301,13 @@ export const useLocalLLM = ({
     fetchOllamaInfo();
   }, [fetchOllamaInfo, ...dependencies]);
 
-  return { ...ollamaInfo, isLoading, installNewModel, uninstallModel };
+  return {
+    ...ollamaInfo,
+    ...loading,
+    error,
+    modelInstallUninstall,
+    installNewModel,
+    uninstallModel,
+    fetchModelDetails,
+  };
 };
