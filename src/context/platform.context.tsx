@@ -9,7 +9,7 @@ interface IPlatformContextProps {
 }
 
 const PlatformContext = React.createContext<IPlatformContextProps | undefined>(
-  undefined,
+  undefined
 );
 
 export const PlatformProvider = ({
@@ -17,6 +17,7 @@ export const PlatformProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  // --- Hooks
   const sessionManager = useSessionManager();
 
   // TODO:(@SOUMITRA-SAHA) Listning the KeyDowns at the Root
@@ -39,7 +40,7 @@ export const usePlatformContext = () => {
   const context = React.useContext(PlatformContext);
   if (!context) {
     throw new Error(
-      "usePlatformContext must be used within a PlatformProvider",
+      "usePlatformContext must be used within a PlatformProvider"
     );
   }
   return context;

@@ -23,9 +23,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
           <Router>
             <App />
           </Router>
+
           <Toaster />
         </PlatformProvider>
       </ThemeProvider>
     </QueryClientProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );
