@@ -33,24 +33,57 @@ export const Chat = React.memo(() => {
   // ----- Store
   const { activeTab, createTab } = useSessionManagerStore();
   const { model, variant, setModel, setVariant } = useApiConfigStore();
-  const { geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs } =
-    useApiConfigStore();
+  const {
+    geminiConfigs,
+    ollamaConfigs,
+    anthropicConfigs,
+    openaiConfigs,
+    localConfigs,
+  } = useApiConfigStore();
 
   // ----- Hooks
   const { toast } = useToast();
   const chat = useChat();
 
-  const availableModels: IGeneralAiProvider[] = React.useMemo(
-    () => [
+  const availableModels: IGeneralAiProvider[][] = React.useMemo(() => {
+    const allAvailableModels: IGeneralAiProvider[] = [
       ...geminiConfigs,
       ...ollamaConfigs,
       ...anthropicConfigs,
       ...openaiConfigs,
-    ],
-    [geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs]
-  );
+      ...localConfigs,
+    ];
 
-  console.log("Chat: ", chat);
+    // Remove duplicates based on the `variant` property
+    const uniqueModels: IGeneralAiProvider[] = allAvailableModels.reduce(
+      (unique, model) => {
+        const exists = unique.some((item) => item.variant === model.variant);
+        if (!exists) unique.push(model);
+        return unique;
+      },
+      [] as IGeneralAiProvider[]
+    );
+
+    // Group models by `model` property
+    const groupedModels: IGeneralAiProvider[][] = Object.values(
+      uniqueModels.reduce((grouped, model) => {
+        if (!grouped[model.model]) {
+          grouped[model.model] = [];
+        }
+        grouped[model.model].push(model);
+
+        return grouped;
+      }, {} as Record<string, IGeneralAiProvider[]>)
+    );
+
+    return groupedModels;
+  }, [
+    geminiConfigs,
+    ollamaConfigs,
+    anthropicConfigs,
+    openaiConfigs,
+    localConfigs,
+  ]);
 
   // ----- Handlers
   const handleModelChange = async (value: string) => {
@@ -131,20 +164,18 @@ export const Chat = React.memo(() => {
                 <SelectValue placeholder={"Not Selected"} />
               </SelectTrigger>
               <SelectContent>
-                {availableModels
-                  ?.reduce((unique: IGeneralAiProvider[], model) => {
-                    const exists = unique.some(
-                      (item) => item.variant === model.variant
-                    );
-                    if (!exists) unique.push(model);
-                    return unique;
-                  }, [])
-                  ?.map((opt) => (
-                    <SelectGroup key={opt.model}>
-                      <SelectLabel className={cn("text-white")}>
-                        {opt.model}
-                      </SelectLabel>
+                {availableModels?.map((models) => (
+                  <SelectGroup
+                    key={`${models?.[0]?.model}__${models.length}`}
+                    className="my-1 rounded bg-background-1"
+                  >
+                    <SelectLabel className={cn("text-white capitalize")}>
+                      {models?.[0]?.model}
+                    </SelectLabel>
+
+                    {models.map((opt) => (
                       <SelectItem
+                        key={opt.variant}
                         value={JSON.stringify({
                           model: opt.model,
                           variant: opt.variant,
@@ -158,13 +189,14 @@ export const Chat = React.memo(() => {
                             })}
                           </span>
                           <span className={cn("flex items-center space-x-1")}>
-                            <span>{opt.model}</span>
+                            <span className="capitalize">{opt.model}</span>
                             {opt.variant && <span>({opt.variant})</span>}
                           </span>
                         </div>
                       </SelectItem>
-                    </SelectGroup>
-                  ))}
+                    ))}
+                  </SelectGroup>
+                ))}
               </SelectContent>
             </Select>
 
