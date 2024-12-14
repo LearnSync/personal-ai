@@ -1,14 +1,14 @@
-// import { fetch } from "@tauri-apps/plugin-http";
 import { useQuery } from "@tanstack/react-query";
+import { fetch } from "@tauri-apps/plugin-http";
 import * as React from "react";
 
 import { endpoint } from "@/config/endpoint";
 import { generateUUID } from "@/core/base/common/uuid";
 import { ILlmMessage } from "@/core/types";
 import { useToast } from "@/hooks/use-toast";
+import { useChatData } from "@/hooks/useChatData";
 import { useApiConfigStore } from "../store/config/apiConfigStore";
 import { useSessionManagerStore } from "../store/sessionManager/sessionManagerStore";
-import { useChatData } from "@/hooks/useChatData";
 
 type OnText = (messageId: string, fullText: string) => void;
 
@@ -235,8 +235,8 @@ export const useChat = (): IUseChatResponse => {
       const existingMessageId = messageId || `msg-${generateUUID()}`;
 
       const newMessage: ILlmMessage = {
-        message_id: existingMessageId,
         content,
+        message_id: existingMessageId,
         role: "user",
       };
 
