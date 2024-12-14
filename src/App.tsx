@@ -79,35 +79,40 @@ function App() {
           </div>
 
           {/* Secondary Side Bar */}
-          <div
-            className={cn(
-              "relative h-screen bg-background-2",
-              hideSecondarySideBar ? "w-0" : "min-w-52"
-            )}
-          >
-            {hideSecondarySideBar && <SecondarySidebar />}
-            <div
-              className={cn("absolute z-50 -translate-y-1/2 top-1/2 -left-8")}
-            >
-              <button
+          {activeExtensionTab &&
+            activeExtensionTab?.displaySecondarySidebar && (
+              <div
                 className={cn(
-                  "p-1 py-3 cursor-pointer hover:bg-white/10 rounded-md"
+                  "relative h-screen bg-background-2",
+                  hideSecondarySideBar ? "w-0" : "min-w-52"
                 )}
               >
-                {hideSecondarySideBar ? (
-                  <ChevronLeft
-                    className="w-6 h-6"
-                    onClick={() => setHideSecondarySideBar((prev) => !prev)}
-                  />
-                ) : (
-                  <ChevronRight
-                    className="w-6 h-6"
-                    onClick={() => setHideSecondarySideBar((prev) => !prev)}
-                  />
-                )}
-              </button>
-            </div>
-          </div>
+                {hideSecondarySideBar && <SecondarySidebar />}
+                <div
+                  className={cn(
+                    "absolute z-50 -translate-y-1/2 top-1/2 -left-8"
+                  )}
+                >
+                  <button
+                    className={cn(
+                      "p-1 py-3 cursor-pointer hover:bg-white/10 rounded-md"
+                    )}
+                  >
+                    {hideSecondarySideBar ? (
+                      <ChevronLeft
+                        className="w-6 h-6"
+                        onClick={() => setHideSecondarySideBar((prev) => !prev)}
+                      />
+                    ) : (
+                      <ChevronRight
+                        className="w-6 h-6"
+                        onClick={() => setHideSecondarySideBar((prev) => !prev)}
+                      />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
         </main>
       </TooltipProvider>
     </ThemeProvider>
