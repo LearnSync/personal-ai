@@ -15,6 +15,7 @@ export interface IDefaultExtensionItems {
   shortCut?: IShortCut[];
   hasMore?: boolean;
   displaySidebar?: boolean;
+  displaySecondarySidebar?: boolean;
   position?: "default" | "bottom";
   newTab?: boolean;
 }
@@ -57,16 +58,35 @@ export function generateShortCuts({
 }
 
 export const APPLICATION_SHORTCUTS = {
-  CHAT: generateShortCuts({ key: "c", ctrl: true, shift: true }),
-  CONTEXT_SEARCH: generateShortCuts({ key: "f", ctrl: true, shift: true }),
-  IMPORTANT_CHAT: generateShortCuts({ key: "i", ctrl: true, shift: true }),
-  CHAT_HISTORY: generateShortCuts({ key: "h", ctrl: true, shift: true }),
-  BOOKMARKED_CHATS: generateShortCuts({ key: "b", ctrl: true, shift: true }),
+  // --- a
   ARCHIVED_CHATS: generateShortCuts({ key: "a", ctrl: true, shift: true }),
-  EXTENSIONS: generateShortCuts({ key: "x", ctrl: true, shift: true }),
-  SETTINGS: generateShortCuts({ key: "s", ctrl: true, shift: true }),
-  NEW_TAB: generateShortCuts({ key: "t", ctrl: true }),
+
+  // --- b
+  BOOKMARKED_CHATS: generateShortCuts({ key: "b", ctrl: true, shift: true }),
+
+  // --- c
+  CODE: generateShortCuts({ key: "c", ctrl: true, shift: true }),
+  CONTEXT_SEARCH: generateShortCuts({ key: "f", ctrl: true, shift: true }),
+  CHAT: generateShortCuts({ key: "c", ctrl: true, shift: true }),
+  CHAT_HISTORY: generateShortCuts({ key: "h", ctrl: true, shift: true }),
+  CHAT_WITH_PDF: generateShortCuts({ key: "a", ctrl: true, shift: true }),
   CLOSE_TAB: generateShortCuts({ key: "w", ctrl: true }),
+
+  // --- d
+
+  // --- e
+  EXTENSIONS: generateShortCuts({ key: "x", ctrl: true, shift: true }),
+
+  // --- i
+  IMPORTANT_CHAT: generateShortCuts({ key: "i", ctrl: true, shift: true }),
+
+  // --- n
+  NEW_TAB: generateShortCuts({ key: "t", ctrl: true }),
+
+  // --- s
+  SETTINGS: generateShortCuts({ key: "s", ctrl: true, shift: true }),
+
+  // --- t
   TOGGLE_SIDEBAR: generateShortCuts({ key: "s", ctrl: true, alt: true }),
 };
 
@@ -99,9 +119,18 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
   },
   {
     id: generateUUID(),
-    label: "Extensions",
-    identificationKey: EXTENSION_KEY.EXTENSION,
-    shortCut: APPLICATION_SHORTCUTS.EXTENSIONS,
+    label: "Chat With PDF",
+    identificationKey: EXTENSION_KEY.CHAT_WITH_PDF,
+    shortCut: APPLICATION_SHORTCUTS.CHAT_WITH_PDF,
+    displaySidebar: true,
+    hasMore: false,
+    newTab: false,
+  },
+  {
+    id: generateUUID(),
+    label: "Code",
+    identificationKey: EXTENSION_KEY.CODE,
+    shortCut: APPLICATION_SHORTCUTS.CODE,
     displaySidebar: true,
     hasMore: false,
     newTab: false,
@@ -112,6 +141,7 @@ export const DEFAULT_EXTENSIONS_ITEMS: Readonly<IDefaultExtensionItems>[] = [
     identificationKey: EXTENSION_KEY.SETTINGS,
     shortCut: APPLICATION_SHORTCUTS.SETTINGS,
     displaySidebar: true,
+    displaySecondarySidebar: false,
     hasMore: false,
     position: "bottom",
     newTab: true,
@@ -216,16 +246,16 @@ export const TIME = {
     END: getEndOfDay(new Date()), // End of today (23:59:59.999)
   },
   YESTERDAY: {
-    START: getStartOfDay(new Date(Date.now() - 86400000)), // Start of yesterday
-    END: getEndOfDay(new Date(Date.now() - 86400000)), // End of yesterday
+    START: getStartOfDay(new Date(Date.now() - 86400000)), // Start of yesterday (00:00:00.000)
+    END: getEndOfDay(new Date(Date.now() - 86400000)), // End of yesterday (23:59:59.999)
   },
   PAST_7_DAYS: {
-    START: getStartOfDay(new Date(Date.now() - 604800000)), // Start of 7 days ago
-    END: getEndOfDay(new Date(Date.now() - 86400000)), // Start of Yesterday
+    START: getStartOfDay(new Date(Date.now() - 604800000)), // Start of 7 days ago (00:00:00.000)
+    END: getEndOfDay(new Date(Date.now() - 86400000)), // End of yesterday (23:59:59.999)
   },
   PAST_30_DAYS: {
-    START: getStartOfDay(new Date(Date.now() - 2592000000)), // Start of 30 days ago
-    END: getEndOfDay(new Date(Date.now() - 604800000)), // Start of Past 7 days
+    START: getStartOfDay(new Date(Date.now() - 2592000000)), // Start of 30 days ago (00:00:00.000)
+    END: getEndOfDay(new Date(Date.now() - 604800000)), // End of past 7 days (23:59:59.999)
   },
 };
 

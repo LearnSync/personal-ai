@@ -17,7 +17,9 @@ export enum EChatHistoryTime {
 
 export enum EXTENSION_KEY {
   CHAT = "chat",
+  CODE = "code",
   CONTEXT_SEARCH = "context_search",
+  CHAT_WITH_PDF = "chat_with_pdf",
   IMPORTANT_CHAT = "important_chat",
   EXTENSION = "extension",
   SETTINGS = "settings",
