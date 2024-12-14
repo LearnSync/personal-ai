@@ -119,9 +119,32 @@ export const useApiConfigStore = create<ApiConfigState>()(
           })),
 
         addLocalConfig: (type, provider) => {
-          set(() => ({
-            [`${type}Configs`]: [provider],
-          }));
+          set((state) => {
+            // @ts-ignore-next-line
+            const currentConfigs = (state[`${type}Configs`] ||
+              []) as IGeneralAiProvider[];
+
+            const providerExists = currentConfigs.some(
+              (existingProvider) =>
+                existingProvider.variant === provider.variant
+            );
+
+            const filteredConfigs = currentConfigs.filter(
+              (existingProvider) => existingProvider.variant !== "embed"
+            );
+
+            const updatedConfigs = providerExists
+              ? filteredConfigs.map((existingProvider) =>
+                  existingProvider.variant === provider.variant
+                    ? provider
+                    : existingProvider
+                )
+              : [...filteredConfigs, provider];
+
+            return {
+              [`${type}Configs`]: updatedConfigs,
+            };
+          });
         },
 
         updateConfig: ({ type, index, apikey, variant }) =>

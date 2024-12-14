@@ -46,6 +46,21 @@ export const LocalLlmSetupSettingScreen = () => {
   const { localConfigs, embeddingConfigs, addLocalConfig } =
     useApiConfigStore();
 
+  // --- Effects
+  React.useEffect(() => {
+    if (ollamaInfo.availableModels.length > 0) {
+      ollamaInfo.availableModels
+        ?.filter((m) => (m.title?.includes(EModelType.EMBED) ? false : true))
+        ?.forEach((item) => {
+          addLocalConfig(EAiProvider.LOCAL, {
+            model: EAiProvider.LOCAL,
+            variant: item.title,
+            apikey: "",
+          });
+        });
+    }
+  }, []);
+
   return (
     <section className="pr-5 overflow-y-auto">
       <H3>Local LLM Configuration</H3>
