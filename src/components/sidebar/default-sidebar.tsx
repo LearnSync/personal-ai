@@ -1,4 +1,3 @@
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import {
   Archive,
   Bookmark,
@@ -13,30 +12,21 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { endpoint } from "@/config/endpoint";
 import { createOption } from "@/constants";
 import { generateUUID } from "@/core";
+import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 import { useApiConfigStore } from "@/core/reactive/store/config/apiConfigStore";
 import { useSessionManagerStore } from "@/core/reactive/store/sessionManager/sessionManagerStore";
+import { ISidebarOption } from "@/core/types";
 import { EAiProvider, SIDEBAR_ITEM_OPTION } from "@/core/types/enum";
 import { useToast } from "@/hooks/use-toast";
+import { useChatData } from "@/hooks/useChatData";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { SidebarItem } from "./sidebar-item";
-import { useChatData } from "@/hooks/useChatData";
-import { ISidebarOption } from "@/core/types";
-import { useSessionManager } from "@/core/reactive/hooks/useSessionManager";
 
 interface DefaultSidebarProps {
   className?: string;
-}
-
-interface ChatResponse {
-  success: boolean;
-  data: any[];
-  message: string;
-  nextPage: number;
-  totalPage: number;
 }
 
 const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
@@ -49,7 +39,6 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
   const { createTab } = useSessionManagerStore();
   const { geminiConfigs, ollamaConfigs, anthropicConfigs, openaiConfigs } =
     useApiConfigStore();
-  const { activeTab } = useSessionManagerStore();
 
   // ----- Hooks
   const { toast } = useToast();
@@ -209,8 +198,10 @@ const DefaultSidebar: React.FC<DefaultSidebarProps> = ({
           </PopoverContent>
         </Popover>
       </div>
+
       <Separator />
-      <ScrollArea className="flex-1 h-[calc(100vh-4rem)] w-full">
+
+      <ScrollArea className={cn("flex-1 h-[calc(100vh-4rem)] w-full")}>
         <div className="flex flex-col items-center w-full mx-auto">
           {results?.map((result, idx) => {
             const data = result?.data?.data;
