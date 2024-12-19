@@ -1,5 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetch } from "@tauri-apps/plugin-http";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import * as React from "react";
 
 import { endpoint } from "@/config/endpoint";
@@ -21,6 +20,15 @@ interface IChatResponse {
   messages: ILlmMessage[];
 }
 
+interface IChatRegistrationPayload {
+  session_id: string;
+  session_name: string;
+  model: string;
+  variant: string;
+  api_key: string;
+  messages: ILlmMessage[];
+}
+
 interface ISendLLMMessageParams {
   sessionId: string;
   sessionName: string;
@@ -34,18 +42,12 @@ interface ISendLLMMessageParams {
 interface IUseChatResponse {
   isLoading: boolean;
   isChatLoading: boolean;
-
   messages: ILlmMessage[];
   archived: boolean;
   favorite: boolean;
   chatSessionId: string | undefined;
-
   abort: () => void;
-  sendMessage: ({
-    content,
-    messageId,
-    attachments,
-  }: {
+  sendMessage: (params: {
     content: string;
     messageId?: string;
     attachments?: File[];
@@ -63,6 +65,7 @@ const fileToBase64 = (file: File): Promise<string> =>
   });
 
 export const useChat = (): IUseChatResponse => {
+  // --- States
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [messages, setMessages] = React.useState<ILlmMessage[]>([]);
   const [abortController, setAbortController] =
@@ -70,15 +73,13 @@ export const useChat = (): IUseChatResponse => {
   const [archived, setArchived] = React.useState<boolean>(false);
   const [favorite, setFavorite] = React.useState<boolean>(false);
 
-  // ----- Hooks
+  // --- Hooks
   const { toast } = useToast();
   const { updateMutation } = useChatData();
-
-  // ----- Store
   const { model, variant, getApiConfigOfActiveVariant } = useApiConfigStore();
   const { activeTab, updateTabLabel } = useSessionManagerStore();
 
-  // ----- React Query
+  // --- Query
   const {
     data: chat,
     isLoading: isChatLoading,
@@ -87,23 +88,22 @@ export const useChat = (): IUseChatResponse => {
     queryKey: ["chat", activeTab?.tab.id],
     queryFn: async () => {
       const response = await fetch(`${endpoint.GET_CHAT}/${activeTab?.tab.id}`);
-      if (response.status === 200) {
-        return await response.json();
+      if (!response.ok) {
+        throw new Error("Failed to fetch chat data");
       }
-
       return response.json();
     },
-    enabled: activeTab?.tab.id ? true : false,
+    enabled: !!activeTab?.tab.id,
     retry: 5,
   });
 
-  // ----- Effect
+  // --- Effect
   React.useEffect(() => {
     if (chat) {
       updateTabLabel(chat.session_id, chat.session_name);
       setArchived(chat.archived);
       setFavorite(chat.favorite);
-      setMessages(() => (chat.messages ? chat.messages : []));
+      setMessages(chat.messages || []);
     }
   }, [chat]);
 
@@ -112,12 +112,13 @@ export const useChat = (): IUseChatResponse => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description:
+          error instanceof Error ? error.message : "An error occurred",
       });
     }
   }, [error]);
 
-  // ----- Private Function
+  // --- Private functions
   const _updateMessageByMessageId = ({
     messageId,
     message,
@@ -147,11 +148,9 @@ export const useChat = (): IUseChatResponse => {
     onFinalMessage,
     onError,
   }: ISendLLMMessageParams) => {
-    let fullText = "";
     const controller = new AbortController();
     setAbortController(controller);
     const responseMessageId = `msg-${generateUUID()}`;
-
     const apiConfig = getApiConfigOfActiveVariant();
 
     try {
@@ -170,57 +169,75 @@ export const useChat = (): IUseChatResponse => {
           response_message_id: responseMessageId,
           attachments: formattedAttachments,
           messages,
-          model: apiConfig ? apiConfig.model : model,
-          variant: apiConfig ? apiConfig.variant : variant,
-          api_key: apiConfig && apiConfig.apikey,
+          model: apiConfig?.model || model,
+          variant: apiConfig?.variant || variant,
+          api_key: apiConfig?.apikey,
         }),
         signal: controller.signal,
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        throw new Error(`HTTP error: ${response.status}`);
       }
 
       const reader = response.body?.getReader();
       if (!reader) {
-        throw new Error("Failed to get reader from response body");
+        throw new Error("Failed to read the response body");
       }
 
       const decoder = new TextDecoder("utf-8");
+      let fullText = "";
 
       // Stream the response
       while (true) {
-        try {
-          const { done, value } = await reader.read();
-          if (done) break;
+        const { done, value } = await reader.read();
+        if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          fullText += chunk;
-          onText(responseMessageId, fullText);
-        } catch (error) {
-          console.error("Error decoding: ", error);
-          break;
-        }
+        const chunk = decoder.decode(value, { stream: true });
+        fullText += chunk;
+
+        onText(responseMessageId, fullText);
       }
 
       onFinalMessage(responseMessageId, fullText);
     } catch (error) {
-      console.error("Error:", error);
-      if (error instanceof Error) {
-        onError(
-          responseMessageId,
-          error.message || "An error occurred while sending the message."
-        );
-      }
+      onError(
+        responseMessageId,
+        error instanceof Error ? error.message : "An error occurred"
+      );
     } finally {
       setAbortController(null);
       setIsLoading(false);
     }
   };
 
-  // ----- Public Function
+  const _chatRegistrationMutation = useMutation({
+    mutationKey: ["chat-registration"],
+    mutationFn: async (payload: IChatRegistrationPayload) => {
+      const response = await fetch(endpoint.REGISTER_CHAT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Chat registration failed");
+      }
+      return response.json();
+    },
+    onError: (error: unknown) => {
+      toast({
+        variant: "destructive",
+        title: "Registration Error",
+        description:
+          error instanceof Error ? error.message : "An unknown error occurred",
+      });
+    },
+  });
+
+  // --- Public functions
   const sendMessage = React.useCallback(
-    ({
+    async ({
       content,
       messageId,
       attachments,
@@ -233,7 +250,6 @@ export const useChat = (): IUseChatResponse => {
 
       setIsLoading(true);
       const existingMessageId = messageId || `msg-${generateUUID()}`;
-
       const newMessage: ILlmMessage = {
         content,
         message_id: existingMessageId,
@@ -246,74 +262,54 @@ export const useChat = (): IUseChatResponse => {
       });
 
       const updatedMessages = messageId ? messages : [...messages, newMessage];
+      const base64Attachments = attachments
+        ? await Promise.all(attachments.map(fileToBase64))
+        : [];
 
-      // Convert file attachments to Base64
-      const processAttachments = async () => {
-        if (!attachments) return [];
-        return Promise.all(
-          attachments.map(async (file) => {
-            const data = await fileToBase64(file);
-            return { name: file.name, type: file.type, data };
-          })
-        );
-      };
-
-      processAttachments()
-        .then((attachments) => {
-          // Callback function
-          _sendMessageToLLM({
-            attachments,
-            sessionId: activeTab.tab.id,
-            sessionName: activeTab.tab.label,
-            messages: updatedMessages,
-            onText: (messageId, fullText) => {
-              _updateMessageByMessageId({
-                messageId,
-                message: {
-                  message_id: messageId,
-                  content: fullText,
-                  role: "assistant",
-                },
-              });
-            },
-            onFinalMessage: (messageId, fullText) => {
-              _updateMessageByMessageId({
-                messageId,
-                message: {
-                  message_id: messageId,
-                  content: fullText,
-                  role: "assistant",
-                },
-              });
-            },
-            onError: (messageId, errorMessage: string) => {
-              _updateMessageByMessageId({
-                messageId,
-                message: {
-                  message_id: messageId,
-                  content: errorMessage,
-                  role: "assistant",
-                },
-              });
+      _sendMessageToLLM({
+        sessionId: activeTab.tab.id,
+        sessionName: activeTab.tab.label,
+        messages: updatedMessages,
+        attachments: base64Attachments.map((data, idx) => ({
+          name: attachments![idx].name,
+          type: attachments![idx].type,
+          data,
+        })),
+        onText: (messageId, fullText) => {
+          _updateMessageByMessageId({
+            messageId,
+            message: {
+              message_id: messageId,
+              content: fullText,
+              role: "assistant",
             },
           });
-        })
-        .catch((error) => {
-          console.error(
-            "Error processing attachments or sending the message:",
-            error
-          );
-        });
+        },
+        onFinalMessage: () => {
+          _chatRegistrationMutation.mutateAsync({
+            session_id: activeTab.tab.id,
+            session_name: activeTab.tab.label,
+            messages,
+            model,
+            variant,
+            api_key: getApiConfigOfActiveVariant()?.apikey || "",
+          });
+        },
+        onError: (messageId, errorMsg) => {
+          console.error("Error sending message:", errorMsg);
+          _updateMessageByMessageId({
+            messageId,
+            message: {
+              message_id: messageId,
+              content: errorMsg,
+              role: "assistant",
+            },
+          });
+        },
+      });
     },
     [messages, activeTab]
   );
-
-  const abort = React.useCallback(() => {
-    if (abortController) {
-      abortController.abort();
-      setAbortController(null);
-    }
-  }, [abortController]);
 
   const toggleBookmark = () => {
     if (chat && activeTab && activeTab.tab.id) {
@@ -352,7 +348,7 @@ export const useChat = (): IUseChatResponse => {
       }
     }
   };
-
+  _chatRegistrationMutation;
   return {
     archived,
     favorite,
@@ -360,13 +356,9 @@ export const useChat = (): IUseChatResponse => {
     isLoading,
     isChatLoading,
     chatSessionId: chat?.session_id,
-
-    // Function
-    abort,
+    abort: () => abortController?.abort(),
     sendMessage,
     toggleBookmark,
     toggleArchive,
   };
 };
-
-export default useChat;

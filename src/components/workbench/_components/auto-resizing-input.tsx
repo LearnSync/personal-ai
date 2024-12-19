@@ -70,11 +70,11 @@ export const AutoResizingInput: React.FC<IAutoResizingInputProps> = ({
   return (
     <div
       className={cn(
-        "relative flex items-center w-full border-2 shadow-xl border-primary/40",
+        "relative flex items-center w-full border-2 shadow-xl border-muted-foreground/40",
         text.length > 0
           ? "rounded-3xl overflow-y-auto h-fit"
           : "rounded-full overflow-hidden h-14",
-        className,
+        className
       )}
     >
       <div className={cn("mx-2", text.length > 0 && "mb-2 mt-auto")}>
@@ -107,7 +107,7 @@ export const AutoResizingInput: React.FC<IAutoResizingInputProps> = ({
           onChange={handleTextChange}
           onKeyDown={handleKeyDown}
           className={cn(
-            "p-0 py-5 overflow-hidden leading-relaxed tracking-wider border-none resize-none text-md h-fit focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground text-primary/80",
+            "p-0 py-5 overflow-hidden leading-relaxed tracking-wider border-none resize-none text-md h-fit focus-visible:outline-none focus-visible:ring-0 placeholder:text-muted-foreground text-secondary-foreground"
           )}
         />
       </ScrollArea>
@@ -116,7 +116,7 @@ export const AutoResizingInput: React.FC<IAutoResizingInputProps> = ({
         {isGenerating ? (
           <Button
             size={"icon"}
-            className={cn("rounded-full")}
+            className={cn("rounded-full  bg-secondary-foreground")}
             onClick={onAbort}
           >
             <Square className="fill-background" />
@@ -124,7 +124,9 @@ export const AutoResizingInput: React.FC<IAutoResizingInputProps> = ({
         ) : (
           <Button
             size={"icon"}
-            className={cn("rounded-full p-0 [&_svg]:size-7")}
+            className={cn(
+              "rounded-full bg-secondary-foreground p-0 [&_svg]:size-7"
+            )}
             disabled={text.length === 0}
             onClick={() => {
               if (onEnter) {

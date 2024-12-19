@@ -118,7 +118,7 @@ export const ApiKeySettingScreen = () => {
           </div>
 
           <div className="mt-2">
-            {geminiConfigs.map((geminiConfig, idx) => (
+            {geminiConfigs?.map((geminiConfig, idx) => (
               <ApiKeyInputBox
                 key={idx}
                 apiKey={geminiConfig.apikey}
@@ -193,8 +193,8 @@ export const ApiKeySettingScreen = () => {
             <Button
               onClick={() =>
                 addConfig(EAiProvider.OLLAMA, {
-                  apikey: "",
                   model: EAiProvider.OLLAMA,
+                  apikey: "",
                   variant: "",
                 })
               }

@@ -17,6 +17,7 @@ export const endpoint = {
     FAVORITE: `${env.AI_SERVER_URL}/chat/all/?favorite=true`,
     HISTORY: `${env.AI_SERVER_URL}/chat/all`,
   },
+  REGISTER_CHAT: `${env.AI_SERVER_URL}/register`,
   UPDATE_CHAT: `${env.AI_SERVER_URL}/chat`, // i.e. /chat/{session_id}, PUT
   DELETE_CHAT: `${env.AI_SERVER_URL}/chat`, // i.e. /chat/{session}, DELETE
 

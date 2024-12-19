@@ -36,13 +36,13 @@ export const ApiKeyInputBox: React.FC<ApiKeyInputBoxProps> = ({
   const [showKey, setShowKey] = React.useState(false);
   const [isSaved, setIsSaved] = React.useState(apiKey ? true : false);
 
-  // Store
+  // --- Store
   const { updateConfig, deleteConfig, getConfig } = useApiConfigStore();
 
-  // Hooks
+  // --- Hooks
   const { toast } = useToast();
 
-  // Effects
+  // --- Effects
   React.useEffect(() => {
     if (currentApiKey && variant) {
       const currentConfig = getConfig(keyForElement);
@@ -75,6 +75,7 @@ export const ApiKeyInputBox: React.FC<ApiKeyInputBoxProps> = ({
           <SelectTrigger className="w-40 bg-background-2">
             <SelectValue placeholder="Variant" />
           </SelectTrigger>
+
           <SelectContent className="bg-background-2">
             {variants?.map((v) => (
               <SelectItem key={v} value={v}>
@@ -120,7 +121,14 @@ export const ApiKeyInputBox: React.FC<ApiKeyInputBoxProps> = ({
                 }
 
                 if (keyForElement) {
-                  updateConfig(keyForElement, idx, currentApiKey, variant);
+                  updateConfig({
+                    type: keyForElement,
+                    index: idx,
+                    apikey: currentApiKey,
+                    variant,
+                  });
+
+                  setIsSaved(true);
                 }
               }}
             >
