@@ -14,6 +14,7 @@ from app.models.chat_model import ChatSessionResponse, ChatMessageResponse, Upda
 from app.models.request import ChatRequest, ChatRegister
 from app.services.ai import AIService
 
+
 # Initializing Router
 router = APIRouter()
 
@@ -29,23 +30,36 @@ async def generate(request: ChatRequest):
         variant = request.variant
         api_key = request.api_key
 
+        # Validate API key requirement for external models
         if model != EAIModel.LOCAL and not api_key:
-            raise HTTPException(status_code=403, detail=f"API Key is required for")
+            raise HTTPException(status_code=403, detail="API Key is required for external models")
 
-        # This is to manage the response into the Database
         async def generate_response() -> AsyncGenerator[str, None]:
+            """
+            Async generator to yield response chunks for streaming.
+            """
             for chunk in AIService.generate_ai_response(
-                    model=model,
-                    variant=variant,
-                    messages=messages,
-                    api_key=api_key
+                model=model,
+                variant=variant,
+                messages=messages,
+                api_key=api_key
             ):
                 yield chunk
 
-        return StreamingResponse(generate_response(), media_type="application/json")
+        return StreamingResponse(
+            generate_response(),
+            media_type="application/json",
+            headers={"Transfer-Encoding": "chunked"}
+        )
 
+    except HTTPException as http_ex:
+        # Propagate HTTP exceptions
+        print(f"Unexpected HTTP Error: {http_ex}")
+        raise http_ex
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error generating response: {str(e)}")
+        # Log unexpected exceptions and return a generic error to the client
+        print(f"Unexpected Error: {e}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
 @router.post("/register")
@@ -124,6 +138,7 @@ async def register_chat(request: ChatRegister, db: Session = Depends(get_db)):
         return {"success": True, "message": "Chat successfully registered or updated.", "session_id": session_id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
 
 @router.get("/chat/{session_id}", response_model=ChatSessionResponse)
 def get_conversation(session_id: str, db: Session = Depends(get_db)):

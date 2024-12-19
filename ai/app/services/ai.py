@@ -49,10 +49,7 @@ class AIService:
         elif model and model.lower().startswith(str(EAIModel.GEMINI)):
             if not api_key:
                 raise ValueError("API key must be provided for Gemini")
-            return ChatGoogleGenerativeAI(
-                model = variant,
-                api_key = api_key
-            )
+            return ChatGoogleGenerativeAI(model=variant, api_key=api_key)
         return Ollama(model=variant)
 
     @staticmethod
